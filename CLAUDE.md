@@ -114,7 +114,13 @@ Après chaque étape : commit clair, mise à jour de ce fichier, note à Antonin
   l'organisation « Lili Rouzier » du compte Supabase du club (antonin.rouzier@harnes-volleyball.fr), passée au **plan Pro**
   (25 $/mois, plafond de dépenses actif) : le compte avait déjà ses 2 projets gratuits. Clé d'accès « studio-lili
   deploiement » limitée à ce seul projet (vérifié : elle ne voit que lui), sans expiration, dans `~/.lili/supabase.env`.
-  Schéma déployé et tests des droits passés en ligne le 21/11/2026. Mot de passe de la base généré par Supabase, non
+  Schéma déployé et tests des droits passés en ligne le 21/11/2026. Même jour, à la demande d'Antonin, les projets
+  `hvb-app` (club) et `palomano-equipe` ont été transférés dans cette organisation Pro (environ 45 $/mois au total) ;
+  le cockpit d'Antonin est sur un autre compte Supabase et n'a pas bougé ; Evoalys est chez Scaleway.
+  Compte propriétaire de Lili créé (rôle « proprietaire » côté serveur et dans `personnes` ; son adresse n'est pas
+  écrite ici, dépôt public) ; lien d'invitation (24 h) dans `~/.lili/invitation.txt`. L'envoi d'e-mails intégré de
+  Supabase ne sert que les membres de l'organisation : invitations et notifications aux clients demanderont un
+  service d'envoi (étape 5). Mot de passe de la base généré par Supabase, non
   conservé (inutile : tout passe par l'API d'administration ; le régénérer dans le tableau de bord au besoin).
 - 21/11/2026 : **les mails de Lili (Gmail) dans son cockpit**, comme la page Mails du cockpit d'Antonin (fonction
   `messagerie`, Gmail par OAuth). À faire à l'étape 5, avec le client OAuth Google qui sert aussi à « Continuer avec Google ».
