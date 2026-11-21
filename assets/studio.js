@@ -411,6 +411,7 @@ window.Studio = (function () {
         [icone("cloche"), el("span", { class: "cote-texte", text: "Notifications" }), nonLues ? el("span", { class: "cote-compte", text: String(nonLues) }) : null]),
       el("button", { type: "button", class: "installer", "data-installer": "", hidden: !window.__installable, onclick: function () { if (window.__installer) window.__installer(); } }, [icone("installer"), "Installer l'application"]),
       lili ? lienCote("#reglages", "Réglages", "reglages", r.nom === "reglages") : null,
+      !lili ? el("a", { href: "guide.html", target: "_blank", rel: "noopener", class: "cote-lien" }, [icone("brief"), el("span", { class: "cote-texte", text: "Comment ça marche" })]) : null,
       el("button", { type: "button", class: "cote-lien", onclick: function () { if (X.verrouiller) X.verrouiller(); } }, [icone("cadenas"), el("span", { class: "cote-texte", text: "Verrouiller" })]),
       el("button", { type: "button", class: "cote-lien", onclick: function () { if (X.quitter) X.quitter(); } }, [icone("sortir"), el("span", { class: "cote-texte", text: "Se déconnecter" })])
     ]);

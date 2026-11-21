@@ -28,8 +28,9 @@ Deno.serve(async (req) => {
   try {
     const { data: deja } = await db.from("personnes").select("id, role, nom").eq("email", email).maybeSingle();
     if (deja?.role === "proprietaire") return json({ erreur: "c'est l'adresse de Lili" }, 400);
-    // Lien de connexion : invitation pour un nouveau compte, lien magique pour un compte existant
-    const { data: lien, error } = await db.auth.admin.generateLink({ type: deja ? "magiclink" : "invite", email,
+    // Lien de connexion : invitation pour un nouveau compte ; pour un compte existant, lien qui fait choisir un nouveau
+    // mot de passe (sert aussi quand la personne l'a oublié : le service d'e-mails intégré ne lui écrit pas)
+    const { data: lien, error } = await db.auth.admin.generateLink({ type: deja ? "recovery" : "invite", email,
       options: { redirectTo: SITE, data: deja ? undefined : { nom } } });
     if (error) throw error;
     const id = deja?.id ?? lien.user.id;
@@ -42,11 +43,11 @@ Deno.serve(async (req) => {
     const prenom = (nom || "").split(" ")[0];
     const titre = role === "client" ? `Votre espace ${espace.nom} vous attend` : `Un espace partagé avec vous`;
     const envoye = await envoyerDepuisLili(db, email, titre,
-      `Bonjour${prenom ? " " + prenom : ""},\n\nLili Rouzier vous ouvre votre espace ${espace.nom} : calendrier, publications à valider, médiathèque et messages.\n\nPour entrer (lien valable 24 h, une seule fois) : ${lien.properties.action_link}\n\nÀ l'arrivée, vous choisirez votre mot de passe.\n`,
+      `Bonjour${prenom ? " " + prenom : ""},\n\nLili Rouzier vous ouvre votre espace ${espace.nom} : calendrier, publications à valider, médiathèque et messages.\n\nPour entrer (lien valable 24 h, une seule fois) : ${lien.properties.action_link}\n\nÀ l'arrivée, vous choisirez votre mot de passe.\n\nLe guide de votre espace : ${SITE}guide.html\n`,
       gabarit({ couleur: espace.couleur, surtitre: `${espace.nom} · par Lili Rouzier`, titre,
         paragraphes: [`Bonjour${prenom ? " " + prenom : ""},`, `Lili Rouzier vous ouvre votre espace : le calendrier, les publications à valider en deux gestes, la médiathèque pour déposer vos photos, et les messages.`,
-          deja ? "Le bouton ci-dessous vous connecte directement (valable 24 h, une seule fois)." : "À l'arrivée, vous choisirez votre mot de passe (le lien est valable 24 h, une seule fois)."],
-        bouton: "Entrer dans mon espace", lien: lien.properties.action_link, pied: "Vous recevez ce message parce que Lili Rouzier vous a invité. Si vous ne l'attendiez pas, ignorez-le." }))
+          deja ? "Le bouton ci-dessous vous connecte et vous fait choisir un nouveau mot de passe (valable 24 h, une seule fois)." : "À l'arrivée, vous choisirez votre mot de passe (le lien est valable 24 h, une seule fois)."],
+        bouton: "Entrer dans mon espace", lien: lien.properties.action_link, pied: `Le guide de votre espace : ${SITE}guide.html. Vous recevez ce message parce que Lili Rouzier vous a invité ; si vous ne l'attendiez pas, ignorez-le.` }))
       .catch((e) => { console.error("inviter : e-mail", (e as Error).message); return false; });
     return json(envoye ? { envoye: true, personne_id: id } : { lien: lien.properties.action_link, personne_id: id });
   } catch (e) {

@@ -651,7 +651,14 @@
       el("h2", { class: "titre-section", text: "Votre entreprise" }), form,
       el("h2", { class: "titre-section", text: "Assistant" }),
       el("div", { class: "bloc" }, [el("p", { text: (MARQUE.assistant || "L'assistant") + " lit vos briefs, vos publications et vos rapports, et crée des brouillons (statut Idée, invisibles des clients). Il ne valide, ne programme et n'envoie jamais rien : c'est toujours vous qui cliquez." }),
-        el("p", { class: "aide", text: "Ouvrez-le avec la touche / ou le bouton de la barre latérale. Le brief du jour est préparé chaque matin à 6 h." })])]);
+        el("p", { class: "aide", text: "Ouvrez-le avec la touche / ou le bouton de la barre latérale. Le brief du jour est préparé chaque matin à 6 h." })]),
+      el("h2", { class: "titre-section", text: "Guide pour vos clients" }),
+      el("div", { class: "bloc" }, [el("p", { text: "« Comment valider vos publications » : la page à joindre à une invitation. L'invitation envoyée depuis Gmail la contient déjà." }),
+        el("div", { class: "actions-ligne", style: { "justify-content": "flex-start" } }, [
+          el("a", { class: "btn-texte", href: "guide.html", target: "_blank", rel: "noopener", text: "Ouvrir le guide" }),
+          el("button", { type: "button", class: "btn-texte", text: "Copier le lien", onclick: function () {
+            navigator.clipboard.writeText(new URL("guide.html", location.href).href).then(function () { St.signaler("Lien du guide copié"); });
+          } })])])]);
   };
 
   // ======================================================================

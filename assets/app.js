@@ -214,12 +214,15 @@
       history.replaceState(null, "", location.pathname);
     }
   })();
+  // Quand le serveur ne peut pas envoyer l'e-mail lui-même, Lili peut toujours renvoyer un lien depuis l'espace (Équipe)
+  var SANS_ENVOI = "L'e-mail n'a pas pu partir. Demandez à Lili un nouveau lien de connexion : il vous fera choisir un mot de passe.";
   $("btn-lien").addEventListener("click", function () {
     var email = $("email").value.trim();
     if (!email) { dire("Indiquez d'abord votre e-mail.", true); $("email").focus(); return; }
     if (APERCU) return vue("vue-lien");
     db.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname } }).then(function (r) {
       // Même réponse que le compte existe ou non : on ne révèle pas qui a accès.
+      if (r.error && /authoriz|smtp|sending|rate limit/i.test(r.error.message)) return dire(SANS_ENVOI, true);
       if (r.error && !/not allowed|signups/i.test(r.error.message)) return dire(r.error.message, true);
       vue("vue-lien");
     });
@@ -228,8 +231,9 @@
     var email = $("email").value.trim();
     if (!email) { dire("Indiquez d'abord votre e-mail.", true); $("email").focus(); return; }
     if (APERCU) return dire("Un e-mail de réinitialisation vient de partir.");
-    db.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname }).then(function () {
-      dire("Si ce compte existe, un e-mail de réinitialisation vient de partir.");
+    db.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname }).then(function (r) {
+      if (r.error && /authoriz|smtp|sending|rate limit/i.test(r.error.message)) return dire(SANS_ENVOI, true);
+      dire("Si ce compte existe, un e-mail de réinitialisation vient de partir. Rien reçu ? Demandez un nouveau lien à Lili.");
     });
   });
   document.querySelectorAll("[data-retour]").forEach(function (b) { b.addEventListener("click", function () { vue("vue-connexion"); }); });

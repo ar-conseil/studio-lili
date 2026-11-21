@@ -170,10 +170,18 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
    script anti-robot (adresses aléatoires sur ar-conseil.github.io) aux Chrome sans écran : il pèse sur les mesures,
    pas sur les vraies visites.
 10. Guides : `docs/guide-lili.md` et « Comment valider vos publications ».
+    **Fait le 21/11/2026** : `docs/guide-lili.md` (une semaine de travail, du code d'entrée à l'assistant) et
+    `guide.html` (page du site pour les clients, liée dans leur barre « Comment ça marche », dans l'e-mail
+    d'invitation et dans Réglages). À tenir à jour à chaque changement d'écran.
 
 Après chaque étape : commit clair, mise à jour de ce fichier, note à Antonin (ce qui est fait, ce qu'il doit faire).
 
 ## Décisions
+- 21/11/2026 : **pas de service d'envoi d'e-mails branché** : l'envoi intégré de Supabase n'écrit qu'aux membres de
+  l'organisation. « Mot de passe oublié » et « Recevoir un lien » ne joignent donc ni les clients ni Lili ; l'écran
+  d'entrée le dit et renvoie vers Lili. Solution en place : « Renvoyer un lien » (Équipe) donne un lien de type
+  recovery qui fait choisir un nouveau mot de passe. Pour que ces boutons marchent seuls : SMTP personnalisé dans
+  Supabase (Gmail de Lili avec mot de passe d'application, ou un service d'envoi), à décider avec Antonin.
 - 21/11/2026 : **connexion Google** : projet Google Cloud « Studio Lili » (`studio-lili-515417`, compte d'Antonin),
   client OAuth web (retours : `…supabase.co/auth/v1/callback` et `…/functions/v1/connexion-google` pour Gmail), clés
   dans `~/.lili/oauth.env`, activée dans Supabase. Passage « en production » à confirmer par Antonin (bouton refusé
