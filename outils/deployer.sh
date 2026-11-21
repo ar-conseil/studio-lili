@@ -5,7 +5,7 @@
 #   oauth.env     GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, MS_CLIENT_ID, MS_CLIENT_SECRET (facultatif : boutons Google / Microsoft)
 #
 #   outils/deployer.sh                               tests locaux, schéma, tests des droits en ligne, connexion, fonctions, config.js
-#   outils/deployer.sh --proprietaire <e-mail>       en plus : invite Lili (rôle propriétaire) ; elle choisit son mot de passe
+#   outils/deployer.sh --proprietaire <e-mail>       en plus : compte de Lili (rôle propriétaire) et lien d'invitation dans ~/.lili/invitation.txt
 set -euo pipefail
 cd "$(dirname "$0")/.."
 set -a; source ~/.lili/supabase.env; set +a
@@ -46,7 +46,14 @@ c = {
   "uri_allow_list": sys.argv[2] + ",http://localhost:8772/",
   "password_min_length": 10,
   "mfa_totp_enroll_enabled": True, "mfa_totp_verify_enabled": True, "mfa_max_enrolled_factors": 10,
-  "mailer_otp_exp": 3600,
+  "mailer_otp_exp": 86400,                     # liens valables 24 h (invitation, connexion)
+  # E-mails en français (envoyés une fois un service d'envoi relié, étape 5 ; celui de Supabase ne sert que l'équipe)
+  "mailer_subjects_invite": "Votre espace avec Lili Rouzier",
+  "mailer_templates_invite_content": "<p>Bonjour,</p><p>Lili Rouzier vous ouvre votre espace : calendrier, publications à valider, médiathèque et messages.</p><p><a href=\"{{ .ConfirmationURL }}\">Entrer dans mon espace</a></p><p>Vous choisirez votre mot de passe en arrivant.</p>",
+  "mailer_subjects_magic_link": "Votre lien de connexion",
+  "mailer_templates_magic_link_content": "<p>Bonjour,</p><p><a href=\"{{ .ConfirmationURL }}\">Se connecter</a></p><p>Ce lien ne sert qu'une fois. Si vous n'avez rien demandé, ignorez ce message.</p>",
+  "mailer_subjects_recovery": "Nouveau mot de passe",
+  "mailer_templates_recovery_content": "<p>Bonjour,</p><p><a href=\"{{ .ConfirmationURL }}\">Choisir un nouveau mot de passe</a></p><p>Si vous n'avez rien demandé, ignorez ce message.</p>",
 }
 g, gs = os.environ.get("GOOGLE_CLIENT_ID"), os.environ.get("GOOGLE_CLIENT_SECRET")
 if g and gs: c.update(external_google_enabled=True, external_google_client_id=g, external_google_secret=gs)
@@ -85,16 +92,20 @@ echo "   écrite (à commiter : GitHub Pages la sert au site)"
 if [[ "${1:-}" == "--proprietaire" && -n "${2:-}" ]]; then
   echo "7. Invitation de Lili (rôle propriétaire)"
   SERVICE=$(python3 -I -c 'import json,sys; print([x for x in json.load(open(sys.argv[1])) if x.get("name")=="service_role"][0]["api_key"])' "$PRIVE/cles.json")
-  python3 -I -c 'import json,sys; print(json.dumps({"email": sys.argv[1], "data": {"nom": "Lili Rouzier"}}))' "$2" > "$PRIVE/invite.json"
-  code=$(curl -s -o "$PRIVE/reponse.json" -w '%{http_code}' -X POST "https://$SUPABASE_PROJECT_REF.supabase.co/auth/v1/invite" \
+  # Lien d'invitation généré sans e-mail (l'envoi intégré de Supabase ne sert que les membres de l'organisation) :
+  # rangé dans ~/.lili/invitation.txt, à transmettre à Lili. Il ne sert qu'une fois et expire après 24 h.
+  python3 -I -c 'import json,sys; print(json.dumps({"type": "invite", "email": sys.argv[1], "data": {"nom": "Lili Rouzier"}, "redirect_to": sys.argv[2]}))' "$2" "$SITE" > "$PRIVE/invite.json"
+  code=$(curl -s -o "$PRIVE/reponse.json" -w '%{http_code}' -X POST "https://$SUPABASE_PROJECT_REF.supabase.co/auth/v1/admin/generate_link" \
     -H "apikey: $SERVICE" -H "Authorization: Bearer $SERVICE" -H "Content-Type: application/json" --data-binary @"$PRIVE/invite.json")
   [[ "$code" == 2* ]] || { echo "   ERREUR $code : $(head -c 600 "$PRIVE/reponse.json")"; exit 1; }
+  ( umask 077; python3 -I -c 'import json,sys; print(json.load(open(sys.argv[1]))["action_link"])' "$PRIVE/reponse.json" > ~/.lili/invitation.txt )
   ID=$(python3 -I -c 'import json,sys; print(json.load(open(sys.argv[1]))["id"])' "$PRIVE/reponse.json")
   # Rôle posé côté serveur (app_metadata), jamais modifiable par l'intéressée ; recopié dans public.personnes
   curl -s -o /dev/null -X PUT "https://$SUPABASE_PROJECT_REF.supabase.co/auth/v1/admin/users/$ID" -H "apikey: $SERVICE" \
     -H "Authorization: Bearer $SERVICE" -H "Content-Type: application/json" -d '{"app_metadata":{"role":"proprietaire"}}'
   printf "update public.personnes set role = 'proprietaire', nom = 'Lili Rouzier' where id = '%s';\n" "$ID" > "$PRIVE/role.sql"
   sql "$PRIVE/role.sql"
-  echo "   invitation envoyée ; à la première connexion, Lili choisit son mot de passe puis relie son code à 6 chiffres"
+  echo "   lien d'invitation dans ~/.lili/invitation.txt (24 h, une seule fois) : à transmettre à Lili ;"
+  echo "   en arrivant, elle choisit son mot de passe puis relie son code à 6 chiffres"
 fi
 echo "Terminé."

@@ -19,6 +19,8 @@
   var $ = function (id) { return document.getElementById(id); };
   var entree = $("entree"), coquille = $("coquille"), message = $("message");
   var etat = { facteur: null, essais: 0, ouvert: false };
+  // Arrivée par le lien d'une invitation : lu avant que supabase-js n'efface l'adresse, pour faire choisir un mot de passe
+  var INVITATION = /(^|[#&?])type=invite(&|$)/.test(location.hash + "&" + location.search.slice(1));
 
   // ---------- Petites aides ----------
   function lire(cle) { try { return localStorage.getItem(cle); } catch (e) { return null; } }
@@ -219,6 +221,11 @@
     });
   });
   document.querySelectorAll("[data-retour]").forEach(function (b) { b.addEventListener("click", function () { vue("vue-connexion"); }); });
+  function choisirMotDePasse(bienvenue) {
+    vue("vue-nouveau");
+    $("nouveau-titre").textContent = bienvenue ? "Bienvenue" : "Nouveau mot de passe";
+    $("nouveau-sous").textContent = bienvenue ? "Choisissez votre mot de passe (10 caractères au moins). Vous pourrez aussi entrer avec Google." : "10 caractères au moins.";
+  }
   $("vue-nouveau").addEventListener("submit", function (ev) {
     ev.preventDefault();
     var mdp = $("nouveau-mdp").value;
@@ -267,7 +274,8 @@
   db.auth.onAuthStateChange(function (evenement) {
     // Sortir du rappel avant de relire la base (sinon supabase-js peut se bloquer sur son verrou de session).
     setTimeout(function () {
-      if (evenement === "PASSWORD_RECOVERY") return vue("vue-nouveau");
+      if (evenement === "PASSWORD_RECOVERY") return choisirMotDePasse(false);
+      if (INVITATION && evenement === "SIGNED_IN" || INVITATION && evenement === "INITIAL_SESSION") { INVITATION = false; return choisirMotDePasse(true); }
       if (evenement === "SIGNED_OUT") { etat.facteur = null; vue("vue-connexion"); return; }
       if (evenement === "SIGNED_IN" || evenement === "INITIAL_SESSION") { if (!etat.ouvert) suite(); }
     }, 0);

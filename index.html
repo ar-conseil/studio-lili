@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&family=Bodoni+Moda:opsz,wght@6..96,400..600&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&family=Bodoni+Moda:opsz,wght@6..96,400..600&display=swap"></noscript>
-  <link rel="stylesheet" href="assets/style.css?v=20261121b">
+  <link rel="stylesheet" href="assets/style.css?v=20261121c">
 </head>
 <body>
   <!-- Entrée : connexion, puis code à 6 chiffres (comme Evoalys : mot de passe et code) -->
@@ -95,8 +95,8 @@
 
         <!-- 5. Nouveau mot de passe (lien « mot de passe oublié ») -->
         <form class="vue" id="vue-nouveau" novalidate hidden>
-          <h1 class="entree-titre">Nouveau mot de passe</h1>
-          <p class="entree-sous">10 caractères au moins.</p>
+          <h1 class="entree-titre" id="nouveau-titre">Nouveau mot de passe</h1>
+          <p class="entree-sous" id="nouveau-sous">10 caractères au moins.</p>
           <label for="nouveau-mdp">Mot de passe</label>
           <input id="nouveau-mdp" type="password" autocomplete="new-password" minlength="10" required>
           <button type="submit" class="btn-plein">Enregistrer</button>
@@ -138,6 +138,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script src="assets/config.js"></script>
   <script src="assets/marque.js"></script>
-  <script src="assets/app.js?v=20261121b"></script>
+  <script src="assets/app.js?v=20261121c"></script>
 </body>
 </html>
