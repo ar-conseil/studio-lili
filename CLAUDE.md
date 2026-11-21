@@ -75,8 +75,26 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   `brief-du-jour` (pg_cron 5 h UTC ; texte sans IA si pas de clé). `_partage/envoi.ts` : envoi depuis le Gmail de Lili.
   Migration `20261121130000_etape7.sql` : `reglages`, `briefs_jour`, `assistant_journal`, numérotation des devis.
   Clé `ANTHROPIC_API_KEY` dans `~/.lili/anthropic.env` (posée le 21/11/2026), envoyée en secret Supabase par le déploiement.
-- Page Mails (`#mails`, touche E, Lili seule) : `assets/vues/mails.js` ; HTML des mails dans un iframe isolé, images
-  distantes bloquées jusqu'au clic ; expéditeur rapproché de son client (adresse d'un membre).
+- Page Mails (`#mails`, touche E, Lili seule) : `assets/vues/mails.js`, une vraie messagerie : conversations (fils
+  Gmail), dossiers et libellés, un raccourci par client, recherche Gmail et filtres, sélection multiple, fiche du client
+  de l'expéditeur, rédaction mise en forme (`St.editeurRiche`) avec signature et réponses types, pièces jointes
+  glissées, brouillon auto (Gmail), annulation d'envoi (délai réglable), envoi programmé (table `mails_programmes`,
+  cron « mails-programmes » chaque minute -> `messagerie` {action: programmes}), « Créer une tâche », raccourcis
+  façon Gmail (`V.toucheMails`, prioritaire sur la page Mails ; ? pour la liste). HTML des mails dans un iframe isolé,
+  images distantes bloquées jusqu'au clic ; le HTML envoyé est nettoyé côté serveur (`nettoyerHtml`).
+- Réglages (`#reglages?onglet=…`) : `assets/vues/reglages.js`, en onglets comme Evoalys (Entreprise avec fiche de
+  complétude, Signatures de mail, Réponses types, Mails et vacances, Devis et signature, Assistant IA, Sécurité,
+  Apparence). Clés de `reglages` : entreprise, signatures {liste, nouveau, reponse}, modeles_mail {liste},
+  mails {annulation}, devis {validite}, vacances {actif, debut, fin, objet, message, bandeau, pause, gmail, temps_fort_id}.
+- En vacances (`St.vacances`) : réponse automatique Gmail (droit `gmail.settings.basic`, demandé à la liaison de la
+  boîte), bandeau chez les clients (temps fort « absence » sans espace, lisible par tous les clients), pause des
+  notifications de Lili dans `notifier` (marquées traitées, gardées dans la cloche).
+- Devis signés en ligne, comme Evoalys : `assets/vues/devis.js` (#devis côté client, pavé de signature, puis code à 6
+  chiffres reçu par e-mail), fonction `signer-devis` ({action: code} envoie le code depuis le Gmail de Lili, 10 min,
+  5 essais, empreinte seule dans `devis_codes` illisible du navigateur ; {action: signer} vérifie) ; preuve : nom,
+  signature PNG, adresse vérifiée et heure du code, date, IP, navigateur, empreinte SHA-256 du devis -> table `devis_signatures` ; le
+  client voit les devis envoyés de son espace (politique `client_lit`) ; « Envoyer à signer » journalise `devis.envoye`
+  (prévient les clients), la signature journalise `devis.signe` (prévient Lili). Migration `20261122100000_mails_devis.sql`.
 - **Démonstration** : `?demo` (comme Lili) ou `?demo=<slug>` (comme la cliente de cette marque), données fictives de
   `assets/demo.js` (dates calculées autour d'aujourd'hui), rien n'est enregistré ; un sélecteur « Voir comme » est dans
   la barre latérale. Sert aussi à vérifier chaque écran avant mise en ligne.

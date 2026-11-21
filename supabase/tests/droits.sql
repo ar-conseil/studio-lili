@@ -106,14 +106,23 @@ select essais.verifier(exists (select 1 from public.comptes_mail where email = '
 select essais.verifier(exists (select 1 from public.reglages where cle = 'entreprise') and exists (select 1 from public.briefs_jour where jour = current_date) and exists (select 1 from public.assistant_journal where demande = 'Idées pour Noël'), 'Lili voit ses réglages, son brief et son assistant');
 insert into public.devis (espace_id, objet, statut) values ('10000000-0000-4000-a000-00000000000a', 'Forfait 2027', 'envoye');
 select essais.verifier((select numero from public.devis where objet = 'Forfait 2027') like 'D' || to_char(current_date, 'YYYY') || '-___', 'le devis envoyé prend un numéro D<année>-<n°>');
+insert into public.devis (espace_id, objet, statut) values ('10000000-0000-4000-a000-00000000000a', 'Brouillon A', 'brouillon'), ('10000000-0000-4000-a000-00000000000b', 'Devis B', 'envoye');
+insert into public.mails_programmes (personne_id, envoyer_le, contenu) values ('00000000-0000-4000-a000-000000000001', now() + interval '1 day', '{"objet": "Envoi de demain"}');
+select essais.verifier(exists (select 1 from public.mails_programmes where contenu ->> 'objet' = 'Envoi de demain'), 'Lili programme un envoi');
 select essais.doit_echouer('select refresh_token from public.comptes_mail', 'le navigateur de Lili lit le jeton Gmail');
 select essais.doit_echouer('select jeton_acces from public.comptes_mail', 'le navigateur de Lili lit le jeton d''accès Gmail');
 reset role;
+-- La signature d'un devis n'est écrite que par la fonction serveur (rôle service)
+insert into public.devis_signatures (devis_id, personne_id, nom_signataire, signature, empreinte)
+  select id, '00000000-0000-4000-a000-0000000000a1', 'A1 Essai', 'data:image/png;base64,AAAA', 'empreinte' from public.devis where objet = 'Forfait 2027';
+-- Le devis envoyé à A (geste de Lili) prévient les deux personnes du client A, et pas B
+select essais.verifier((select count(distinct n.personne_id) from public.notifications n join public.journal j on j.id = n.journal_id
+  where j.action = 'devis.envoye' and j.espace_id = '10000000-0000-4000-a000-00000000000a') = 2, 'le devis envoyé prévient les 2 personnes du client A');
 -- L'envoi pour validation (geste de Lili, partagé) prévient les deux personnes du client A, et personne d'autre
 select essais.verifier((select count(distinct personne_id) from public.notifications n join public.journal j on j.id = n.journal_id
   where j.objet_id = '20000000-0000-4000-a000-000000000001' and j.details ->> 'vers' = 'a-valider') = 2, 'l''envoi pour validation prévient les 2 personnes du client A');
 select essais.verifier(not exists (select 1 from public.notifications n join public.journal j on j.id = n.journal_id where j.visibilite = 'interne'), 'aucune notification pour une activité interne');
-select essais.verifier(not exists (select 1 from public.notifications where personne_id = '00000000-0000-4000-a000-0000000000b1'), 'le client B n''est prévenu de rien chez A');
+select essais.verifier(not exists (select 1 from public.notifications n join public.journal j on j.id = n.journal_id where n.personne_id = '00000000-0000-4000-a000-0000000000b1' and j.espace_id = '10000000-0000-4000-a000-00000000000a'), 'le client B n''est prévenu de rien chez A');
 
 -- ---------- Client A ----------
 select essais.devenir('00000000-0000-4000-a000-0000000000a1', 'aal1');
@@ -143,7 +152,13 @@ select essais.verifier((select count(*) from public.comptes_mail) = 0, 'A ne voi
 select essais.verifier((select count(*) from public.reglages) = 0, 'A ne voit pas les réglages de Lili (SIRET, IBAN…)');
 select essais.verifier((select count(*) from public.briefs_jour) = 0, 'A ne voit pas le brief du jour de Lili');
 select essais.verifier((select count(*) from public.assistant_journal) = 0, 'A ne voit pas ce que Lili demande à son assistant');
-select essais.verifier((select count(*) from public.devis) = 0, 'A ne voit pas les devis');
+select essais.verifier((select count(*) from public.devis) = 1 and exists (select 1 from public.devis where objet = 'Forfait 2027'), 'A ne voit que le devis envoyé de son espace (ni brouillon, ni celui de B)');
+select essais.verifier((select count(*) from public.devis_signatures) = 1, 'A voit la signature de son devis');
+select essais.verifier((select count(*) from public.mails_programmes) = 0, 'A ne voit pas les envois programmés de Lili');
+select essais.doit_echouer('select 1 from public.devis_codes', 'A lit les codes de signature');
+select essais.doit_echouer($$insert into public.devis_signatures (devis_id, nom_signataire, signature, empreinte) select id, 'faux', 'x', 'x' from public.devis where objet = 'Forfait 2027'$$, 'A écrit une signature sans passer par la fonction');
+update public.devis set statut = 'accepte', total_ttc = 1 where objet = 'Forfait 2027';   -- sans effet : aucune ligne modifiable
+select essais.verifier((select statut from public.devis where objet = 'Forfait 2027') = 'envoye', 'A ne modifie pas son devis');
 select essais.verifier(not exists (select 1 from public.messages where contenu = 'Message B'), 'A ne lit pas les messages de B');
 select essais.doit_echouer($$insert into public.reglages (cle, valeur) values ('pirate', '{}')$$, 'A écrit dans les réglages de Lili');
 select essais.doit_echouer($$update public.notifications set personne_id = '00000000-0000-4000-a000-0000000000b1'$$, 'A détourne une notification');
@@ -184,6 +199,7 @@ select essais.verifier((select count(*) from public.publications where espace_id
 select essais.verifier((select count(*) from public.commentaires) = 0, 'B ne voit aucun commentaire de A');
 select essais.verifier((select count(*) from public.medias where espace_id = '10000000-0000-4000-a000-00000000000a') = 0, 'B ne voit aucun média de A');
 select essais.verifier((select count(*) from public.messages where espace_id = '10000000-0000-4000-a000-00000000000a') = 0 and (select count(*) from public.messages) = 1, 'B ne voit pas les messages de A, seulement les siens');
+select essais.verifier((select count(*) from public.devis) = 1 and exists (select 1 from public.devis where objet = 'Devis B') and (select count(*) from public.devis_signatures) = 0, 'B ne voit que son devis, et aucune signature de A');
 select essais.verifier((select count(*) from public.journal where espace_id = '10000000-0000-4000-a000-00000000000a') = 0, 'B ne voit pas le journal de A');
 select essais.verifier((select count(*) from public.personnes where email like 'a_@essai.invalid') = 0, 'B ne voit pas les personnes de A');
 select essais.verifier((select count(*) from storage.objects where name like '10000000-0000-4000-a000-00000000000a/%') = 0, 'B ne lit aucun fichier de A');

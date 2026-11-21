@@ -4,7 +4,8 @@
 
 const env = (k: string) => Deno.env.get(k) ?? "";
 export const urlRetour = () => `${env("SUPABASE_URL")}/functions/v1/connexion-google`;
-const SCOPES = "openid email https://www.googleapis.com/auth/gmail.modify";
+// gmail.settings.basic : la réponse automatique de vacances, réglée depuis le studio
+const SCOPES = "openid email https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.settings.basic";
 export type CompteMail = { id: string; personne_id: string; email: string; refresh_token: string | null; jeton_acces: string | null; jeton_expire_le: string | null; droits: string | null };
 
 const b64 = (o: Uint8Array) => btoa(String.fromCharCode(...o)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");

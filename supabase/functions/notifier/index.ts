@@ -48,6 +48,8 @@ function phrase(j: any, acteur: string, titre: string, pourClient: boolean) {
     case "message.envoye": return `${pourClient ? acteur : acteur} vous a écrit${j.details?.extrait ? " : " + j.details.extrait : ""}`;
     case "media.depose": return `${acteur} a déposé ${j.details?.nom ? "« " + j.details.nom + " »" : "un fichier"}`;
     case "publication.idee": return `${acteur} propose une idée : ${titre || ""}`;
+    case "devis.envoye": return `Un devis vous attend${j.details?.objet ? " : " + j.details.objet : ""}, à signer en ligne`;
+    case "devis.signe": return `${acteur} a signé le devis ${j.details?.numero || ""}${j.details?.objet ? " (" + j.details.objet + ")" : ""}`;
     default: return `${acteur} : nouveauté dans l'espace`;
   }
 }
@@ -106,6 +108,11 @@ Deno.serve(async (req) => {
   let envoyeur: any = null;
   if (boite) { try { envoyeur = gmail(boite, await jetonAcces(db, boite)); } catch (e) { console.error("notifier : Gmail", (e as Error).message); } }
 
+  // Vacances de Lili : rien ne lui est poussé ni écrit pendant ses dates ; tout l'attend dans la cloche du studio
+  const { data: vac } = await db.from("reglages").select("valeur").eq("cle", "vacances").maybeSingle();
+  const auj = new Intl.DateTimeFormat("fr-CA", { timeZone: "Europe/Paris" }).format(new Date());
+  const enPause = !!(vac?.valeur?.actif && vac.valeur.pause && vac.valeur.debut <= auj && auj <= vac.valeur.fin);
+
   const parPersonne = new Map<string, any[]>();
   for (const n of file) { const l = parPersonne.get(n.personne_id) ?? []; l.push(n); parPersonne.set(n.personne_id, l); }
   const bilan = { push: 0, mails: 0, personnes: parPersonne.size };
@@ -114,11 +121,12 @@ Deno.serve(async (req) => {
   for (const [pid, ns] of parPersonne) {
     const dest = P.get(pid) as any; if (!dest) continue;
     const pourClient = dest.role !== "proprietaire";
+    if (!pourClient && enPause) { await db.from("notifications").update({ push_le: maintenant, mail_le: maintenant }).in("id", ns.map((n: any) => n.id)); continue; }
     const lignes = ns.map((n: any) => {
       const j: any = J.get(n.journal_id); if (!j) return null;
       const acteur = ((P.get(j.acteur_id) as any)?.nom || "Quelqu'un").split(" ")[0];
       const titre = (T.get(j.objet_id) as string) || j.details?.titre || "";
-      const lien = j.objet_type === "publication" ? `${SITE}#p/${j.objet_id}` : SITE;
+      const lien = j.objet_type === "publication" ? `${SITE}#p/${j.objet_id}` : j.objet_type === "devis" ? `${SITE}#devis` : SITE;
       return { n, j, texte: phrase(j, pourClient ? (acteur === "Lili" ? "Lili" : acteur) : acteur, titre, pourClient), lien };
     }).filter(Boolean) as any[];
 

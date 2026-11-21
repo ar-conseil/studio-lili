@@ -199,6 +199,9 @@ window.DEMO_DONNEES = function () {
   ];
   var devis = [{ id: "dv1", prospect_id: "pr1", espace_id: null, numero: "D" + auj.getFullYear() + "-004", objet: "Accompagnement réseaux sociaux", lignes: [{ libelle: "Gestion des réseaux sociaux (mensuel)", quantite: 1, prix_ht: 450, tva: 20 }],
     total_ht: 450, total_tva: 90, total_ttc: 540, statut: "envoye", date_devis: jourIso(-5), valable_jusque: jourIso(25), cree_le: jour(-5) }];
+  devis.push({ id: "dv2", prospect_id: null, espace_id: E.ondine, numero: "D" + auj.getFullYear() + "-005", objet: "Shooting et reels de la fête des mères", lignes: [
+    { libelle: "Shooting photo en boutique (demi-journée)", quantite: 1, prix_ht: 350, tva: 20 }, { libelle: "Montage de 4 reels", quantite: 4, prix_ht: 60, tva: 20 }],
+    total_ht: 590, total_tva: 118, total_ttc: 708, statut: "envoye", date_devis: jourIso(-1), valable_jusque: jourIso(29), cree_le: jour(-1) });
   var reglages = [{ cle: "entreprise", valeur: { nom: "Lili Rouzier", activite: "Community manager", adresse: "Adresse de démonstration", siret: "000 000 000 00000 (démonstration)", conditions: "Paiement à 30 jours par virement." } }];
 
   return { lili: LILI, personnesDemo: P, espaces: espaces, espaces_prive: prives, comptes: comptes, personnes: personnes, membres: membres,

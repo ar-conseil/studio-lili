@@ -399,14 +399,19 @@
         if (f.statut === "brouillon") actions.push(el("button", { type: "button", class: "btn-texte", text: "Modifier", onclick: function () { editerPiece(table, f); } }));
         if (fact && f.statut === "brouillon") actions.push(el("button", { type: "button", class: "btn-texte", text: "Émettre", onclick: function () { emettre(f); } }));
         if (fact && f.statut === "emise") actions.push(el("button", { type: "button", class: "btn-texte", text: "Payée", onclick: function () { St.maj("factures", f.id, { statut: "payee", payee_le: St.iso(new Date()) }).then(function () { St.dessiner(false); }); } }));
-        if (!fact && f.statut === "brouillon") actions.push(el("button", { type: "button", class: "btn-texte", text: "Marquer envoyé", onclick: function () { St.maj("devis", f.id, { statut: "envoye", date_devis: f.date_devis || St.iso(new Date()) }).then(function () { St.dessiner(false); }); } }));
+        if (!fact && f.statut === "brouillon") actions.push(el("button", { type: "button", class: "btn-texte", text: f.espace_id ? "Envoyer à signer" : "Marquer envoyé", onclick: function () {
+          var go = function () { St.maj("devis", f.id, { statut: "envoye", date_devis: f.date_devis || St.iso(new Date()) }).then(function () { St.signaler(f.espace_id ? "Devis envoyé : le client le signe dans son espace" : "Devis marqué envoyé"); St.dessiner(false); }); };
+          if (!f.espace_id) return go();
+          confirmer("Envoyer ce devis au client ?", "Il le voit dans son espace (rubrique Devis), est prévenu, et peut le signer en ligne. Le devis ne se modifie plus ensuite.", "Envoyer", go);
+        } }));
         if (!fact && f.statut === "envoye") { actions.push(el("button", { type: "button", class: "btn-texte", text: "Accepté", onclick: function () { St.maj("devis", f.id, { statut: "accepte" }).then(function () { St.dessiner(false); }); } })); actions.push(el("button", { type: "button", class: "btn-texte", text: "Refusé", onclick: function () { St.maj("devis", f.id, { statut: "refuse" }).then(function () { St.dessiner(false); }); } })); }
         actions.push(f.pdf_path ? el("button", { type: "button", class: "btn-texte", onclick: function () { ouvrirPdf(f.pdf_path); } }, [St.icone("imprimer"), "PDF"])
           : el("button", { type: "button", class: "btn-texte", onclick: function () { imprimerPiece(table, f); } }, [St.icone("imprimer"), "PDF"]));
-        var d = fact ? f.date_facture : f.date_devis;
+        var d = fact ? f.date_facture : f.date_devis, sg = !fact && S.signaturesDevis.filter(function (x) { return x.devis_id === f.id; })[0];
         return el("tr", {}, [el("td", { class: "mono", text: f.numero ? String(f.numero) : "—" }), el("td", { text: [f.objet, f.periode].filter(Boolean).join(" · ") || "Sans objet" }),
           el("td", { class: "mono", text: d ? St.fmt(d + "T12:00:00", { day: "numeric", month: "short", year: "numeric" }) : "—" }), el("td", { class: "n", text: euros(f.total_ttc) }),
-          el("td", {}, [el("span", { class: "etat-piece e-" + f.statut, text: STATUTS_FACT[f.statut] || f.statut })]), el("td", { class: "actions-ligne" }, actions)]);
+          el("td", {}, [el("span", { class: "etat-piece e-" + f.statut, text: sg ? "Signé" : STATUTS_FACT[f.statut] || f.statut }),
+            sg ? el("small", { class: "aide", text: " " + St.fmt(sg.signe_le, { day: "numeric", month: "short" }) + " par " + sg.nom_signataire }) : null]), el("td", { class: "actions-ligne" }, actions)]);
       }))
     ])]);
   }
@@ -432,7 +437,8 @@
     var objet = texte(f.objet, { aide: fact ? "Community management" : "Proposition d'accompagnement" });
     var mois = St.fmt(new Date(), { month: "long", year: "numeric" });
     var periode = texte(f.periode || (fact ? mois.charAt(0).toUpperCase() + mois.slice(1) : ""), { aide: "Novembre 2026" });
-    var valable = el("input", { type: "date", value: f.valable_jusque || St.iso(St.ajouterJours(new Date(), 30)), "aria-label": "Valable jusqu'au" });
+    var jours = +(((S.reglages.filter(function (x) { return x.cle === "devis"; })[0] || {}).valeur || {}).validite) || 30;
+    var valable = el("input", { type: "date", value: f.valable_jusque || St.iso(St.ajouterJours(new Date(), jours)), "aria-label": "Valable jusqu'au" });
     var zone = el("div", { class: "lignes-piece" }), tot = el("div", { class: "totaux-piece" });
     var majTotaux = function () { var t = totaux(lignes); tot.textContent = ""; [["Total HT", t.total_ht], ["TVA", t.total_tva], ["Total TTC", t.total_ttc]].forEach(function (x) { tot.appendChild(el("span", { text: x[0] })); tot.appendChild(el("b", { class: "mono", text: euros(x[1]) })); }); };
     var rendre = function () {
@@ -463,11 +469,12 @@
         } }].filter(Boolean) });
   }
   function imprimerPiece(table, f) {
+    var sg = table === "devis" && S.signaturesDevis.filter(function (x) { return x.devis_id === f.id; })[0];
     var fact = table === "factures", ent = entreprise(), e = f.espace_id && St.espace(f.espace_id), pr = e ? St.prive(e.id) : {}, pp = f.prospect_id && S.prospects.filter(function (p) { return p.id === f.prospect_id; })[0];
     var dest = e ? { nom: pr.raison_sociale || e.nom, adresse: pr.adresse, siret: pr.siret, email: pr.email_facturation } : pp ? { nom: pp.nom, adresse: "", email: pp.email } : {};
     var brouillon = f.statut === "brouillon", titre = (fact ? "Facture" : "Devis") + (f.numero ? " n° " + f.numero : brouillon ? " (brouillon)" : "");
     var d = fact ? f.date_facture : f.date_devis, ligne = function (t) { return t ? echapper(t).replace(/\n/g, "<br>") + "<br>" : ""; };
-    if (!ent.nom) St.signaler("Pensez à remplir l'identité de l'entreprise dans Réglages", true);
+    if (!ent.nom && St.estLili()) St.signaler("Pensez à remplir l'identité de l'entreprise dans Réglages", true);
     imprimer(titre + " · " + (dest.nom || ""),
       (brouillon ? '<div class="brouillon">BROUILLON</div>' : "") +
       '<div class="deux"><div><h1>' + echapper(ent.nom || MARQUE.proprietaire || "") + '</h1><div class="filet"></div><p class="petit">' + ligne(ent.activite) + ligne(ent.adresse) +
@@ -481,7 +488,12 @@
       (f.lignes || []).map(function (l) { return '<tr><td>' + echapper(l.libelle) + '</td><td class="n">' + String(l.quantite).replace(".", ",") + '</td><td class="n">' + euros(l.prix_ht) + '</td><td class="n">' + String(l.tva).replace(".", ",") + ' %</td><td class="n">' + euros((+l.quantite || 0) * (+l.prix_ht || 0)) + '</td></tr>'; }).join("") +
       '</tbody></table><table class="totaux"><tr><td>Total HT</td><td class="n">' + euros(f.total_ht) + '</td></tr><tr><td>TVA</td><td class="n">' + euros(f.total_tva) + '</td></tr><tr><td>Total TTC</td><td class="n">' + euros(f.total_ttc) + '</td></tr></table>' +
       '<p class="petit" style="margin-top:28px">' + ligne(ent.conditions || "Paiement à 30 jours par virement.") + (ent.iban_affiche ? "IBAN : " + echapper(ent.iban_affiche) + "<br>" : "") +
-      (fact ? "Pénalités de retard : trois fois le taux d'intérêt légal. Indemnité forfaitaire pour frais de recouvrement : 40 €. Pas d'escompte pour paiement anticipé." : "Bon pour accord : date et signature du client.") + '</p>');
+      (fact ? "Pénalités de retard : trois fois le taux d'intérêt légal. Indemnité forfaitaire pour frais de recouvrement : 40 €. Pas d'escompte pour paiement anticipé." : (sg ? "" : "Bon pour accord : date et signature du client.")) + '</p>' +
+      (sg ? '<div style="margin-top:18px;border:1px solid #E7E0D5;border-radius:12px;padding:14px 16px;max-width:420px"><p class="petit" style="margin:0 0 6px"><b>Bon pour accord</b>, signé électroniquement par ' + echapper(sg.nom_signataire) +
+        ' le ' + St.fmt(sg.signe_le, { day: "numeric", month: "long", year: "numeric" }) + ' à ' + St.hm(sg.signe_le) + '</p><img src="' + sg.signature + '" alt="Signature" style="max-width:260px;max-height:110px;display:block">' +
+        '<p class="petit" style="margin:8px 0 0;font-size:10.5px;color:#8B8178;word-break:break-all">Signature électronique' +
+        (sg.email_verifie ? ' avec code à usage unique envoyé à ' + echapper(sg.email_verifie) + (sg.code_verifie_le ? ' et saisi le ' + St.fmt(sg.code_verifie_le, { day: "numeric", month: "long", year: "numeric" }) + ' à ' + St.hm(sg.code_verifie_le) : '') : ' simple') +
+        (sg.ip ? ', adresse IP ' + echapper(sg.ip) : '') + '. Empreinte SHA-256 du devis signé : ' + echapper(sg.empreinte) + '</p></div>' : ''));
   }
 
   // ======================================================================
@@ -531,6 +543,8 @@
           .then(function () { fermer(); St.signaler("Fiche enregistrée"); St.dessiner(false); }, function (x) { St.signaler("Non enregistré : " + x.message, true); });
       } }] });
   };
+
+  St.aides = { champ: champ, texte: texte, choix: choix, confirmer: confirmer, imprimer: imprimer, echapper: echapper, euros: euros, entreprise: entreprise, totaux: totaux, imprimerPiece: function (t, f) { imprimerPiece(t, f); } };
 
   // Résumés des tuiles de la page client
   St.resumes = {
@@ -633,33 +647,6 @@
       });
     });
   }
-
-  // ======================================================================
-  // Réglages : l'identité de l'entreprise (en-tête des factures et devis)
-  // ======================================================================
-  V.reglages = function () {
-    var ent = entreprise(), champs = [["nom", "Nom commercial", "Lili Rouzier"], ["activite", "Activité", "Community manager"], ["adresse", "Adresse", "", 2], ["siret", "SIRET", ""],
-      ["tva_intra", "TVA intracommunautaire", "FR…"], ["email", "E-mail de facturation", ""], ["telephone", "Téléphone", ""], ["iban_affiche", "IBAN affiché sur les factures", "FR76 …"],
-      ["conditions", "Conditions de paiement", "Paiement à 30 jours par virement.", 2]];
-    var saisies = {};
-    var form = el("form", { class: "bloc formulaire", onsubmit: function (ev) {
-      ev.preventDefault(); var v = {}; Object.keys(saisies).forEach(function (k) { v[k] = saisies[k].value.trim(); });
-      St.enregistrer("reglages", { cle: "entreprise", valeur: v, modifie_le: maintenant() }).then(function () { St.signaler("Réglages enregistrés"); });
-    } }, champs.map(function (c) { saisies[c[0]] = texte(ent[c[0]], { lignes: c[3], aide: c[2] }); return champ(c[1], saisies[c[0]]); })
-      .concat([el("div", {}, [el("button", { type: "submit", class: "btn-plein", text: "Enregistrer" })])]));
-    return el("div", { class: "rubrique-etroite" }, [St.entete(null, "Réglages", "L'en-tête de vos factures et devis. TVA à 20 % par défaut sur chaque ligne."),
-      el("h2", { class: "titre-section", text: "Votre entreprise" }), form,
-      el("h2", { class: "titre-section", text: "Assistant" }),
-      el("div", { class: "bloc" }, [el("p", { text: (MARQUE.assistant || "L'assistant") + " lit vos briefs, vos publications et vos rapports, et crée des brouillons (statut Idée, invisibles des clients). Il ne valide, ne programme et n'envoie jamais rien : c'est toujours vous qui cliquez." }),
-        el("p", { class: "aide", text: "Ouvrez-le avec la touche / ou le bouton de la barre latérale. Le brief du jour est préparé chaque matin à 6 h." })]),
-      el("h2", { class: "titre-section", text: "Guide pour vos clients" }),
-      el("div", { class: "bloc" }, [el("p", { text: "« Comment valider vos publications » : la page à joindre à une invitation. L'invitation envoyée depuis Gmail la contient déjà." }),
-        el("div", { class: "actions-ligne", style: { "justify-content": "flex-start" } }, [
-          el("a", { class: "btn-texte", href: "guide.html", target: "_blank", rel: "noopener", text: "Ouvrir le guide" }),
-          el("button", { type: "button", class: "btn-texte", text: "Copier le lien", onclick: function () {
-            navigator.clipboard.writeText(new URL("guide.html", location.href).href).then(function () { St.signaler("Lien du guide copié"); });
-          } })])])]);
-  };
 
   // ======================================================================
   // L'assistant : une conversation (touche /), dictée possible au micro

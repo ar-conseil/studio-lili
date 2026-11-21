@@ -41,6 +41,19 @@ export function mime(o: { nom: string; de: string; a: string[]; cc: string[]; cc
       `Content-Disposition: attachment; filename="${enteteUtf8(p.nom)}"`, "Content-Transfer-Encoding: base64", "", lignes76(b64(p.octets))]),
     `--${mix}--`, ""].join("\r\n");
 }
+// HTML écrit par Lili dans l'éditeur du studio : on ne garde que la mise en forme (ni script, ni style actif, ni attribut on…)
+export function nettoyerHtml(h: string) {
+  return String(h ?? "")
+    .replace(/<\s*(script|style|iframe|object|embed|form|input|button|textarea|select|meta|link|base)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, "")
+    .replace(/<\s*(script|style|iframe|object|embed|form|input|button|textarea|select|meta|link|base)[^>]*\/?>/gi, "")
+    .replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+    .replace(/(href|src)\s*=\s*(["']?)\s*(javascript|vbscript|data:text\/html)[^"'\s>]*\2/gi, '$1="#"')
+    .slice(0, 400000);
+}
+export const htmlEnTexte = (h: string) => String(h ?? "").replace(/<br\s*\/?>/gi, "\n").replace(/<\/(p|div|li|h[1-6]|blockquote)>/gi, "\n")
+  .replace(/<li[^>]*>/gi, "- ").replace(/<a [^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, "$2 ($1)").replace(/<[^>]+>/g, "")
+  .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\n{3,}/g, "\n\n").trim();
+
 export function citer(o: { de: string; date: string; texte: string; html: string; objet: string; a: string }, mode: string) {
   const quand = o.date ? new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", dateStyle: "full", timeStyle: "short" }).format(new Date(o.date)) : "";
   if (mode === "transferer") {
@@ -124,6 +137,57 @@ export function gmail(c: CompteMail, jeton: string) {
       return quoi === "lu" ? mod([], ["UNREAD"]) : quoi === "non_lu" ? mod(["UNREAD"], []) : quoi === "suivi" ? mod(["STARRED"], [])
         : quoi === "non_suivi" ? mod([], ["STARRED"]) : mod([], ["INBOX"]);
     },
+    // Conversations (fils), comme Gmail : une ligne par fil, avec ses participants et son nombre de messages
+    async fils(dossier: string, q: string, suite: string, n = 40) {
+      const etiquette = dossier || "INBOX";
+      const l = await g(`/threads?maxResults=${n}${q ? `&q=${encodeURIComponent(q)}` : ""}${q && !dossier ? "" : `&labelIds=${encodeURIComponent(etiquette)}`}${suite ? `&pageToken=${encodeURIComponent(suite)}` : ""}`);
+      const ids = (l.threads ?? []).map((t: any) => t.id) as string[];
+      const fils: any[] = [];
+      for (let i = 0; i < ids.length; i += 10) fils.push(...await Promise.all(ids.slice(i, i + 10).map(async (id) => {
+        const t = await g(`/threads/${id}?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Subject`);
+        const ms = t.messages ?? [], dernier = ms[ms.length - 1] ?? {};
+        const h = (m: any, k: string) => (m.payload?.headers ?? []).find((x: any) => x.name.toLowerCase() === k)?.value ?? "";
+        const labels = new Set<string>(ms.flatMap((m: any) => m.labelIds ?? []));
+        const de = [...new Set(ms.map((m: any) => h(m, "from")))];
+        return { id, nb: ms.length, de, a: h(dernier, "to"), objet: h(ms[0] ?? {}, "subject") || h(dernier, "subject"), date: new Date(+(dernier.internalDate ?? 0)).toISOString(),
+          extrait: entites(dernier.snippet ?? t.snippet ?? ""), lu: !ms.some((m: any) => (m.labelIds ?? []).includes("UNREAD")), suivi: labels.has("STARRED"),
+          important: labels.has("IMPORTANT"), libelles: [...labels].filter((x) => /^Label_/.test(x)), brouillon: labels.has("DRAFT"),
+          pieces: ms.some((m: any) => /mixed/.test(m.payload?.mimeType ?? "")), dernier: dernier.id };
+      })));
+      return { fils, suite: l.nextPageToken ?? null, estimation: l.resultSizeEstimate ?? null };
+    },
+    async lireFil(id: string) {
+      const t = await g(`/threads/${id}?format=full`);
+      const messages = [];
+      for (const d of t.messages ?? []) {
+        const h = (k: string) => (d.payload?.headers ?? []).find((x: any) => x.name.toLowerCase() === k)?.value ?? "";
+        const p = parties(d.payload, { texte: "", html: "", pieces: [] });
+        const images: Record<string, string> = {};
+        for (const x of p.pieces.filter((x: any) => x.cid && x.taille < IMAGE_MAX && /^image\//.test(x.type))) {
+          const data = x.donnees ?? (await g(`/messages/${d.id}/attachments/${x.piece}`).catch(() => ({}))).data;
+          if (data) images[x.cid] = `data:${x.type};base64,${data.replace(/-/g, "+").replace(/_/g, "/")}`;
+        }
+        const lab: string[] = d.labelIds ?? [];
+        messages.push({ id: d.id, de: h("from"), a: h("to"), cc: h("cc"), date: new Date(+d.internalDate).toISOString(), objet: h("subject"), texte: p.texte, html: p.html,
+          extrait: entites(d.snippet ?? ""), lu: !lab.includes("UNREAD"), brouillon: lab.includes("DRAFT"), suivi: lab.includes("STARRED"), images,
+          pieces: p.pieces.filter((x: any) => !(x.cid && images[x.cid] && p.html.includes("cid:" + x.cid))).map((x: any) => ({ id: x.id, nom: x.nom, type: x.type, taille: x.taille })) });
+      }
+      if (messages.some((m) => !m.lu)) await g(`/threads/${id}/modify`, { method: "POST", body: JSON.stringify({ removeLabelIds: ["UNREAD"] }) }).catch(() => null);
+      return { id, messages, lien: `https://mail.google.com/mail/u/${encodeURIComponent(c.email)}/#all/${id}` };
+    },
+    async rangerFil(id: string, quoi: string) {
+      const mod = (ajout: string[], retrait: string[]) => g(`/threads/${id}/modify`, { method: "POST", body: JSON.stringify({ addLabelIds: ajout, removeLabelIds: retrait }) });
+      if (quoi === "corbeille") return g(`/threads/${id}/trash`, { method: "POST" });
+      if (quoi === "reception") { await g(`/threads/${id}/untrash`, { method: "POST" }).catch(() => null); return mod(["INBOX"], ["SPAM"]); }
+      if (quoi === "indesirable") return mod(["SPAM"], ["INBOX"]);
+      return quoi === "lu" ? mod([], ["UNREAD"]) : quoi === "non_lu" ? mod(["UNREAD"], []) : quoi === "suivi" ? mod(["STARRED"], [])
+        : quoi === "non_suivi" ? mod([], ["STARRED"]) : quoi === "important" ? mod(["IMPORTANT"], []) : quoi === "non_important" ? mod([], ["IMPORTANT"]) : mod([], ["INBOX"]);
+    },
+    libellerFil: (id: string, ajout: string[], retrait: string[]) => g(`/threads/${id}/modify`, { method: "POST", body: JSON.stringify({ addLabelIds: ajout, removeLabelIds: retrait }) }),
+    creerLibelle: (nom: string) => g("/labels", { method: "POST", body: JSON.stringify({ name: nom, labelListVisibility: "labelShow", messageListVisibility: "show" }) }),
+    // Réponse automatique de vacances (réglage Gmail : droit gmail.settings.basic)
+    lireVacances: () => g("/settings/vacation"),
+    ecrireVacances: (v: any) => g("/settings/vacation", { method: "PUT", body: JSON.stringify(v) }),
     async origine(id: string) {
       const { d, h, p } = await lireBrut(id);
       const pieces: PieceJointe[] = [];

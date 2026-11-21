@@ -113,14 +113,21 @@ en PDF.
 
 ## 8. Temps et factures
 
-1. **Une fois pour toutes** : page **Réglages** (en bas à gauche), l'identité de ton entreprise (nom, adresse, SIRET,
-   e-mail, IBAN, conditions de paiement). C'est l'en-tête de tes factures et devis.
+1. **Une fois pour toutes** : **Réglages** (en bas à gauche) > Entreprise : la fiche de ton entreprise (nom,
+   adresse, SIRET, TVA, IBAN, conditions de paiement), avec sa jauge de complétude. C'est l'en-tête de tes factures
+   et devis. Les autres onglets : Signatures de mail, Réponses types, Mails et vacances, Devis et signature
+   (validité par défaut), Assistant IA (consommation du mois), Sécurité (code, mot de passe, appareils),
+   Apparence (clair, sombre ou comme l'appareil).
 2. **Temps** : dans la rubrique du client, date, durée (« 1h30 », « 45 ») et ce que tu as fait. La jauge compare au
    forfait d'heures du mois (réglé dans la Fiche).
 3. **Facture** : « Nouvelle facture » propose ton forfait du mois, TVA 20 %. Elle reste un **brouillon** modifiable.
    **Émettre** lui donne le numéro suivant (la suite de Notion : 92, 93…) et la fige. **PDF** l'ouvre prête à
    enregistrer ; tu l'envoies toi-même. « Payée » quand le virement arrive.
-4. **Devis** : même chose ; « Marquer envoyé » lui donne son numéro (D2026-001…), puis Accepté ou Refusé.
+4. **Devis** : même chose. Pour un client, « Envoyer à signer » lui donne son numéro (D2026-001…) : le client le
+   voit dans son espace (rubrique Devis), coche « Bon pour accord », trace sa signature, puis saisit le code à 6
+   chiffres reçu par e-mail (comme dans Evoalys) : c'est signé. Tu es
+   prévenue, la ligne affiche « Signé le … par … » et le PDF porte la signature et la preuve (adresse vérifiée par le
+   code, date, adresse IP, empreinte du devis). Pour un prospect sans espace, « Marquer envoyé », puis Accepté ou Refusé.
 
 Tes anciennes factures importées de Notion gardent leur PDF d'origine.
 
@@ -131,16 +138,42 @@ Tes anciennes factures importées de Notion gardent leur PDF d'origine.
 - **Prospects** : du premier contact à la signature, avec la prochaine action et sa date. « Préparer un devis » et
   « Signé : créer son espace » sont dans la fiche du prospect.
 
-## 10. Mails et notifications
+## 10. Mails, vacances et notifications
 
-- **Mails** (touche **E**) : ta boîte Gmail dans le studio. La première fois, « Relier ma boîte Gmail » et accepte
-  l'accès demandé par Google. Les images des mails sont bloquées jusqu'à ton clic. Une fois la boîte reliée, les
-  e-mails aux clients (invitations, publication à valider, nouveau message) partent depuis ton adresse, regroupés,
-  et **seulement après un geste de ta part** : rien d'interne ne part jamais. Les e-mails « mot de passe oublié » et
-  « lien de connexion », demandés par la personne elle-même, partent aussi de ta boîte.
-- **Notifications** (la cloche) : ce que tes clients ont fait. « Recevoir les notifications sur cet appareil » les
-  active sur l'ordinateur ou le téléphone ; sur iPhone, il faut d'abord avoir installé l'application sur l'écran
-  d'accueil.
+**Mails** (touche **E**) : ta boîte Gmail, en mieux rangée.
+
+- **Conversations** : chaque échange est regroupé ; les anciens messages se replient, le dernier est ouvert.
+- **Dossiers** : Réception, Suivis (étoile), Programmés, Envoyés, Brouillons, Tous les messages, Indésirables,
+  Corbeille, tes libellés Gmail, et **un raccourci par client** (tous les mails échangés avec ses membres).
+- **La fiche du client** apparaît en haut d'un mail qui vient de lui : ce qui attend sa validation, la prochaine
+  publication, un clic pour ouvrir son espace.
+- **Recherche** (touche **/**) comme dans Gmail (`de:inès`, `has:attachment`, `after:2026/11/01`…) et filtres
+  Non lus, Pièces jointes, Clients.
+- **Sélection multiple** : coche plusieurs conversations puis Archiver, Corbeille, Lu ou Non lu, Suivre, Libellé.
+- **Écrire** (touche **C** ou « Nouveau message ») : texte mis en forme (gras, listes, liens, citation), ta
+  **signature** ajoutée toute seule, tes **réponses types** en un clic, pièces jointes glissées dans la fenêtre,
+  destinataires proposés parmi tes clients. Le brouillon s'enregistre tout seul dans Gmail.
+- **Annuler un envoi** : après « Envoyer », tu as quelques secondes pour cliquer « Annuler ».
+- **Programmer l'envoi** : l'horloge à côté d'Envoyer (cet après-midi, demain 8 h, lundi 8 h, ou une date). Le
+  message part tout seul, même ordinateur éteint ; tu le retrouves dans « Programmés » et peux l'annuler.
+- **Créer une tâche** depuis un mail (« Répondre : … », pour aujourd'hui).
+- Toutes les touches : **?** sur la page Mails (J/K pour descendre et monter, E archiver, R répondre, etc.).
+
+Les images des mails sont bloquées jusqu'à ton clic. Les e-mails aux clients (invitations, à valider, devis, nouveau
+message) partent de ton adresse, regroupés, et **seulement après un geste de ta part**. Les e-mails « mot de passe
+oublié » et « lien de connexion », demandés par la personne elle-même, partent aussi de ta boîte.
+
+**En vacances** (bouton sur la page Mails, ou Réglages > Mails et vacances) : choisis tes dates, puis
+
+- la **réponse automatique Gmail** répond une fois à chaque personne qui t'écrit ;
+- un **bandeau** s'affiche en haut de l'espace de tes clients (« Lili est en congés jusqu'au… ») ;
+- tes **notifications sont en pause** : tout t'attend dans la cloche au retour.
+
+Tout se coupe tout seul après la date ; « Je suis de retour » le fait plus tôt.
+
+**Notifications** (la cloche) : ce que tes clients ont fait. « Recevoir les notifications sur cet appareil » les
+active sur l'ordinateur ou le téléphone ; sur iPhone, il faut d'abord avoir installé l'application sur l'écran
+d'accueil.
 
 ## 11. L'assistant
 
@@ -165,7 +198,7 @@ jamais rien. Plus le brief d'un client est rempli, plus ses propositions lui res
 | C | Calendrier (T : aujourd'hui ; ← → : période) |
 | P | Publications |
 | M | Médiathèque |
-| E | Mails |
+| E | Mails (puis ? pour ses propres raccourcis) |
 | 1 à 9 | Les clients |
 | ← → | Rubrique précédente ou suivante d'un client |
 | Échap | Revenir |

@@ -8,7 +8,7 @@ window.Studio = (function () {
   var S = {
     moi: null, role: "proprietaire", espaces: [], prives: [], comptes: [], membres: [], personnes: [], medias: [], publications: [],
     pubMedias: [], commentaires: [], versions: [], operations: [], tempsForts: [], taches: [], journal: [], notes: [], notifications: [], boitesMail: [],
-    briefs: [], messages: [], rapports: [], veille: [], partenaires: [], temps: [], devis: [], factures: [], prospects: [], reglages: [], briefsJour: [],
+    briefs: [], messages: [], rapports: [], signaturesDevis: [], mailsNonLus: 0, veille: [], partenaires: [], temps: [], devis: [], factures: [], prospects: [], reglages: [], briefsJour: [],
     urls: {}, route: { nom: "", param: "", rubrique: "", query: {} }, voirCommeEspace: null
   };
   var X = { db: null, demo: false, quitter: null, verrouiller: null, coquille: null, page: null, demarre: false };
@@ -92,6 +92,21 @@ window.Studio = (function () {
     reglages: '<circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/>',
     micro: '<rect x="6" y="1.8" width="4" height="7.5" rx="2"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.2"/>',
     imprimer: '<path d="M4.5 6V2h7v4M4.5 11.5H3a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v3.5a1 1 0 0 1-1 1h-1.5"/><path d="M4.5 9.5h7V14h-7z"/>',
+    etoile: '<path d="M8 1.9l1.85 3.9 4.25.5-3.15 2.95.85 4.2L8 11.35 4.2 13.45l.85-4.2L1.9 6.3l4.25-.5z"/>',
+    trombone: '<path d="M10.5 4.5 5.3 9.7a1.4 1.4 0 0 0 2 2l5.4-5.4a2.8 2.8 0 0 0-4-4L3.3 7.7a4.2 4.2 0 0 0 6 6l4.2-4.2"/>',
+    archiver: '<rect x="2" y="2.5" width="12" height="3" rx="1"/><path d="M3 5.5v7a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-7M6.5 8.5h3"/>',
+    rafraichir: '<path d="M13.5 8A5.5 5.5 0 1 1 11.9 4.1M13.5 2.5v3.2h-3.2"/>',
+    etiquette: '<path d="M2.5 2.5h5.3l6 6-5.3 5.3-6-6z"/><circle cx="5.3" cy="5.3" r="1"/>',
+    horloge: '<circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.3 1.6"/>',
+    lu: '<path d="M2 6.5 8 2.5l6 4V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><path d="m2.5 7 5.5 3.6L13.5 7"/>',
+    soleil: '<circle cx="8" cy="8" r="2.8"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1"/>',
+    plume: '<path d="M13.5 2.5c-4 0-8 3.5-9 8.5l-1 2.5 2.5-1c5-1 8.5-5 8.5-9z"/><path d="M4.5 11.5 9 7"/>',
+    envoyer: '<path d="M14 2 7 9M14 2 9.5 14 7 9 2 6.5z"/>',
+    gras: '<path d="M4.5 2.5h4.2a2.6 2.6 0 0 1 0 5.2H4.5zM4.5 7.7h5a2.9 2.9 0 0 1 0 5.8h-5z"/>',
+    italique: '<path d="M7 2.5h5M4 13.5h5M10 2.5 6.5 13.5"/>',
+    souligne: '<path d="M4.5 2.5v5a3.5 3.5 0 0 0 7 0v-5M3.5 14h9"/>',
+    liste: '<path d="M6 4h7.5M6 8h7.5M6 12h7.5"/><circle cx="3" cy="4" r=".6"/><circle cx="3" cy="8" r=".6"/><circle cx="3" cy="12" r=".6"/>',
+    citation: '<path d="M3 10.5c0-3 1-5 3.5-6M9 10.5c0-3 1-5 3.5-6"/><circle cx="4.3" cy="11" r="1.4"/><circle cx="10.3" cy="11" r="1.4"/>',
     cloche: '<path d="M4 11.5V7a4 4 0 0 1 8 0v4.5l1 1.5H3zM6.5 14.5a1.6 1.6 0 0 0 3 0"/>'
   };
   function icone(nom, classe) { var s = el("span", { class: "ic " + (classe || ""), "aria-hidden": "true" }); s.innerHTML = '<svg viewBox="0 0 16 16">' + (ICONES[nom] || "") + "</svg>"; return s; }
@@ -145,10 +160,11 @@ window.Studio = (function () {
   var TABLES = [["espaces", "espaces"], ["comptes", "comptes"], ["membres", "membres"], ["personnes", "personnes"], ["medias", "medias"],
     ["publications", "publications"], ["publication_medias", "pubMedias"], ["commentaires", "commentaires"], ["versions", "versions"],
     ["operations", "operations"], ["temps_forts", "tempsForts"], ["journal", "journal"], ["notifications", "notifications"],
-    ["briefs", "briefs"], ["messages", "messages"], ["rapports", "rapports"], ["veille", "veille"], ["partenaires", "partenaires"]];
+    ["briefs", "briefs"], ["messages", "messages"], ["rapports", "rapports"], ["veille", "veille"], ["partenaires", "partenaires"],
+    ["devis", "devis"], ["devis_signatures", "signaturesDevis"]];
   var TABLES_LILI = [["espaces_prive", "prives"], ["taches", "taches"], ["notes_internes", "notes"],
     ["comptes_mail", "boitesMail", "id, email, droits, derniere_erreur, cree_le"],
-    ["temps", "temps"], ["devis", "devis"], ["factures", "factures"], ["prospects", "prospects"], ["reglages", "reglages"], ["briefs_jour", "briefsJour"]];
+    ["temps", "temps"], ["factures", "factures"], ["prospects", "prospects"], ["reglages", "reglages"], ["briefs_jour", "briefsJour"]];
   function charger() {
     if (X.demo) {
       if (!X.donneesDemo) {
@@ -158,6 +174,7 @@ window.Studio = (function () {
         S.medias = d.medias; S.publications = d.publications; S.pubMedias = d.publication_medias; S.commentaires = d.commentaires;
         S.versions = d.versions; S.operations = d.operations; S.tempsForts = d.temps_forts; S.taches = d.taches; S.journal = d.journal; S.notes = d.notes_internes;
         ["briefs", "messages", "rapports", "veille", "partenaires", "temps", "devis", "factures", "prospects", "reglages"].forEach(function (k) { S[k] = d[k] || []; });
+        S.signaturesDevis = d.devis_signatures || [];
         S.notifications = d.journal.map(function (j, i) { return { id: i + 1, personne_id: d.lili, journal_id: j.id, lue_le: null, cree_le: j.cree_le }; });
         S.medias.forEach(function (m) { S.urls[m.chemin] = m.url; if (m.apercu_url) S.urls[m.chemin + "#apercu"] = m.apercu_url; });
         // ?demo=maison-ondine : ouvre directement la démonstration comme la cliente de cette marque
@@ -213,7 +230,7 @@ window.Studio = (function () {
   var LOCALE = { publications: "publications", medias: "medias", commentaires: "commentaires", taches: "taches", espaces: "espaces", espaces_prive: "prives",
     notes_internes: "notes", operations: "operations", temps_forts: "tempsForts", comptes: "comptes", publication_medias: "pubMedias", versions: "versions",
     briefs: "briefs", messages: "messages", rapports: "rapports", veille: "veille", partenaires: "partenaires", temps: "temps", devis: "devis", factures: "factures",
-    prospects: "prospects", reglages: "reglages", briefs_jour: "briefsJour", membres: "membres", personnes: "personnes" };
+    prospects: "prospects", reglages: "reglages", briefs_jour: "briefsJour", devis_signatures: "signaturesDevis", membres: "membres", personnes: "personnes" };
   // Tables sans colonne « cree_le » (la base refuserait une colonne inconnue)
   var SANS_DATE = ["espaces_prive", "comptes", "operations", "temps_forts", "publication_medias", "briefs", "rapports", "temps", "reglages"];
   function maj(table, id, champs) {
@@ -383,7 +400,7 @@ window.Studio = (function () {
       lienCote("#calendrier", "Calendrier", "calendrier", r.nom === "calendrier", null, "C"),
       lienCote("#publications", "Publications", "publications", r.nom === "publications", aValider.length || null, "P"),
       lienCote("#mediatheque", "Médiathèque", "mediatheque", r.nom === "mediatheque", null, "M"),
-      lienCote("#mails", "Mails", "mail", r.nom === "mails", null, "E"),
+      lienCote("#mails", "Mails", "mail", r.nom === "mails", S.mailsNonLus || null, "E"),
       lienCote("#taches", "Tâches", "taches", r.nom === "taches", S.taches.filter(function (t) { return t.statut !== "fait" && t.echeance && t.echeance <= iso(new Date()); }).length || null),
       lienCote("#prospects", "Prospects", "prospects", r.nom === "prospects")
     ] : [
@@ -394,7 +411,8 @@ window.Studio = (function () {
       lienCote("#mediatheque", "Médiathèque", "mediatheque", r.nom === "mediatheque"),
       lienCote("#brief", "Brief", "brief", r.nom === "brief"),
       lienCote("#rapports", "Rapports", "rapports", r.nom === "rapports"),
-      lienCote("#messages", "Messages", "commentaire", r.nom === "messages")
+      lienCote("#messages", "Messages", "commentaire", r.nom === "messages"),
+      devisDuClient().length ? lienCote("#devis", "Devis", "euro", r.nom === "devis", devisDuClient().filter(function (d) { return d.statut === "envoye"; }).length || null) : null
     ]);
     var clients = lili ? [el("p", { class: "cote-titre", text: "Clients" }), el("nav", { class: "cote-clients", "aria-label": "Clients" }, espacesActifs().map(function (e, i) {
       var actif = r.nom === "client" && r.param === e.slug;
@@ -441,7 +459,7 @@ window.Studio = (function () {
   function filAriane() {
     var r = S.route, morceaux = [];
     var noms = { "": estLili() ? "Aujourd'hui" : "Accueil", calendrier: "Calendrier", publications: "Publications", mediatheque: "Médiathèque", valider: "À valider", mails: "Mails",
-      taches: "Tâches", prospects: "Prospects", reglages: "Réglages", brief: "Brief et ligne éditoriale", rapports: "Rapports", messages: "Messages" };
+      taches: "Tâches", prospects: "Prospects", reglages: "Réglages", devis: "Devis", brief: "Brief et ligne éditoriale", rapports: "Rapports", messages: "Messages" };
     if (r.nom === "client" && !estLili()) morceaux.push(el("span", { text: "Page introuvable" }));
     else if (r.nom === "client") {
       var e = espaceSlug(r.param);
@@ -460,6 +478,12 @@ window.Studio = (function () {
   function logoEspace(e, taille) {
     var u = urlEspace(e, "logo_path");
     return el("span", { class: "logo-espace " + (taille || ""), style: { "--c": (e && e.couleur) || "#1E1A17", "--cf": foncee((e && e.couleur) || "#1E1A17") } }, [u ? el("img", { src: u, alt: "" }) : el("b", { text: initiales(e && e.nom) })]);
+  }
+  // Devis que le client peut voir (en ligne, la base filtre ; en démonstration, même règle ici)
+  function devisDuClient() {
+    if (estLili()) return [];
+    var e = S.voirCommeEspace || (espacesClient()[0] || {}).id;
+    return S.devis.filter(function (d) { return d.espace_id === e && ["envoye", "accepte", "refuse"].indexOf(d.statut) >= 0; });
   }
   function rubriquesClient() {
     return [{ id: "calendrier", nom: "Calendrier", icone: "calendrier" }, { id: "publications", nom: "Publications", icone: "publications" }, { id: "mediatheque", nom: "Médiathèque", icone: "mediatheque" },
@@ -495,7 +519,7 @@ window.Studio = (function () {
   // ======================================================================
   // Routeur et rendu
   // ======================================================================
-  var RESERVES = ["", "calendrier", "publications", "mediatheque", "valider", "p", "mails", "taches", "prospects", "reglages", "brief", "rapports", "messages"];
+  var RESERVES = ["", "calendrier", "publications", "mediatheque", "valider", "p", "mails", "taches", "prospects", "reglages", "brief", "rapports", "messages", "devis"];
   function lireRoute() {
     var h = decodeURIComponent(location.hash.replace(/^#/, "")), q = {}, i = h.indexOf("?");
     if (i >= 0) { new URLSearchParams(h.slice(i + 1)).forEach(function (v, k) { q[k] = v; }); h = h.slice(0, i); }
@@ -519,10 +543,25 @@ window.Studio = (function () {
     if (r.nom === "mediatheque") return V.mediatheque(r);
     if (r.nom === "mails") return estLili() ? V.mails(r) : introuvable();
     if (["taches", "prospects", "reglages"].indexOf(r.nom) >= 0) return estLili() ? V[r.nom](r) : introuvable();
+    if (r.nom === "devis") { var ed = espacesClient()[0]; return !estLili() && ed && V.devisClient ? V.devisClient(r, ed) : introuvable(); }
     if (["brief", "rapports", "messages"].indexOf(r.nom) >= 0) { var ec = espacesClient()[0]; return !estLili() && ec ? V["rub_" + r.nom](r, ec) : introuvable(); }
     if (r.nom === "p") return publication(r.param) && visible(publication(r.param)) ? V.publication(r) : introuvable();
     if (r.nom === "client") { var e = espaceSlug(r.param); return e && estLili() ? V.client(r, e) : introuvable(); }
     return introuvable();
+  }
+  // Vacances de Lili : bandeau chez les clients (absence « pour tous » des temps forts) et rappel chez Lili
+  function bandeauVacances() {
+    var auj = iso(new Date());
+    if (estLili()) {
+      var v = V.vacancesActives ? V.vacancesActives() : null; if (!v || v.debut > auj) return null;
+      return el("div", { class: "bandeau-vacances" }, [icone("soleil"), el("span", { text: "Vous êtes en vacances jusqu'au " + fmt(v.fin + "T12:00:00", { weekday: "long", day: "numeric", month: "long" }) + " : réponse automatique et notifications en pause." }),
+        el("button", { type: "button", class: "btn-texte", text: "Je suis de retour", onclick: function () { if (V.finVacances) V.finVacances(); } })]);
+    }
+    var a = S.tempsForts.filter(function (t) { return !t.espace_id && t.type === "absence" && t.debut <= auj && (t.fin || t.debut) >= auj; })[0];
+    if (!a) return null;
+    var retour = ajouterJours(new Date((a.fin || a.debut) + "T12:00:00"), 1);
+    return el("div", { class: "bandeau-vacances" }, [icone("soleil"), el("span", { text: (MARQUE.proprietaire || "Lili").split(" ")[0] + " est en congés jusqu'au " + fmt((a.fin || a.debut) + "T12:00:00", { weekday: "long", day: "numeric", month: "long" }) +
+      ". Vos messages l'attendent ; elle vous répond à son retour, le " + fmt(retour, { weekday: "long", day: "numeric", month: "long" }) + "." })]);
   }
   function introuvable() { return el("section", { class: "vide-page" }, [el("h1", { class: "titre-page", text: "Page introuvable" }), el("p", { text: "Cette page n'existe pas ou ne vous est pas ouverte." }), el("a", { class: "btn-plein", href: "#", text: "Revenir à l'accueil" })]); }
   function dessiner(transition) {
@@ -530,6 +569,7 @@ window.Studio = (function () {
     var defil = window.scrollY, faire = function () {
       dessinerCoquille();
       var v; try { v = vueCourante(); } catch (e) { console.error(e); v = el("p", { class: "erreur-page", text: "Cette page n'a pas pu s'afficher : " + e.message }); }
+      var bandeau = bandeauVacances(); if (bandeau) X.page.appendChild(bandeau);
       X.page.appendChild(v);
       var e = S.route.nom === "client" ? espaceSlug(S.route.param) : S.route.nom === "p" && publication(S.route.param) ? espace(publication(S.route.param).espace_id) : !estLili() ? espacesClient()[0] : null;
       document.documentElement.style.setProperty("--marque", (e && e.couleur) || "var(--encre)");
@@ -563,6 +603,7 @@ window.Studio = (function () {
     if (!X.demarre || ev.metaKey || ev.ctrlKey || ev.altKey || document.querySelector("dialog[open]")) return;
     if (enSaisie()) { if (ev.key === "Escape") document.activeElement.blur(); return; }
     var k = ev.key, r = S.route;
+    if (r.nom === "mails" && estLili() && V.toucheMails && V.toucheMails(ev)) { ev.preventDefault(); return; }
     if (estLili() && (k === "n" || k === "N")) { ev.preventDefault(); nouvellePublication(); }
     else if (k === "0") aller("");
     else if (k === "c" || k === "C") aller("calendrier");
@@ -587,7 +628,7 @@ window.Studio = (function () {
     if (X.demo || X.canal) return;
     X.canal = X.db.channel("studio");
     ["publications", "publication_medias", "commentaires", "medias", "versions", "espaces", "taches", "journal", "operations", "notifications", "comptes_mail",
-      "briefs", "messages", "rapports", "veille", "partenaires", "temps", "devis", "factures", "prospects", "membres", "briefs_jour"].forEach(function (t) {
+      "briefs", "messages", "rapports", "veille", "partenaires", "temps", "devis", "factures", "prospects", "membres", "briefs_jour", "devis_signatures", "temps_forts", "reglages"].forEach(function (t) {
       X.canal.on("postgres_changes", { event: "*", schema: "public", table: t }, function () {
         clearTimeout(attente); attente = setTimeout(function () {
           if (enSaisie() || document.querySelector("dialog[open]") || X.glisse) { enAttente = true; return; }
@@ -603,6 +644,8 @@ window.Studio = (function () {
   // ======================================================================
   // Démarrage (appelé par l'entrée une fois le code saisi)
   // ======================================================================
+  // Thème choisi dans Réglages > Apparence (sinon celui de l'appareil)
+  try { var theme = localStorage.getItem("studio-theme"); if (theme === "light" || theme === "dark") document.documentElement.setAttribute("data-theme", theme); } catch (x) { /* stockage indisponible */ }
   function ouvrir(o) {
     X.db = o.db; X.demo = !!o.demo; X.quitter = o.quitter; X.verrouiller = o.verrouiller; X.coquille = o.coquille;
     X.coquille.innerHTML = '<div class="squelette" role="status" aria-label="Chargement"><i class="s-titre"></i><div class="s-grille"><i></i><i></i><i></i></div></div>';
