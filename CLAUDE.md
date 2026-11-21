@@ -73,7 +73,7 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   brouillons « idée » internes ; repli automatique de modèle activé, beta `server-side-fallback-2026-07-01`),
   `brief-du-jour` (pg_cron 5 h UTC ; texte sans IA si pas de clé). `_partage/envoi.ts` : envoi depuis le Gmail de Lili.
   Migration `20261121130000_etape7.sql` : `reglages`, `briefs_jour`, `assistant_journal`, numérotation des devis.
-  Clé `ANTHROPIC_API_KEY` : à poser dans `~/.lili/anthropic.env` puis relancer le déploiement (secret Supabase).
+  Clé `ANTHROPIC_API_KEY` dans `~/.lili/anthropic.env` (posée le 21/11/2026), envoyée en secret Supabase par le déploiement.
 - Page Mails (`#mails`, touche E, Lili seule) : `assets/vues/mails.js` ; HTML des mails dans un iframe isolé, images
   distantes bloquées jusqu'au clic ; expéditeur rapproché de son client (adresse d'un membre).
 - **Démonstration** : `?demo` (comme Lili) ou `?demo=<slug>` (comme la cliente de cette marque), données fictives de
@@ -152,7 +152,7 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
    l'affichage sur les vraies données sans compte : `.donnees/extraire.mjs` puis `.donnees/reel.html?demo` (local, privé).
 7. Brief, Veille, Partenariats, Rapports, Temps & facturation, Prospects, assistant IA. **Fait le 21/11/2026**
    (plus invitations des clients, tâches en colonnes, réglages, fiche client ; vérifié en démonstration ordinateur et
-   téléphone, comme Lili et comme cliente). En attente : la clé Anthropic (assistant), sinon brief du jour sans IA.
+   téléphone, comme Lili et comme cliente). Clé Anthropic posée : brief du jour rédigé par Claude (vérifié en ligne).
 8. PWA, page de connexion, page de confidentialité (RGPD, hébergement Supabase UE).
 9. Recette : espace « client démo » (marque fictive), parcours complets ordinateur et téléphone, tests RLS, Lighthouse > 90.
 10. Guides : `docs/guide-lili.md` et « Comment valider vos publications ».
