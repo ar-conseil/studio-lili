@@ -194,6 +194,15 @@
         .then(function (r) { if (r.error) dire("Connexion impossible : " + r.error.message, true); });
     });
   });
+  // N'afficher que les fournisseurs activés dans Supabase (réglages publics de l'authentification)
+  if (!APERCU) {
+    document.querySelectorAll("[data-fournisseur]").forEach(function (b) { b.hidden = true; });
+    fetch(CFG.url + "/auth/v1/settings", { headers: { apikey: CFG.cle } }).then(function (r) { return r.json(); }).then(function (x) {
+      var actifs = (x && x.external) || {}, un = false;
+      document.querySelectorAll("[data-fournisseur]").forEach(function (b) { b.hidden = !actifs[b.dataset.fournisseur]; un = un || !b.hidden; });
+      document.querySelector(".separateur").hidden = !un;
+    }).catch(function () { /* sans réponse : e-mail et mot de passe seulement */ });
+  }
   // Retour d'un fournisseur avec une erreur (compte non invité, refus…) : message clair, sans détail technique
   (function () {
     var p = new URLSearchParams(location.hash.slice(1) || location.search);
