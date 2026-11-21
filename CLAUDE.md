@@ -177,6 +177,9 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
 Après chaque étape : commit clair, mise à jour de ce fichier, note à Antonin (ce qui est fait, ce qu'il doit faire).
 
 ## Décisions
+- 21/11/2026 : **ce qui reste hors du compte de Lili, validé par Antonin** : la base Supabase (organisation « Lili Rouzier »
+  du compte Supabase du club) et l'assistant (espace « Studio Lili » du compte Anthropic « Palomano Lille »). Seul le
+  projet Google Cloud est à son nom.
 - 21/11/2026 : **assistant dans son propre espace de travail Anthropic** « Studio Lili » (organisation « Palomano Lille »),
   limite de dépenses 15 $/mois : la clé de l'assistant est seule dans cet espace, la limite ne touche donc ni le
   cockpit d'Antonin ni les autres outils de l'espace « Default ». Clé « studio-lili assistant » (expire le 01/12/2027)
