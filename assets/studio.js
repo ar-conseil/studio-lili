@@ -478,6 +478,11 @@ window.Studio = (function () {
     var d = X.donneesDemo; if (!d) return;
     if (!S.voirCommeEspace) { S.role = "proprietaire"; S.moi = personne(d.lili); return; }
     var m = S.membres.filter(function (x) { return x.espace_id === S.voirCommeEspace; })[0];
+    if (!m) {   // espace sans client invité : un visiteur d'aperçu, le temps de voir l'espace comme lui
+      var id = "apercu-" + S.voirCommeEspace;
+      if (!personne(id)) S.personnes.push({ id: id, nom: "Client (aperçu)", role: "client" });
+      m = { espace_id: S.voirCommeEspace, personne_id: id, role: "client" }; S.membres.push(m);
+    }
     S.role = "client"; S.moi = personne(m.personne_id);
   }
   // Ce qu'un client voit en démonstration : la même règle que la base (son espace, ce qui est partagé, ses idées)
