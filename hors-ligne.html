@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#F4EFE7">
+<title>Hors connexion · Studio Lili</title>
+<link rel="stylesheet" href="assets/polices/polices.css">
+<style>
+  :root { --papier: #FBF8F3; --encre: #1E1A17; --encre-2: #5F574F; --filet: #E7E0D5; --terre: #A9553A; color-scheme: light; }
+  @media (prefers-color-scheme: dark) { :root { --papier: #171412; --encre: #F1ECE4; --encre-2: #C2B8AC; --filet: #342E29; --terre: #D98B6E; color-scheme: dark; } }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--papier); color: var(--encre); font: 16px/1.6 "Geist", system-ui, sans-serif; display: grid; place-items: center; padding: 24px 16px; box-sizing: border-box; text-align: center; }
+  main { max-width: 420px; }
+  img { width: 140px; height: auto; margin: 0 auto 28px; display: block; }
+  @media (prefers-color-scheme: dark) { img { content: url("assets/marque/logo-clair.svg"); } }
+  h1 { font: 500 34px/1.15 "Bodoni Moda", Didot, Georgia, serif; margin: 0 0 10px; }
+  p { color: var(--encre-2); margin: 0 0 24px; }
+  button { font: 600 15px "Geist", system-ui, sans-serif; background: var(--encre); color: var(--papier); border: 0; border-radius: 12px; min-height: 48px; padding: 0 22px; cursor: pointer; }
+  .filet { width: 46px; height: 2px; background: var(--terre); margin: 0 auto 22px; }
+</style>
+</head>
+<body>
+<main>
+  <img src="assets/marque/logo.svg" alt="Lili Rouzier, community manager" width="560" height="300">
+  <div class="filet"></div>
+  <h1>Pas de connexion</h1>
+  <p>Le studio a besoin d'internet pour afficher vos publications à jour. Rien n'est perdu : il revient dès que le réseau est là.</p>
+  <button type="button" onclick="location.reload()">Réessayer</button>
+</main>
+<script>window.addEventListener("online", function () { location.reload(); });</script>
+</body>
+</html>

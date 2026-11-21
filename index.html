@@ -15,13 +15,11 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Studio Lili">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&family=Bodoni+Moda:opsz,wght@6..96,400..600&display=swap" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&family=Bodoni+Moda:opsz,wght@6..96,400..600&display=swap"></noscript>
-  <link rel="stylesheet" href="assets/style.css?v=20261121h">
-  <link rel="stylesheet" href="assets/studio.css?v=20261121h">
+  <link rel="preload" href="assets/polices/geist-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/polices/bodoni-moda-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/polices/polices.css">
+  <link rel="stylesheet" href="assets/style.css?v=20261121i">
+  <link rel="stylesheet" href="assets/studio.css?v=20261121i">
 </head>
 <body>
   <!-- Entrée : connexion, puis code à 6 chiffres (comme Evoalys : mot de passe et code) -->
@@ -52,7 +50,7 @@
           <label for="email">E-mail</label>
           <input id="email" name="email" type="email" autocomplete="username" autocapitalize="none" spellcheck="false" required>
           <label for="mot-de-passe">Mot de passe</label>
-          <input id="mot-de-passe" name="password" type="password" autocomplete="current-password" required>
+          <div class="champ-mdp"><input id="mot-de-passe" name="password" type="password" autocomplete="current-password" required><button type="button" class="voir-mdp" data-voir="mot-de-passe" aria-pressed="false">Afficher</button></div>
           <button type="submit" class="btn-plein">Continuer</button>
           <div class="entree-liens">
             <button type="button" class="btn-texte" id="btn-lien">Recevoir un lien par e-mail</button>
@@ -98,8 +96,9 @@
         <form class="vue" id="vue-nouveau" novalidate hidden>
           <h1 class="entree-titre" id="nouveau-titre">Nouveau mot de passe</h1>
           <p class="entree-sous" id="nouveau-sous">10 caractères au moins.</p>
+          <input id="nouveau-identifiant" type="email" autocomplete="username" hidden aria-hidden="true" tabindex="-1">
           <label for="nouveau-mdp">Mot de passe</label>
-          <input id="nouveau-mdp" type="password" autocomplete="new-password" minlength="10" required>
+          <div class="champ-mdp"><input id="nouveau-mdp" type="password" autocomplete="new-password" minlength="10" required><button type="button" class="voir-mdp" data-voir="nouveau-mdp" aria-pressed="false">Afficher</button></div>
           <button type="submit" class="btn-plein">Enregistrer</button>
         </form>
 
@@ -111,7 +110,7 @@
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v7.5M5 7l3 3 3-3M3 12.5h10"/></svg>Installer l'application
         </button>
         <p class="astuce" data-astuce hidden></p>
-        <p class="mention">Espace privé de Lili Rouzier et de ses clients · Données hébergées à Paris · <a href="confidentialite.html">Confidentialité</a></p>
+        <p class="mention">Espace privé de Lili Rouzier et de ses clients · Données hébergées à Paris · <a href="confidentialite.html">Confidentialité</a> · <a href="confidentialite.html#mentions">Mentions légales</a></p>
       </div>
     </div>
   </section>
@@ -119,19 +118,19 @@
   <!-- L'application, une fois le code saisi : dessinée par assets/studio.js et assets/vues/ -->
   <div class="coquille" id="coquille" hidden></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="assets/vendeur/supabase-2.45.4.js"></script>
   <script src="assets/config.js"></script>
-  <script src="assets/marque.js?v=20261121h"></script>
-  <script src="assets/demo.js?v=20261121h"></script>
-  <script src="assets/studio.js?v=20261121h"></script>
-  <script src="assets/vues/communs.js?v=20261121h"></script>
-  <script src="assets/vues/lili.js?v=20261121h"></script>
-  <script src="assets/vues/calendrier.js?v=20261121h"></script>
-  <script src="assets/vues/publication.js?v=20261121h"></script>
-  <script src="assets/vues/client.js?v=20261121h"></script>
-  <script src="assets/vues/direct.js?v=20261121h"></script>
-  <script src="assets/vues/mails.js?v=20261121h"></script>
-  <script src="assets/vues/rubriques.js?v=20261121h"></script>
-  <script src="assets/app.js?v=20261121h"></script>
+  <script src="assets/marque.js?v=20261121i"></script>
+  <script src="assets/demo.js?v=20261121i"></script>
+  <script src="assets/studio.js?v=20261121i"></script>
+  <script src="assets/vues/communs.js?v=20261121i"></script>
+  <script src="assets/vues/lili.js?v=20261121i"></script>
+  <script src="assets/vues/calendrier.js?v=20261121i"></script>
+  <script src="assets/vues/publication.js?v=20261121i"></script>
+  <script src="assets/vues/client.js?v=20261121i"></script>
+  <script src="assets/vues/direct.js?v=20261121i"></script>
+  <script src="assets/vues/mails.js?v=20261121i"></script>
+  <script src="assets/vues/rubriques.js?v=20261121i"></script>
+  <script src="assets/app.js?v=20261121i"></script>
 </body>
 </html>

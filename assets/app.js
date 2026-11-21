@@ -235,6 +235,7 @@
   document.querySelectorAll("[data-retour]").forEach(function (b) { b.addEventListener("click", function () { vue("vue-connexion"); }); });
   function choisirMotDePasse(bienvenue) {
     vue("vue-nouveau");
+    if (db) db.auth.getUser().then(function (r) { var u = r.data && r.data.user; if (u) $("nouveau-identifiant").value = u.email || ""; });
     $("nouveau-titre").textContent = bienvenue ? "Bienvenue" : "Nouveau mot de passe";
     $("nouveau-sous").textContent = bienvenue ? "Choisissez votre mot de passe (10 caractères au moins). Vous pourrez aussi entrer avec Google." : "10 caractères au moins.";
   }
@@ -271,6 +272,13 @@
       : safariMac ? "Pour l'installer : menu Fichier, puis « Ajouter au Dock »." : "";
     if (astuce) document.querySelectorAll("[data-astuce]").forEach(function (p) { p.textContent = astuce; p.hidden = false; });
   }
+  // Afficher ou masquer le mot de passe saisi
+  document.querySelectorAll("[data-voir]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var c = $(b.getAttribute("data-voir")), voir = c.type === "password";
+      c.type = voir ? "text" : "password"; b.textContent = voir ? "Masquer" : "Afficher"; b.setAttribute("aria-pressed", voir ? "true" : "false"); c.focus();
+    });
+  });
   if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(function () { /* l'app marche sans */ });
 
   // ---------- Démarrage ----------

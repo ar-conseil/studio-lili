@@ -35,7 +35,7 @@
   function imprimer(titre, corps) {
     var w = window.open("", "_blank"); if (!w) { St.signaler("La fenêtre d'impression a été bloquée par le navigateur", true); return; }
     w.document.write('<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>' + echapper(titre) + '</title>' +
-      '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;1,6..96,400&family=Geist:wght@400;500;600&family=Geist+Mono&display=swap">' +
+      '<link rel="stylesheet" href="' + new URL("assets/polices/polices.css", location.href).href + '">' +
       '<style>@page{size:A4;margin:16mm}body{font:13px/1.5 Geist,system-ui,sans-serif;color:#1E1A17;margin:0}h1,h2{font-family:"Bodoni Moda",Georgia,serif;font-weight:500;margin:0}' +
       'h1{font-size:30px}h2{font-size:18px;margin:22px 0 8px}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{text-align:left;padding:8px 6px;border-bottom:1px solid #E7E0D5;vertical-align:top}' +
       'th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8B8178;font-weight:600}.n{text-align:right;font-family:"Geist Mono",monospace;white-space:nowrap}' +

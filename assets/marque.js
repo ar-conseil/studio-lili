@@ -8,5 +8,8 @@ window.MARQUE = {
   assistant: "l'assistant",         // nom de l'assistant IA, au choix de Lili
   logo: "assets/marque/logo.svg",
   logoClair: "assets/marque/logo-clair.svg",
-  icone: "assets/marque/icone.svg"
+  icone: "assets/marque/icone.svg",
+  // Mentions légales (page confidentialite.html#mentions) : informations publiques de l'entreprise de Lili.
+  // Vides = la ligne n'est pas affichée. À remplir avec Lili : SIRET, adresse professionnelle, e-mail de contact.
+  mentions: { statut: "Entrepreneuse individuelle (micro-entreprise)", siret: "", adresse: "", email: "" }
 };

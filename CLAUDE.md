@@ -11,7 +11,8 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
 ## Architecture (reprise du cockpit d'Antonin)
 - Site statique sans build, GitHub Pages (dépôt PUBLIC `ar-conseil/studio-lili`, branche `main`, racine) :
   `index.html`, `assets/app.js`, `assets/style.css`, `assets/config.js` (URL + clé anon, écrit par `outils/deployer.sh`).
-- supabase-js en CDN (version épinglée), polices par Google Fonts, aucune autre dépendance lourde.
+- supabase-js et polices hébergés sur le site (`assets/vendeur/supabase-2.45.4.js`, identique au CDN ; `assets/polices/`,
+  sous-ensembles latin de Google Fonts, licence OFL) : aucune requête vers un autre site que Supabase. Aucune autre dépendance lourde.
 - Coquille façon Notion : barre latérale fixe, barre fine avec fil d'Ariane, seule la page change (transition de vue),
   pas de flou d'arrière-plan, barre d'onglets en bas sur téléphone. Raccourcis clavier, PWA installable, temps réel.
 - Identité : **piste « Papier »** (choisie le 21/11/2026) : papier crème #FBF8F3, barre latérale #F4EFE7, encre chaude
@@ -153,7 +154,10 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
 7. Brief, Veille, Partenariats, Rapports, Temps & facturation, Prospects, assistant IA. **Fait le 21/11/2026**
    (plus invitations des clients, tâches en colonnes, réglages, fiche client ; vérifié en démonstration ordinateur et
    téléphone, comme Lili et comme cliente). Clé Anthropic posée : brief du jour rédigé par Claude (vérifié en ligne).
-8. PWA, page de connexion, page de confidentialité (RGPD, hébergement Supabase UE).
+8. PWA, page de connexion, page de confidentialité (RGPD, hébergement Supabase UE). **Fait le 21/11/2026** :
+   page hors connexion gardée par `sw.js` (vérifiée dans Chrome serveur coupé), raccourcis du manifeste, bouton
+   Afficher du mot de passe, `confidentialite.html` réécrite (prestataires dont Anthropic, durées, droits) avec les
+   mentions légales lues dans `MARQUE.mentions` (`assets/marque.js`) : SIRET, adresse et e-mail de Lili à remplir.
 9. Recette : espace « client démo » (marque fictive), parcours complets ordinateur et téléphone, tests RLS, Lighthouse > 90.
 10. Guides : `docs/guide-lili.md` et « Comment valider vos publications ».
 
