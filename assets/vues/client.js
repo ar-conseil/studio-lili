@@ -157,7 +157,12 @@
     var etiquettes = el("input", { type: "text", value: (m.etiquettes || []).join(", "), placeholder: "Étiquettes, séparées par des virgules", "aria-label": "Étiquettes" });
     var peutModifier = lili || m.depose_par === S.moi.id;
     var pubs = S.pubMedias.filter(function (x) { return x.media_id === m.id; }).map(function (x) { return St.publication(x.publication_id); }).filter(Boolean);
-    var corps = [el("div", { class: "media-grand" }, [St.image(m, { apercu: false })]), el("p", { class: "aside", text: (m.nom_fichier || "") + " · déposé par " + (auteur.nom || "?") + " · " + St.ilya(m.cree_le) + " · " + e.nom })];
+    // Ce qui parle à tout le monde : le vrai nom du fichier (pas un identifiant), qui l'a déposé si on le sait, et quand
+    var nomLisible = m.nom_fichier && !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(m.nom_fichier) && !/^[0-9a-f]{20,}\./i.test(m.nom_fichier) ? m.nom_fichier : "";
+    var datePub = pubs.map(function (p) { return p.date_prevue; }).filter(Boolean).sort().pop();
+    var quand = m.notion_id && datePub ? "publication du " + St.fmt(datePub, { day: "numeric", month: "long", year: "numeric" }) : "ajouté " + St.ilya(m.cree_le);
+    var infos = [nomLisible, auteur.nom ? "déposé par " + auteur.nom : null, quand, lili ? e.nom : null].filter(Boolean).join(" · ");
+    var corps = [el("div", { class: "media-grand" }, [St.image(m, { apercu: false })]), el("p", { class: "aside", text: infos })];
     if (peutModifier) corps.push(el("div", { class: "pile-serree" }, [dossier, etiquettes]));
     if (pubs.length) corps.push(el("p", { class: "aside" }, ["Utilisé dans : "].concat(pubs.map(function (p, i) { return el("a", { href: "#p/" + p.id, text: (i ? ", " : "") + (p.titre || "Sans titre") }); }))));
     var actions = [{ texte: "Fermer" }];
@@ -172,6 +177,6 @@
     if (lili) actions.splice(1, 0, { texte: m.visibilite === "interne" ? "Partager avec le client" : "Réserver à Lili", action: function (f) {
       St.maj("medias", m.id, { visibilite: m.visibilite === "interne" ? "partage" : "interne" }).then(function () { f(); St.dessiner(false); });
     } });
-    St.fenetre({ titre: m.dossier || "Fichier", classe: "large media-fenetre", corps: corps, actions: actions });
+    St.fenetre({ titre: (pubs[0] && pubs[0].titre) || nomLisible.replace(/\.[a-z0-9]+$/i, "") || m.dossier || "Fichier", sous: m.dossier ? "Dossier " + m.dossier : null, classe: "large media-fenetre", corps: corps, actions: actions });
   }
 })(window.Studio);

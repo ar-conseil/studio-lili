@@ -91,7 +91,7 @@ function media(e, chemin, dossier) {
   const ext2 = ext === "heic" ? "jpg" : ext;
   const dest = `${e.id}/notion-${empreinte(rel)}.${ext2}`;
   if (!mediasParChemin.has(dest)) mediasParChemin.set(dest, { id: uuidDe("media:" + rel), espace_id: e.id, chemin: dest, type, nom_fichier: basename(chemin).replace(/ [0-9a-f]{32}/, ""),
-    taille: statSync(chemin).size, dossier: dossier || "Notion", etiquettes: [], visibilite: "partage", notion_id: rel, source: chemin, heic: ext === "heic" });
+    taille: statSync(chemin).size, dossier: dossier || "Archives", etiquettes: [], visibilite: "partage", notion_id: rel, source: chemin, heic: ext === "heic" });
   return mediasParChemin.get(dest);
 }
 const calendriers = FICHIERS.filter((p) => /CALENDRIER[^/]*_all\.csv$/.test(p));
@@ -130,12 +130,12 @@ for (const f of calendriers) {
     const cle = `${e.slug}|${norme(titre)}|${iso(debut)}`;
     if (pubsParCle.has(cle) && titre) {   // même publication dans le calendrier Instagram et dans le calendrier Facebook
       const p = pubsParCle.get(cle); reseaux.forEach((x) => { if (!p.reseaux.includes(x)) p.reseaux.push(x); });
-      visuels.forEach((v) => p._visuels.push(media(e, v, "Notion"))); continue;
+      visuels.forEach((v) => p._visuels.push(media(e, v, "Archives"))); continue;
     }
     const p = { id: uuidDe("pub:" + cle + (titre ? "" : Math.random())), espace_id: e.id, titre: titre || "Sans titre", reseaux, format, statut, etapes, etiquettes,
       date_prevue: aLHeure(debut, reseaux[0], format), fin: fin ? aLHeure(fin, reseaux[0], format) : null, legende, hashtags: [], mentions: [],
       lien: r["cont@ct"] || null, script: r["VOIX OFF"] || null, lien_en_ligne: lienEnLigne, notion_id: "pub:" + cle,
-      _compte: compte, _operation: r["ACTUALITÉ 📢"] || null, _visuels: visuels.map((v) => media(e, v, "Notion")), _note: notes };
+      _compte: compte, _operation: r["ACTUALITÉ 📢"] || null, _visuels: visuels.map((v) => media(e, v, "Archives")), _note: notes };
     if (!titre) p.notion_id += ":" + empreinte(legende + visuels.join());
     pubsParCle.set(cle + (titre ? "" : p.notion_id), p);
   }
