@@ -126,37 +126,10 @@ input:focus { outline: none; border-color: var(--encre); box-shadow: 0 0 0 3px c
   transition: border-color .15s, transform .15s var(--doux);
 }
 .installer:hover { border-color: var(--encre); transform: translateY(-1px); }
-.installer svg, .cote svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.installer svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .astuce { margin: 0; font-size: 13px; color: var(--encre-2); max-width: 340px; }
 .mention { margin: 4px 0 0; font-size: 12px; color: var(--encre-3); }
 
-/* ---------- Coquille (barre latérale façon Notion) ---------- */
-.cote {
-  position: fixed; inset: 0 auto 0 0; width: var(--l-cote); display: flex; flex-direction: column; gap: 6px;
-  padding: calc(14px + env(safe-area-inset-top)) 10px 14px; background: var(--creme); border-right: 1px solid var(--filet);
-}
-.cote-logo { display: flex; align-items: center; gap: 10px; padding: 6px 8px 16px; text-decoration: none; color: inherit; }
-.cote-logo img { border-radius: 8px; box-shadow: 0 0 0 1px var(--filet); }
-.cote-logo span { display: grid; line-height: 1.2; }
-.cote-logo b { font-weight: 600; font-size: 14px; }
-.cote-logo small { font-size: 12px; color: var(--encre-3); }
-.cote-liens { display: grid; gap: 2px; }
-.cote-liens a { display: flex; align-items: center; gap: 10px; padding: 8px 10px; min-height: 40px; border-radius: 10px; text-decoration: none; color: var(--encre-2); font-weight: 500; font-size: 14px; }
-.cote-liens a:hover { background: var(--survol); color: var(--encre); }
-.cote-liens a[aria-current="page"] { background: color-mix(in srgb, var(--encre) 8%, transparent); color: var(--encre); font-weight: 600; }
-.cote-bas { margin-top: auto; display: grid; gap: 2px; justify-items: start; }
-.cote-bas .installer { margin-bottom: 8px; }
-.page { margin-left: var(--l-cote); padding: clamp(28px, 6vw, 72px) clamp(16px, 5vw, 64px); max-width: 980px; }
-.surtitre { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--encre-3); }
-.titre-page { font: 500 clamp(34px, 5vw, 52px)/1.08 var(--titres); font-variation-settings: "opsz" 96; letter-spacing: -.015em; margin: 0 0 14px; }
-.texte-page { color: var(--encre-2); max-width: 56ch; margin: 0; }
-@media (max-width: 760px) {
-  .cote { position: static; width: auto; flex-direction: row; align-items: center; border-right: 0; border-bottom: 1px solid var(--filet); padding: calc(8px + env(safe-area-inset-top)) 12px 8px; }
-  .cote-logo { padding: 4px; } .cote-logo span, .cote-liens { display: none; }
-  .cote-bas { margin: 0 0 0 auto; display: flex; align-items: center; }
-  .cote-bas .installer { margin: 0; padding: 8px 12px; }
-  .page { margin-left: 0; }
-}
 @media (max-width: 420px) { .carte-entree { padding: 24px 18px 18px; border-radius: 18px; } .code { gap: 6px; } .code > span { height: 52px; font-size: 23px; } .code .code-milieu { margin-left: 6px; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 

@@ -10,7 +10,9 @@
 
   var CFG = window.STUDIO_CONFIG || {};
   var MARQUE = window.MARQUE || {};
-  var APERCU = !CFG.url || !CFG.cle || !window.supabase;
+  // Démonstration (?demo) ou site pas encore relié : écrans et studio avec des marques fictives, rien d'enregistré
+  var DEMO = /[?&]demo(=|&|$)/.test(location.search);
+  var APERCU = DEMO || !CFG.url || !CFG.cle || !window.supabase;
   var VERROU_MS = 30 * 60000;              // absence ou inactivité au-delà de laquelle le code est redemandé
   var ESSAIS_MAX = 5;                      // codes faux avant déconnexion complète
   var CLE_ACTIVITE = "studio.activite";    // dernière activité, en millisecondes (cet appareil seulement)
@@ -147,12 +149,15 @@
   // ---------- L'application ----------
   function ouvrir() {
     noterActivite();
-    entree.hidden = true; coquille.hidden = false; etat.ouvert = true;
-    var maintenant = new Date();
-    $("date-du-jour").textContent = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long" }).format(maintenant);
-    var h = maintenant.getHours(), prenom = (MARQUE.proprietaire || "").split(" ")[0];
-    $("bonjour").textContent = (h < 5 || h >= 18 ? "Bonsoir" : "Bonjour") + (prenom ? " " + prenom : "");
-    document.title = "Aujourd'hui · " + (MARQUE.outil || "Studio");
+    entree.hidden = true; coquille.hidden = false;
+    var dejaOuvert = etat.studio; etat.ouvert = true; etat.studio = true;
+    if (dejaOuvert) return;   // simple déverrouillage : le studio est resté chargé
+    window.Studio.ouvrir({ db: db, demo: APERCU, coquille: coquille, verrouiller: verrouiller, quitter: quitter });
+  }
+  function quitter() {
+    ecrire(CLE_ACTIVITE, "0"); etat.studio = false; window.Studio.fermer();
+    if (APERCU) return vue("vue-connexion");
+    db.auth.signOut();
   }
   function verrouiller() {
     if (!etat.ouvert) return;
@@ -165,9 +170,7 @@
   });
   setInterval(function () { if (etat.ouvert && absentDepuis() > VERROU_MS) verrouiller(); }, 30000);
   document.addEventListener("visibilitychange", function () { if (!document.hidden && etat.ouvert && absentDepuis() > VERROU_MS) verrouiller(); });
-  $("btn-verrouiller").addEventListener("click", verrouiller);
-  $("btn-quitter").addEventListener("click", function () { ecrire(CLE_ACTIVITE, "0"); if (APERCU) return vue("vue-connexion"); db.auth.signOut(); });
-  $("btn-autre-compte").addEventListener("click", function () { ecrire(CLE_ACTIVITE, "0"); if (APERCU) return vue("vue-connexion"); db.auth.signOut(); });
+  $("btn-autre-compte").addEventListener("click", quitter);
 
   // ---------- Connexion ----------
   var formConnexion = $("vue-connexion");
@@ -249,7 +252,8 @@
   // ---------- Installation sur le bureau ou l'écran d'accueil ----------
   var invitation = null;
   var installee = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
-  function montrerInstaller(oui) { document.querySelectorAll("[data-installer]").forEach(function (b) { b.hidden = !oui; }); }
+  function montrerInstaller(oui) { window.__installable = oui; document.querySelectorAll("[data-installer]").forEach(function (b) { b.hidden = !oui; }); }
+  window.__installer = function () { if (!invitation) return; invitation.prompt(); invitation.userChoice.then(function () { invitation = null; montrerInstaller(false); }); };
   window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); invitation = e; montrerInstaller(true); });
   window.addEventListener("appinstalled", function () { invitation = null; montrerInstaller(false); });
   document.querySelectorAll("[data-installer]").forEach(function (b) {
@@ -276,7 +280,7 @@
     if (ecran === "code") demanderCode();
     else if (ecran === "enrolement") preparerEnrolement();
     else if (ecran === "nouveau") vue("vue-nouveau");
-    else if (ecran === "app") ouvrir();
+    else if (ecran === "app" || DEMO) ouvrir();
     else vue("vue-connexion");
     return;
   }
@@ -285,7 +289,7 @@
     setTimeout(function () {
       if (evenement === "PASSWORD_RECOVERY") return choisirMotDePasse(false);
       if (INVITATION && evenement === "SIGNED_IN" || INVITATION && evenement === "INITIAL_SESSION") { INVITATION = false; return choisirMotDePasse(true); }
-      if (evenement === "SIGNED_OUT") { etat.facteur = null; vue("vue-connexion"); return; }
+      if (evenement === "SIGNED_OUT") { etat.facteur = null; etat.studio = false; window.Studio.fermer(); vue("vue-connexion"); return; }
       if (evenement === "SIGNED_IN" || evenement === "INITIAL_SESSION") { if (!etat.ouvert) suite(); }
     }, 0);
   });

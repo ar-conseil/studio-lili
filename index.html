@@ -20,7 +20,8 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&family=Bodoni+Moda:opsz,wght@6..96,400..600&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&family=Bodoni+Moda:opsz,wght@6..96,400..600&display=swap"></noscript>
-  <link rel="stylesheet" href="assets/style.css?v=20261121c">
+  <link rel="stylesheet" href="assets/style.css?v=20261121e">
+  <link rel="stylesheet" href="assets/studio.css?v=20261121e">
 </head>
 <body>
   <!-- Entrée : connexion, puis code à 6 chiffres (comme Evoalys : mot de passe et code) -->
@@ -115,29 +116,19 @@
     </div>
   </section>
 
-  <!-- L'application, une fois le code saisi -->
-  <div class="coquille" id="coquille" hidden>
-    <aside class="cote" id="cote" aria-label="Menu">
-      <a class="cote-logo" href="#" aria-label="Aujourd'hui"><img src="assets/marque/icone.svg" alt="" width="32" height="32"><span><b data-marque="outil">Studio Lili</b><small data-marque="proprietaire">Lili Rouzier</small></span></a>
-      <nav class="cote-liens" aria-label="Navigation">
-        <a href="#" aria-current="page"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></svg>Aujourd'hui</a>
-      </nav>
-      <div class="cote-bas">
-        <button type="button" class="installer" data-installer hidden><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v7.5M5 7l3 3 3-3M3 12.5h10"/></svg>Installer l'application</button>
-        <button type="button" class="btn-texte" id="btn-verrouiller" title="Redemander le code">Verrouiller</button>
-        <button type="button" class="btn-texte" id="btn-quitter">Se déconnecter</button>
-      </div>
-    </aside>
-    <main class="page" id="page">
-      <p class="surtitre" id="date-du-jour"></p>
-      <h1 class="titre-page" id="bonjour">Bonjour</h1>
-      <p class="texte-page">Votre studio se construit ici : calendriers éditoriaux, publications, validations de vos clients, médiathèque et facturation arrivent étape par étape.</p>
-    </main>
-  </div>
+  <!-- L'application, une fois le code saisi : dessinée par assets/studio.js et assets/vues/ -->
+  <div class="coquille" id="coquille" hidden></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script src="assets/config.js"></script>
-  <script src="assets/marque.js"></script>
-  <script src="assets/app.js?v=20261121d"></script>
+  <script src="assets/marque.js?v=20261121e"></script>
+  <script src="assets/demo.js?v=20261121e"></script>
+  <script src="assets/studio.js?v=20261121e"></script>
+  <script src="assets/vues/communs.js?v=20261121e"></script>
+  <script src="assets/vues/lili.js?v=20261121e"></script>
+  <script src="assets/vues/calendrier.js?v=20261121e"></script>
+  <script src="assets/vues/publication.js?v=20261121e"></script>
+  <script src="assets/vues/client.js?v=20261121e"></script>
+  <script src="assets/app.js?v=20261121e"></script>
 </body>
 </html>

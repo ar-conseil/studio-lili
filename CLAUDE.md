@@ -40,6 +40,20 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
 - Journal d'activité par espace : base des notifications et de l'historique.
 
 ## Où sont les choses
+- Le studio (étape 4) : `assets/studio.js` = noyau (état `Studio.S`, lecture et écriture Supabase ou démonstration,
+  adresses signées des fichiers, coquille, routeur, raccourcis, temps réel). Pages dans `assets/vues/` :
+  `communs.js` (cartes, aperçus fidèles Instagram / Facebook / LinkedIn / TikTok / Pinterest / Google dessinés en
+  HTML, bulles épinglées), `lili.js` (Aujourd'hui, page client et rubriques, publications), `calendrier.js` (mois,
+  semaine, liste, glisser, fériés et temps forts calculés, opérations et absences en bandes), `publication.js` (fiche,
+  visuels du carrousel, commentaires épinglés, fil, versions comparées), `client.js` (accueil client, validation en
+  deux gestes, médiathèque). Styles : `assets/studio.css` (piste Papier, téléphone compris).
+- Adresses : `#`, `#calendrier?vue=mois|semaine|liste&jour=…&client=…`, `#publications?statut=…`, `#mediatheque`,
+  `#p/<id>`, `#valider` (client), `#<slug-client>` et `#<slug>/calendrier|publications|mediatheque`.
+  Clavier : N nouvelle publication, 0 accueil, C calendrier, P publications, M médiathèque, 1-9 clients, Échap retour,
+  ← → rubriques ou période du calendrier, T aujourd'hui.
+- **Démonstration** : `?demo` (comme Lili) ou `?demo=<slug>` (comme la cliente de cette marque), données fictives de
+  `assets/demo.js` (dates calculées autour d'aujourd'hui), rien n'est enregistré ; un sélecteur « Voir comme » est dans
+  la barre latérale. Sert aussi à vérifier chaque écran avant mise en ligne.
 - Entrée et coquille : `index.html`, `assets/app.js`, `assets/style.css`. `assets/marque.js` = LA constante du nom de
   l'outil, de la propriétaire, de l'assistant et des fichiers du logo. `assets/config.js` vide = mode aperçu
   (écrans visibles sans base ; `?ecran=code|enrolement|nouveau|app` pour en voir un).
@@ -100,6 +114,9 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
 3. Schéma Supabase complet + RLS + tests de droits. **Fait le 21/11/2026** (tests locaux au vert ; à rejouer en ligne au
    premier déploiement, dès que le projet Supabase existe).
 4. Coquille, Aujourd'hui, Clients, Calendrier, Publication avec aperçus, validation client, commentaires épinglés, médiathèque.
+   **Fait le 21/11/2026** (vérifié en démonstration sur ordinateur et téléphone : validation, demande de modification,
+   bulle épinglée, glisser du calendrier). Pas encore : présence en direct, notifications (étape 5), grille Instagram,
+   tâches en colonnes.
 5. Temps réel (présence, commentaires, statuts), notifications e-mail et Web Push.
 6. Import réel des données Notion.
 7. Brief, Veille, Partenariats, Rapports, Temps & facturation, Prospects, assistant IA.
@@ -110,6 +127,11 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
 Après chaque étape : commit clair, mise à jour de ce fichier, note à Antonin (ce qui est fait, ce qu'il doit faire).
 
 ## Décisions
+- 21/11/2026 : **connexion Google** : projet Google Cloud « Studio Lili » (`studio-lili-515417`, compte d'Antonin),
+  client OAuth web (retours : `…supabase.co/auth/v1/callback` et `…/functions/v1/connexion-google` pour Gmail), clés
+  dans `~/.lili/oauth.env`, activée dans Supabase. Passage « en production » à confirmer par Antonin (bouton refusé
+  par la sécurité de l'agent) ; sinon seuls les utilisateurs test peuvent entrer avec Google. Microsoft : reporté
+  (le bouton reste masqué tant que le fournisseur n'est pas actif, lu dans les réglages publics de Supabase).
 - 21/11/2026 : **projet Supabase `studio-lili`** (ref `jilxunfapbtqtrgkxdha`, Paris eu-west-3, instance Micro) dans
   l'organisation « Lili Rouzier » du compte Supabase du club (antonin.rouzier@harnes-volleyball.fr), passée au **plan Pro**
   (25 $/mois, plafond de dépenses actif) : le compte avait déjà ses 2 projets gratuits. Clé d'accès « studio-lili
