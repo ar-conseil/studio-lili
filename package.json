@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "node outils/tester-droits.mjs",
-    "import-apercu": "node outils/import-notion.mjs"
+    "import-apercu": "node outils/import-notion.mjs",
+    "recette": "node outils/recette.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.2.17",

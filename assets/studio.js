@@ -441,7 +441,8 @@ window.Studio = (function () {
     var r = S.route, morceaux = [];
     var noms = { "": estLili() ? "Aujourd'hui" : "Accueil", calendrier: "Calendrier", publications: "Publications", mediatheque: "Médiathèque", valider: "À valider", mails: "Mails",
       taches: "Tâches", prospects: "Prospects", reglages: "Réglages", brief: "Brief et ligne éditoriale", rapports: "Rapports", messages: "Messages" };
-    if (r.nom === "client") {
+    if (r.nom === "client" && !estLili()) morceaux.push(el("span", { text: "Page introuvable" }));
+    else if (r.nom === "client") {
       var e = espaceSlug(r.param);
       morceaux.push(el("a", { href: "#" + r.param, text: e ? e.nom : "" }));
       var rub = rubriquesClient().filter(function (x) { return x.id === r.rubrique; })[0];

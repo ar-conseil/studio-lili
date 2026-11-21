@@ -159,6 +159,12 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
    Afficher du mot de passe, `confidentialite.html` réécrite (prestataires dont Anthropic, durées, droits) avec les
    mentions légales lues dans `MARQUE.mentions` (`assets/marque.js`) : SIRET, adresse et e-mail de Lili à remplir.
 9. Recette : espace « client démo » (marque fictive), parcours complets ordinateur et téléphone, tests RLS, Lighthouse > 90.
+   **Fait le 21/11/2026** : `npm run recette` (`outils/recette.mjs`) prépare l'espace « Atelier Exemple
+   (démonstration) » (`#client-demo`, archivé donc absent du studio de Lili) et son compte client sans mot de passe
+   (`client-demo@studio-lili.invalid`), se connecte comme lui sur la base en ligne par lien magique vérifié par le
+   script, fait 34 vérifications (voir, faire, et surtout ne pas pouvoir), puis remet tout dans l'état de départ.
+   Parcours client vérifié sur le vrai site (validation, brief, messages ; ordinateur et téléphone) ; côté Lili,
+   59 adresses en démonstration sans erreur ni débordement. Lighthouse (page d'entrée en ligne) : voir la note d'étape.
 10. Guides : `docs/guide-lili.md` et « Comment valider vos publications ».
 
 Après chaque étape : commit clair, mise à jour de ce fichier, note à Antonin (ce qui est fait, ce qu'il doit faire).
