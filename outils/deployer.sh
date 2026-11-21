@@ -1,0 +1,100 @@
+#!/bin/zsh
+# Met en ligne le studio de Lili sur Supabase, avec le seul jeton d'accès (API d'administration ; jamais `supabase login`).
+# Accès lus dans ~/.lili/ (jamais dans le dépôt) :
+#   supabase.env  SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_REF
+#   oauth.env     GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, MS_CLIENT_ID, MS_CLIENT_SECRET (facultatif : boutons Google / Microsoft)
+#
+#   outils/deployer.sh                               tests locaux, schéma, tests des droits en ligne, connexion, fonctions, config.js
+#   outils/deployer.sh --proprietaire <e-mail>       en plus : invite Lili (rôle propriétaire) ; elle choisit son mot de passe
+set -euo pipefail
+cd "$(dirname "$0")/.."
+set -a; source ~/.lili/supabase.env; set +a
+: "${SUPABASE_ACCESS_TOKEN:?jeton manquant dans ~/.lili/supabase.env}" "${SUPABASE_PROJECT_REF:?identifiant du projet manquant}"
+SB=(npx --yes supabase@2.122.0)
+API="https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF"
+SITE="https://ar-conseil.github.io/studio-lili/"
+PRIVE=$(mktemp -d ~/.lili/tmp.XXXX); trap 'rm -rf "$PRIVE"' EXIT
+APPLIQUEES=~/.lili/migrations-appliquees
+
+sql() { # fichier SQL -> exécuté sur la base par l'API d'administration ; s'arrête à la première erreur
+  python3 -I -c 'import json,sys; print(json.dumps({"query": open(sys.argv[1]).read()}))' "$1" > "$PRIVE/corps.json"
+  local code; code=$(curl -s -o "$PRIVE/reponse.json" -w '%{http_code}' -X POST "$API/database/query" \
+    -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" --data-binary @"$PRIVE/corps.json")
+  [[ "$code" == 2* ]] || { print "   ERREUR $code : $(head -c 800 "$PRIVE/reponse.json")"; exit 1; }
+}
+
+echo "1. Tests des droits sur le Mac (PGlite)"
+[ -d node_modules/@electric-sql/pglite ] || npm install --silent
+node outils/tester-droits.mjs | tail -1
+
+echo "2. Schéma (chaque migration une seule fois)"
+for m in supabase/migrations/*.sql; do
+  if grep -qx "$(basename "$m")" "$APPLIQUEES" 2>/dev/null; then echo "   déjà appliquée : $(basename "$m")"; continue; fi
+  sql "$m" && basename "$m" >> "$APPLIQUEES" && echo "   appliquée : $(basename "$m")"
+done
+
+echo "3. Tests des droits sur la base en ligne (transaction annulée : rien ne reste)"
+sql supabase/tests/droits.sql && echo "   tous les tests passent"
+
+echo "4. Connexion : inscriptions fermées, code à 6 chiffres, Google et Microsoft"
+[ -f ~/.lili/oauth.env ] && { set -a; source ~/.lili/oauth.env; set +a; }
+python3 -I - "$PRIVE/auth.json" "$SITE" <<'PY'
+import json, os, sys
+c = {
+  "disable_signup": True,                       # personne ne s'inscrit seul : Lili invite
+  "site_url": sys.argv[2],
+  "uri_allow_list": sys.argv[2] + ",http://localhost:8772/",
+  "password_min_length": 10,
+  "mfa_totp_enroll_enabled": True, "mfa_totp_verify_enabled": True, "mfa_max_enrolled_factors": 10,
+  "mailer_otp_exp": 3600,
+}
+g, gs = os.environ.get("GOOGLE_CLIENT_ID"), os.environ.get("GOOGLE_CLIENT_SECRET")
+if g and gs: c.update(external_google_enabled=True, external_google_client_id=g, external_google_secret=gs)
+m, ms = os.environ.get("MS_CLIENT_ID"), os.environ.get("MS_CLIENT_SECRET")
+if m and ms: c.update(external_azure_enabled=True, external_azure_client_id=m, external_azure_secret=ms,
+                      external_azure_url="https://login.microsoftonline.com/common")
+json.dump(c, open(sys.argv[1], "w"))
+print("   Google : " + ("activé" if g and gs else "pas de clés dans ~/.lili/oauth.env") + " · Microsoft : " + ("activé" if m and ms else "pas de clés"))
+PY
+code=$(curl -s -o "$PRIVE/reponse.json" -w '%{http_code}' -X PATCH "$API/config/auth" -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" --data-binary @"$PRIVE/auth.json")
+[[ "$code" == 2* ]] || { echo "   ERREUR $code : $(head -c 600 "$PRIVE/reponse.json")"; exit 1; }
+
+echo "5. Fonctions serveur"
+fonctions=(supabase/functions/*/index.ts(N))
+if (( ${#fonctions} )); then
+  for f in $fonctions; do f=${f:h:t}
+    "${SB[@]}" functions deploy "$f" --project-ref "$SUPABASE_PROJECT_REF" --use-api >/dev/null && echo "   $f déployée"
+  done
+else echo "   aucune pour l'instant"; fi
+
+echo "6. Clé publique du site (assets/config.js)"
+curl -s "$API/api-keys" -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" > "$PRIVE/cles.json"
+ANON=$(python3 -I -c 'import json,sys; print([x for x in json.load(open(sys.argv[1])) if x.get("name")=="anon"][0]["api_key"])' "$PRIVE/cles.json")
+cat > assets/config.js <<JS
+/* Adresse du projet Supabase et clé publique (« anon »), écrites par outils/deployer.sh.
+   Cette clé est faite pour être publique : sans connexion, la base ne renvoie rien (règles RLS).
+   Ne jamais mettre ici la clé service_role. */
+window.STUDIO_CONFIG = {
+  url: "https://$SUPABASE_PROJECT_REF.supabase.co",
+  cle: "$ANON"
+};
+JS
+echo "   écrite (à commiter : GitHub Pages la sert au site)"
+
+if [[ "${1:-}" == "--proprietaire" && -n "${2:-}" ]]; then
+  echo "7. Invitation de Lili (rôle propriétaire)"
+  SERVICE=$(python3 -I -c 'import json,sys; print([x for x in json.load(open(sys.argv[1])) if x.get("name")=="service_role"][0]["api_key"])' "$PRIVE/cles.json")
+  python3 -I -c 'import json,sys; print(json.dumps({"email": sys.argv[1], "data": {"nom": "Lili Rouzier"}}))' "$2" > "$PRIVE/invite.json"
+  code=$(curl -s -o "$PRIVE/reponse.json" -w '%{http_code}' -X POST "https://$SUPABASE_PROJECT_REF.supabase.co/auth/v1/invite" \
+    -H "apikey: $SERVICE" -H "Authorization: Bearer $SERVICE" -H "Content-Type: application/json" --data-binary @"$PRIVE/invite.json")
+  [[ "$code" == 2* ]] || { echo "   ERREUR $code : $(head -c 600 "$PRIVE/reponse.json")"; exit 1; }
+  ID=$(python3 -I -c 'import json,sys; print(json.load(open(sys.argv[1]))["id"])' "$PRIVE/reponse.json")
+  # Rôle posé côté serveur (app_metadata), jamais modifiable par l'intéressée ; recopié dans public.personnes
+  curl -s -o /dev/null -X PUT "https://$SUPABASE_PROJECT_REF.supabase.co/auth/v1/admin/users/$ID" -H "apikey: $SERVICE" \
+    -H "Authorization: Bearer $SERVICE" -H "Content-Type: application/json" -d '{"app_metadata":{"role":"proprietaire"}}'
+  printf "update public.personnes set role = 'proprietaire', nom = 'Lili Rouzier' where id = '%s';\n" "$ID" > "$PRIVE/role.sql"
+  sql "$PRIVE/role.sql"
+  echo "   invitation envoyée ; à la première connexion, Lili choisit son mot de passe puis relie son code à 6 chiffres"
+fi
+echo "Terminé."

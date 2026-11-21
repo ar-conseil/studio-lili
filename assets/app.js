@@ -181,6 +181,25 @@
       $("mot-de-passe").value = ""; etat.essais = 0; // la suite vient de l'événement SIGNED_IN
     });
   });
+  // Google ou Microsoft : retour sur le site, puis code à 6 chiffres comme pour le mot de passe.
+  // Un compte Google ou Microsoft à la même adresse qu'un compte invité s'y rattache ; les inconnus sont refusés.
+  document.querySelectorAll("[data-fournisseur]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var f = b.dataset.fournisseur;
+      if (APERCU) return preparerEnrolement();
+      dire("Ouverture de " + (f === "google" ? "Google" : "Microsoft") + "…");
+      db.auth.signInWithOAuth({ provider: f, options: { redirectTo: location.origin + location.pathname, scopes: f === "azure" ? "email openid profile" : undefined } })
+        .then(function (r) { if (r.error) dire("Connexion impossible : " + r.error.message, true); });
+    });
+  });
+  // Retour d'un fournisseur avec une erreur (compte non invité, refus…) : message clair, sans détail technique
+  (function () {
+    var p = new URLSearchParams(location.hash.slice(1) || location.search);
+    if (p.get("error")) {
+      dire(/signup|not allowed|disabled/i.test(p.get("error_description") || "") ? "Ce compte n'a pas encore accès : demandez une invitation à Lili." : "Connexion refusée : " + (p.get("error_description") || p.get("error")), true);
+      history.replaceState(null, "", location.pathname);
+    }
+  })();
   $("btn-lien").addEventListener("click", function () {
     var email = $("email").value.trim();
     if (!email) { dire("Indiquez d'abord votre e-mail.", true); $("email").focus(); return; }

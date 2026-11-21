@@ -1,0 +1,12 @@
+{
+  "name": "studio-lili",
+  "private": true,
+  "description": "Outils du studio de Lili (le site lui-même n'a ni dépendance ni étape de construction)",
+  "type": "module",
+  "scripts": {
+    "test": "node outils/tester-droits.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.2.17"
+  }
+}
