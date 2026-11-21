@@ -36,6 +36,7 @@
     }));
 
     var colGauche = el("div", { class: "pile" }, [
+      St.blocBriefDuJour ? St.blocBriefDuJour() : null,
       St.bloc("Publications du jour", duJour.length, duJour.length ? el("div", { class: "liste-pubs" }, duJour.map(function (p) { return St.lignePublication(p); }))
         : St.vide("Rien n'est prévu aujourd'hui.", el("button", { type: "button", class: "btn-texte", text: "Prévoir une publication", onclick: function () { St.nouvellePublication(null, new Date()); } }))),
       modifs.length ? St.bloc("Modifications demandées", modifs.length, el("div", { class: "liste-pubs" }, modifs.map(function (p) {
@@ -87,7 +88,7 @@
     if (r.rubrique) {
       var rub = St.rubriquesClient().filter(function (x) { return x.id === r.rubrique; })[0];
       if (!rub) { St.aller(e.slug); return el("div"); }
-      var corps = rub.id === "calendrier" ? V.calendrier(r, e) : rub.id === "publications" ? V.publications(r, e) : V.mediatheque(r, e);
+      var corps = rub.id === "calendrier" ? V.calendrier(r, e) : rub.id === "publications" ? V.publications(r, e) : rub.id === "mediatheque" ? V.mediatheque(r, e) : V["rub_" + rub.id](r, e);
       return el("div", { class: "vue-rubrique", style: { "--c": e.couleur } }, [
         el("header", { class: "entete-rubrique" }, [
           el("a", { class: "retour-client", href: "#" + e.slug, title: "Retour à la présentation (Échap)" }, [St.icone("retour"), St.logoEspace(e, "petit"), el("span", { text: e.nom })]),
@@ -114,12 +115,14 @@
     return el("div", { class: "vue-client", style: { "--c": e.couleur } }, [
       el("div", { class: "couverture" }, [couv ? el("img", { src: couv, alt: "" }) : null]),
       el("header", { class: "entete-client" }, [St.logoEspace(e, "grand"), el("div", {}, [el("p", { class: "surtitre", text: [e.metier, (e.reseaux || []).map(function (x) { return (St.RESEAUX[x] || {}).nom; }).join(" · ")].filter(Boolean).join(" · ") }), el("h1", { class: "titre-page", text: e.nom }),
-        el("p", { class: "phrase", text: membres.length ? "Avec " + membres.map(function (m) { var p = St.personne(m.personne_id) || {}; return p.nom + (m.fonction ? " (" + m.fonction.toLowerCase() + ")" : ""); }).join(", ") : "Aucun membre invité pour l'instant." })]),
-        el("div", { class: "entete-actions" }, [el("button", { type: "button", class: "btn-plein", onclick: function () { St.nouvellePublication(e.id); } }, [St.icone("plus"), "Nouvelle publication"])])]),
+        el("p", { class: "phrase", text: membres.length ? "Avec " + membres.map(function (m) { var p = St.personne(m.personne_id) || {}; return p.nom + (m.fonction ? " (" + m.fonction.toLowerCase() + ")" : ""); }).join(", ") : "Aucun membre invité pour l'instant." }, membres.length ? [] : [" ", el("a", { href: "#" + e.slug + "/equipe", text: "Inviter le client" })])]),
+        el("div", { class: "entete-actions" }, [el("button", { type: "button", class: "btn-texte", onclick: function () { St.editerEspace(e); } }, [St.icone("reglages"), "Fiche"]),
+          el("button", { type: "button", class: "btn-plein", onclick: function () { St.nouvellePublication(e.id); } }, [St.icone("plus"), "Nouvelle publication"])])]),
       el("div", { class: "chiffres" }, chiffres.map(function (c) { return el("div", { class: "chiffre " + (c[3] || "") }, [el("span", { text: c[0] }), el("b", { text: String(c[1]) }), el("small", { text: c[2] })]); })),
       el("nav", { class: "tuiles", "aria-label": "Rubriques de " + e.nom }, St.rubriquesClient().map(function (x) {
         var resume = x.id === "calendrier" ? (prochaines[0] ? "Prochaine : " + (prochaines[0].titre || "Sans titre") + " · " + St.quand(prochaines[0].date_prevue) : "Rien de prévu")
-          : x.id === "publications" ? pubs.length + " publication" + (pubs.length > 1 ? "s" : "") : S.medias.filter(function (m) { return m.espace_id === e.id && !m.corbeille_le; }).length + " fichiers";
+          : x.id === "publications" ? pubs.length + " publication" + (pubs.length > 1 ? "s" : "") : x.id === "mediatheque" ? S.medias.filter(function (m) { return m.espace_id === e.id && !m.corbeille_le; }).length + " fichiers"
+          : St.resumes && St.resumes[x.id] ? St.resumes[x.id](e) : "";
         return el("a", { class: "tuile", href: "#" + e.slug + "/" + x.id }, [St.icone(x.icone, "tuile-ic"), el("span", {}, [el("b", { text: x.nom }), el("small", { text: resume })]), St.icone("fleche", "tuile-fleche")]);
       })),
       prochaines.length ? el("section", { class: "a-venir" }, [el("h2", { text: "À venir" }), el("div", { class: "grille-cartes" }, prochaines.map(function (p) { return St.cartePublication(p, { sansClient: true }); }))]) : null

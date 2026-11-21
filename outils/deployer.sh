@@ -95,9 +95,17 @@ select cron.schedule('notifier', '*/5 * * * *', \$\$ select net.http_post(url :=
 -- Ménage : journal des tâches 7 jours, notifications traitées 60 jours
 select cron.unschedule('menage') where exists (select 1 from cron.job where jobname = 'menage');
 select cron.schedule('menage', '23 3 * * *', \$\$ delete from cron.job_run_details where end_time < now() - interval '7 days';
-  delete from public.notifications where cree_le < now() - interval '60 days'; \$\$);
+  delete from public.notifications where cree_le < now() - interval '60 days';
+  delete from public.assistant_journal where cree_le < now() - interval '90 days';
+  delete from public.briefs_jour where jour < current_date - 60; \$\$);
+-- Brief du jour : chaque matin à 5 h UTC (6 h à Paris l'hiver, 7 h l'été), 7 jours sur 7
+select cron.unschedule('brief-du-jour') where exists (select 1 from cron.job where jobname = 'brief-du-jour');
+select cron.schedule('brief-du-jour', '0 5 * * *', \$\$ select net.http_post(url := 'https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/brief-du-jour',
+    headers := jsonb_build_object('Content-Type', 'application/json',
+      'x-cle-synchro', (select decrypted_secret from vault.decrypted_secrets where name = 'cle_synchro')),
+    body := '{}'::jsonb, timeout_milliseconds := 120000) \$\$);
 SQL
-sql "$PRIVE/cron.sql" && echo "   tâche « notifier » toutes les 5 minutes"
+sql "$PRIVE/cron.sql" && echo "   tâches « notifier » (5 min), « brief-du-jour » (chaque matin) et « menage »"
 
 echo "6. Clé publique du site (assets/config.js)"
 curl -s "$API/api-keys" -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" > "$PRIVE/cles.json"

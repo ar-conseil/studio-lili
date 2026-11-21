@@ -64,9 +64,13 @@ insert into storage.objects (bucket_id, name) values
 insert into public.messages (espace_id, auteur_id, contenu) values ('10000000-0000-4000-a000-00000000000a', '00000000-0000-4000-a000-0000000000a1', 'Message A');
 insert into public.taches (titre, espace_id) values ('Tâche de Lili', '10000000-0000-4000-a000-00000000000a');
 insert into public.temps (espace_id, minutes) values ('10000000-0000-4000-a000-00000000000a', 90);
-insert into public.factures (espace_id, objet, statut, numero) values ('10000000-0000-4000-a000-00000000000a', 'Octobre', 'payee', 91);
+insert into public.factures (espace_id, objet, statut, numero) values ('10000000-0000-4000-a000-00000000000a', 'Octobre', 'payee', (select coalesce(max(numero), 90) + 1 from public.factures));
 insert into public.briefs (espace_id, ton, visibilite) values ('10000000-0000-4000-a000-00000000000a', 'Chaleureux', 'partage');
 insert into public.rapports (espace_id, mois, reseau, abonnes, visibilite) values ('10000000-0000-4000-a000-00000000000a', '2026-10-01', 'instagram', 1200, 'interne');
+insert into public.reglages (cle, valeur) values ('entreprise', '{"siret": "000 000 000 00000"}') on conflict (cle) do update set valeur = excluded.valeur;
+insert into public.briefs_jour (jour, contenu) values (current_date, 'Brief de Lili') on conflict (jour) do update set contenu = excluded.contenu;
+insert into public.assistant_journal (personne_id, demande) values ('00000000-0000-4000-a000-000000000001', 'Idées pour Noël');
+insert into public.messages (espace_id, auteur_id, contenu) values ('10000000-0000-4000-a000-00000000000b', '00000000-0000-4000-a000-0000000000b1', 'Message B');
 insert into public.comptes_mail (personne_id, email, refresh_token, jeton_acces) values ('00000000-0000-4000-a000-000000000001', 'lili-gmail@essai.invalid', 'jeton-secret', 'acces-secret');
 
 -- ---------- Personne non connectée : rien ----------
@@ -85,10 +89,10 @@ reset role;
 -- ---------- Lili avec son code : tout ----------
 select essais.devenir('00000000-0000-4000-a000-000000000001', 'aal2');
 set local role authenticated;
-select essais.verifier((select count(*) from public.publications) = 4, 'Lili voit les 4 publications');
-select essais.verifier((select count(*) from public.commentaires) = 2, 'Lili voit les commentaires internes');
-select essais.verifier((select count(*) from public.espaces_prive) = 1, 'Lili voit la partie privée des espaces');
-select essais.verifier((select count(*) from storage.objects) = 5, 'Lili voit tous les fichiers');
+select essais.verifier((select count(*) from public.publications where espace_id::text like '10000000-%') = 4, 'Lili voit les 4 publications d''essai');
+select essais.verifier((select count(*) from public.commentaires where publication_id::text like '20000000-%') = 2, 'Lili voit les commentaires internes');
+select essais.verifier((select count(*) from public.espaces_prive where espace_id::text like '10000000-%') = 1, 'Lili voit la partie privée des espaces');
+select essais.verifier((select count(*) from storage.objects where name like '10000000-%') = 5, 'Lili voit tous les fichiers d''essai');
 -- Passage « à valider » : version figée ; idée qui avance : journal interne
 update public.publications set statut = 'en-creation' where id = '20000000-0000-4000-a000-000000000002';
 update public.publications set statut = 'modifs-demandees' where id = '20000000-0000-4000-a000-000000000001';
@@ -97,8 +101,11 @@ select essais.verifier((select max(numero) from public.versions where publicatio
 select essais.verifier((select visibilite from public.publications where id = '20000000-0000-4000-a000-000000000002') = 'interne', 'une publication en création reste interne');
 -- Facture émise : numéro suivant
 insert into public.factures (espace_id, objet, statut) values ('10000000-0000-4000-a000-00000000000a', 'Novembre', 'emise');
-select essais.verifier((select max(numero) from public.factures) = 92, 'la facture émise prend le numéro 92');
-select essais.verifier((select count(*) from public.comptes_mail) = 1, 'Lili voit sa boîte Gmail reliée');
+select essais.verifier((select numero from public.factures where objet = 'Novembre') = (select max(numero) from public.factures where objet <> 'Novembre') + 1, 'la facture émise prend le numéro suivant (92 sur une base vide)');
+select essais.verifier(exists (select 1 from public.comptes_mail where email = 'lili-gmail@essai.invalid'), 'Lili voit sa boîte Gmail reliée');
+select essais.verifier(exists (select 1 from public.reglages where cle = 'entreprise') and exists (select 1 from public.briefs_jour where jour = current_date) and exists (select 1 from public.assistant_journal where demande = 'Idées pour Noël'), 'Lili voit ses réglages, son brief et son assistant');
+insert into public.devis (espace_id, objet, statut) values ('10000000-0000-4000-a000-00000000000a', 'Forfait 2027', 'envoye');
+select essais.verifier((select numero from public.devis where objet = 'Forfait 2027') like 'D' || to_char(current_date, 'YYYY') || '-___', 'le devis envoyé prend un numéro D<année>-<n°>');
 select essais.doit_echouer('select refresh_token from public.comptes_mail', 'le navigateur de Lili lit le jeton Gmail');
 select essais.doit_echouer('select jeton_acces from public.comptes_mail', 'le navigateur de Lili lit le jeton d''accès Gmail');
 reset role;
@@ -133,6 +140,12 @@ select essais.verifier((select count(*) from storage.objects where bucket_id = '
 select essais.verifier((select count(*) from public.versions) = 1, 'A voit la version envoyée');
 select essais.verifier((select count(*) from public.notifications) >= 1 and not exists (select 1 from public.notifications where personne_id <> '00000000-0000-4000-a000-0000000000a1'), 'A ne voit que ses propres notifications');
 select essais.verifier((select count(*) from public.comptes_mail) = 0, 'A ne voit pas la boîte Gmail de Lili');
+select essais.verifier((select count(*) from public.reglages) = 0, 'A ne voit pas les réglages de Lili (SIRET, IBAN…)');
+select essais.verifier((select count(*) from public.briefs_jour) = 0, 'A ne voit pas le brief du jour de Lili');
+select essais.verifier((select count(*) from public.assistant_journal) = 0, 'A ne voit pas ce que Lili demande à son assistant');
+select essais.verifier((select count(*) from public.devis) = 0, 'A ne voit pas les devis');
+select essais.verifier(not exists (select 1 from public.messages where contenu = 'Message B'), 'A ne lit pas les messages de B');
+select essais.doit_echouer($$insert into public.reglages (cle, valeur) values ('pirate', '{}')$$, 'A écrit dans les réglages de Lili');
 select essais.doit_echouer($$update public.notifications set personne_id = '00000000-0000-4000-a000-0000000000b1'$$, 'A détourne une notification');
 -- Écritures interdites
 select essais.doit_echouer($$insert into public.publications (espace_id, titre, statut, auteur_id, visibilite) values ('10000000-0000-4000-a000-00000000000b', 'intrusion', 'idee', '00000000-0000-4000-a000-0000000000a1', 'partage')$$, 'A crée une publication chez B');
@@ -170,7 +183,7 @@ set local role authenticated;
 select essais.verifier((select count(*) from public.publications where espace_id = '10000000-0000-4000-a000-00000000000a') = 0, 'B ne voit aucun post de A, même partagé');
 select essais.verifier((select count(*) from public.commentaires) = 0, 'B ne voit aucun commentaire de A');
 select essais.verifier((select count(*) from public.medias where espace_id = '10000000-0000-4000-a000-00000000000a') = 0, 'B ne voit aucun média de A');
-select essais.verifier((select count(*) from public.messages) = 0, 'B ne voit pas les messages de A');
+select essais.verifier((select count(*) from public.messages where espace_id = '10000000-0000-4000-a000-00000000000a') = 0 and (select count(*) from public.messages) = 1, 'B ne voit pas les messages de A, seulement les siens');
 select essais.verifier((select count(*) from public.journal where espace_id = '10000000-0000-4000-a000-00000000000a') = 0, 'B ne voit pas le journal de A');
 select essais.verifier((select count(*) from public.personnes where email like 'a_@essai.invalid') = 0, 'B ne voit pas les personnes de A');
 select essais.verifier((select count(*) from storage.objects where name like '10000000-0000-4000-a000-00000000000a/%') = 0, 'B ne lit aucun fichier de A');

@@ -148,7 +148,61 @@ window.DEMO_DONNEES = function () {
     { id: 2, espace_id: E.ondine, acteur_id: P.ines, action: "commentaire.ajoute", objet_id: pubs[1].id, details: { titre: pubs[1].titre }, visibilite: "partage", cree_le: jour(-1, 19) },
     { id: 3, espace_id: E.ecrin, acteur_id: P.sarah, action: "publication.idee", objet_id: pubs[pubs.length - 1].id, details: { titre: "Idée de la cliente : avant / après" }, visibilite: "partage", cree_le: jour(-1, 11) }
   ];
+  // Étape 7 : brief, messages, rapports, veille, partenariats, temps, factures, devis, prospects (tout est fictif)
+  function moisIso(n) { var d = new Date(auj); d.setDate(1); d.setMonth(d.getMonth() + n); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-01"; }
+  function jourIso(n) { var d = new Date(auj.getTime() + n * J); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  var briefs = [
+    { espace_id: E.ondine, cible: "Femmes et hommes de 28 à 55 ans du quartier, qui offrent des fleurs pour une occasion ou pour eux-mêmes.", ton: "Chaleureux, poétique sans en faire trop, toujours de saison.",
+      piliers: ["Le bouquet de la semaine", "Coulisses de l'atelier", "Conseils pour faire durer les fleurs", "Événements et mariages"], mots_oui: ["de saison", "cueilli", "atelier", "local"], mots_non: ["pas cher", "promo"],
+      concurrents: ["@fleuriste_voisin (fictif)"], objectifs: "Faire connaître les ateliers du samedi et doubler les commandes pour la fête des mères.", visibilite: "partage", modifie_le: jour(-6) },
+    { espace_id: E.lumiere, cible: "Étudiants et télétravailleurs du centre-ville.", ton: "Complice, simple, avec une pointe d'humour.", piliers: ["La boisson du moment", "L'équipe", "Le lieu"],
+      mots_oui: ["fait maison", "torréfié"], mots_non: ["industriel"], concurrents: [], objectifs: "Remplir les après-midi en semaine.", visibilite: "interne", modifie_le: jour(-20) }
+  ];
+  var messages = [
+    { id: "m1", espace_id: E.ondine, auteur_id: P.ines, contenu: "Bonjour Lili, on reçoit les pivoines jeudi : on peut les mettre en avant ce week-end ?", cree_le: jour(-1, 9, 12) },
+    { id: "m2", espace_id: E.ondine, auteur_id: LILI, contenu: "Oui ! Je prépare un carrousel pour samedi matin, je vous l'envoie à valider demain.", cree_le: jour(-1, 10, 3) },
+    { id: "m3", espace_id: E.lumiere, auteur_id: P.claire, contenu: "La carte de Noël est prête, je vous dépose les photos dans la médiathèque.", cree_le: jour(-2, 16, 40) }
+  ];
+  var rapports = [];
+  [[E.ondine, "instagram", 2140, 60], [E.ondine, "facebook", 880, 12], [E.lumiere, "instagram", 3510, 90], [E.sable, "linkedin", 640, 25]].forEach(function (x, k) {
+    for (var i = -6; i <= -1; i++) {
+      var n = i + 7;
+      rapports.push({ id: "r" + k + "-" + n, espace_id: x[0], mois: moisIso(i), reseau: x[1], abonnes: x[2] + x[3] * n + (n % 2 ? 7 : -3), portee: Math.round((x[2] * 2.4) + n * 140), impressions: Math.round(x[2] * 4.1 + n * 260),
+        interactions: Math.round(x[2] * .09 + n * 11), engagement: Math.round((3.1 + (n % 3) * .4) * 10) / 10, commentaire: i === -1 && x[1] !== "facebook" ? "Les carrousels de coulisses ont le mieux marché ; on continue en décembre avec deux par semaine." : null,
+        visibilite: i >= -2 ? (i === -1 && k === 0 ? "interne" : "partage") : "partage", meilleures: [], source: "saisie" });
+    }
+  });
+  var veille = [
+    { id: "v1", espace_id: E.ondine, compte: "@atelier_floral (fictif)", lien: "https://www.instagram.com/", note: "Format « avant / après » d'un bouquet en vidéo de 7 s : à tester pour les mariages.", visibilite: "interne", cree_le: jour(-3) },
+    { id: "v2", espace_id: E.lumiere, compte: "@cafe_du_port (fictif)", lien: null, note: "Série « une tasse, une histoire » avec les clients habitués.", visibilite: "interne", cree_le: jour(-9) }
+  ];
+  var partenaires = [
+    { id: "pa1", espace_id: E.ondine, nom: "Chloé, créatrice de bougies (fictive)", compte: "@chloe.bougies", reseau: "instagram", audience: 12400, statut: "en-discussion", contreparties: "Coffret fleurs et bougie pour la fête des mères, jeu concours commun.", visibilite: "interne", echanges: [], publications: [], cree_le: jour(-12) },
+    { id: "pa2", espace_id: E.ondine, nom: "Librairie du coin (fictive)", compte: "@librairie.coin", reseau: "instagram", audience: 3100, statut: "repere", contreparties: null, visibilite: "interne", echanges: [], publications: [], cree_le: jour(-4) }
+  ];
+  var temps = [
+    { id: "t1", espace_id: E.ondine, jour: jourIso(-1), minutes: 90, note: "Carrousel pivoines" }, { id: "t2", espace_id: E.ondine, jour: jourIso(-3), minutes: 150, note: "Shooting atelier" },
+    { id: "t3", espace_id: E.ondine, jour: jourIso(-8), minutes: 60, note: "Planning de décembre" }, { id: "t4", espace_id: E.lumiere, jour: jourIso(-2), minutes: 120, note: "Reels de la carte de Noël" }
+  ];
+  var factures = [
+    { id: "f1", espace_id: E.ondine, numero: 90, objet: "Community management", periode: "Mois précédent", lignes: [{ libelle: "Gestion des réseaux sociaux · Maison Ondine", quantite: 1, prix_ht: 650, tva: 20 }],
+      total_ht: 650, total_tva: 130, total_ttc: 780, statut: "payee", date_facture: jourIso(-35), echeance: jourIso(-5), payee_le: jourIso(-12), cree_le: jour(-35) },
+    { id: "f2", espace_id: E.ondine, numero: 91, objet: "Community management", periode: "Ce mois-ci", lignes: [{ libelle: "Gestion des réseaux sociaux · Maison Ondine", quantite: 1, prix_ht: 650, tva: 20 }],
+      total_ht: 650, total_tva: 130, total_ttc: 780, statut: "emise", date_facture: jourIso(-4), echeance: jourIso(26), cree_le: jour(-4) },
+    { id: "f3", espace_id: E.lumiere, numero: null, objet: "Community management", periode: "Ce mois-ci", lignes: [{ libelle: "Gestion des réseaux sociaux · Café Lumière", quantite: 1, prix_ht: 500, tva: 20 }],
+      total_ht: 500, total_tva: 100, total_ttc: 600, statut: "brouillon", cree_le: jour(-1) }
+  ];
+  var prospects = [
+    { id: "pr1", nom: "Boulangerie Fournil (fictive)", contact: "Marc", email: "marc@fournil.exemple", source: "Bouche-à-oreille", etape: "proposition", montant_mensuel: 450, prochaine_action: "Relancer après la proposition", prochaine_action_le: jourIso(2), cree_le: jour(-15) },
+    { id: "pr2", nom: "Yoga Rivage (fictif)", contact: "Nadia", source: "Instagram", etape: "premier-echange", montant_mensuel: 380, prochaine_action: "Appel découverte", prochaine_action_le: jourIso(-1), cree_le: jour(-6) },
+    { id: "pr3", nom: "Garage Vintage (fictif)", contact: "Paul", source: "Salon", etape: "contact", montant_mensuel: null, cree_le: jour(-2) }
+  ];
+  var devis = [{ id: "dv1", prospect_id: "pr1", espace_id: null, numero: "D" + auj.getFullYear() + "-004", objet: "Accompagnement réseaux sociaux", lignes: [{ libelle: "Gestion des réseaux sociaux (mensuel)", quantite: 1, prix_ht: 450, tva: 20 }],
+    total_ht: 450, total_tva: 90, total_ttc: 540, statut: "envoye", date_devis: jourIso(-5), valable_jusque: jourIso(25), cree_le: jour(-5) }];
+  var reglages = [{ cle: "entreprise", valeur: { nom: "Lili Rouzier", activite: "Community manager", adresse: "Adresse de démonstration", siret: "000 000 000 00000 (démonstration)", conditions: "Paiement à 30 jours par virement." } }];
+
   return { lili: LILI, personnesDemo: P, espaces: espaces, espaces_prive: prives, comptes: comptes, personnes: personnes, membres: membres,
     medias: medias, publications: pubs, publication_medias: pm, commentaires: commentaires, versions: versions, operations: operations,
-    temps_forts: tempsForts, taches: taches, journal: journal, notes_internes: [{ id: "n1", espace_id: E.ondine, publication_id: pubs[0].id, contenu: "Inès préfère les visuels sans texte." }] };
+    temps_forts: tempsForts, taches: taches, journal: journal, notes_internes: [{ id: "n1", espace_id: E.ondine, publication_id: pubs[0].id, contenu: "Inès préfère les visuels sans texte." }],
+    briefs: briefs, messages: messages, rapports: rapports, veille: veille, partenaires: partenaires, temps: temps, factures: factures, devis: devis, prospects: prospects, reglages: reglages };
 };

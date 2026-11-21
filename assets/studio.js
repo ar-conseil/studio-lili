@@ -8,6 +8,7 @@ window.Studio = (function () {
   var S = {
     moi: null, role: "proprietaire", espaces: [], prives: [], comptes: [], membres: [], personnes: [], medias: [], publications: [],
     pubMedias: [], commentaires: [], versions: [], operations: [], tempsForts: [], taches: [], journal: [], notes: [], notifications: [], boitesMail: [],
+    briefs: [], messages: [], rapports: [], veille: [], partenaires: [], temps: [], devis: [], factures: [], prospects: [], reglages: [], briefsJour: [],
     urls: {}, route: { nom: "", param: "", rubrique: "", query: {} }, voirCommeEspace: null
   };
   var X = { db: null, demo: false, quitter: null, verrouiller: null, coquille: null, page: null, demarre: false };
@@ -82,6 +83,15 @@ window.Studio = (function () {
     corbeille: '<path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 9h5.8l.6-9"/>', lien: '<path d="M6.5 9.5a3 3 0 0 0 4.2 0l2-2a3 3 0 0 0-4.2-4.2l-.6.6M9.5 6.5a3 3 0 0 0-4.2 0l-2 2a3 3 0 0 0 4.2 4.2l.6-.6"/>',
     installer: '<path d="M8 2.5v7.5M5 7l3 3 3-3M3 12.5h10"/>',
     mail: '<rect x="1.5" y="3" width="13" height="10" rx="2"/><path d="m2.5 4.5 5.5 4 5.5-4"/>',
+    etincelle: '<path d="M8 1.8 9.3 6.7 14.2 8 9.3 9.3 8 14.2 6.7 9.3 1.8 8 6.7 6.7z"/>',
+    brief: '<path d="M4 1.8h5.5L12.5 5v9.2H4z"/><path d="M9.5 1.8V5h3M6 8h4.5M6 10.5h4.5"/>',
+    rapports: '<path d="M2.5 13.5h11M4.5 11V8M8 11V4.5M11.5 11V6.5"/>',
+    euro: '<path d="M11.5 4a4.5 4.5 0 1 0 0 8M3 7h6M3 9.2h6"/>',
+    personnes: '<circle cx="6" cy="5.5" r="2.3"/><path d="M1.8 13.5a4.2 4.2 0 0 1 8.4 0M10.8 3.4a2.3 2.3 0 0 1 0 4.4M12 9.6a4.2 4.2 0 0 1 2.2 3.9"/>',
+    prospects: '<path d="M2 3h12l-4.5 5.5V13l-3 1.2V8.5z"/>',
+    reglages: '<circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/>',
+    micro: '<rect x="6" y="1.8" width="4" height="7.5" rx="2"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.2"/>',
+    imprimer: '<path d="M4.5 6V2h7v4M4.5 11.5H3a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v3.5a1 1 0 0 1-1 1h-1.5"/><path d="M4.5 9.5h7V14h-7z"/>',
     cloche: '<path d="M4 11.5V7a4 4 0 0 1 8 0v4.5l1 1.5H3zM6.5 14.5a1.6 1.6 0 0 0 3 0"/>'
   };
   function icone(nom, classe) { var s = el("span", { class: "ic " + (classe || ""), "aria-hidden": "true" }); s.innerHTML = '<svg viewBox="0 0 16 16">' + (ICONES[nom] || "") + "</svg>"; return s; }
@@ -134,9 +144,11 @@ window.Studio = (function () {
   // Lecture : tout ce que la personne connectée a le droit de voir (les règles de la base filtrent)
   var TABLES = [["espaces", "espaces"], ["comptes", "comptes"], ["membres", "membres"], ["personnes", "personnes"], ["medias", "medias"],
     ["publications", "publications"], ["publication_medias", "pubMedias"], ["commentaires", "commentaires"], ["versions", "versions"],
-    ["operations", "operations"], ["temps_forts", "tempsForts"], ["journal", "journal"], ["notifications", "notifications"]];
+    ["operations", "operations"], ["temps_forts", "tempsForts"], ["journal", "journal"], ["notifications", "notifications"],
+    ["briefs", "briefs"], ["messages", "messages"], ["rapports", "rapports"], ["veille", "veille"], ["partenaires", "partenaires"]];
   var TABLES_LILI = [["espaces_prive", "prives"], ["taches", "taches"], ["notes_internes", "notes"],
-    ["comptes_mail", "boitesMail", "id, email, droits, derniere_erreur, cree_le"]];
+    ["comptes_mail", "boitesMail", "id, email, droits, derniere_erreur, cree_le"],
+    ["temps", "temps"], ["devis", "devis"], ["factures", "factures"], ["prospects", "prospects"], ["reglages", "reglages"], ["briefs_jour", "briefsJour"]];
   function charger() {
     if (X.demo) {
       if (!X.donneesDemo) {
@@ -145,6 +157,7 @@ window.Studio = (function () {
         S.espaces = d.espaces; S.prives = d.espaces_prive; S.comptes = d.comptes; S.membres = d.membres; S.personnes = d.personnes;
         S.medias = d.medias; S.publications = d.publications; S.pubMedias = d.publication_medias; S.commentaires = d.commentaires;
         S.versions = d.versions; S.operations = d.operations; S.tempsForts = d.temps_forts; S.taches = d.taches; S.journal = d.journal; S.notes = d.notes_internes;
+        ["briefs", "messages", "rapports", "veille", "partenaires", "temps", "devis", "factures", "prospects", "reglages"].forEach(function (k) { S[k] = d[k] || []; });
         S.notifications = d.journal.map(function (j, i) { return { id: i + 1, personne_id: d.lili, journal_id: j.id, lue_le: null, cree_le: j.cree_le }; });
         S.medias.forEach(function (m) { S.urls[m.chemin] = m.url; if (m.apercu_url) S.urls[m.chemin + "#apercu"] = m.apercu_url; });
         // ?demo=maison-ondine : ouvre directement la démonstration comme la cliente de cette marque
@@ -159,6 +172,8 @@ window.Studio = (function () {
       var q = X.db.from(t[0]).select(t[2] || "*");
       if (t[0] === "journal") q = q.order("cree_le", { ascending: false }).limit(300);
       if (t[0] === "notifications") q = q.order("cree_le", { ascending: false }).limit(100);
+      if (t[0] === "messages") q = q.order("cree_le", { ascending: false }).limit(500);
+      if (t[0] === "briefs_jour") q = q.order("jour", { ascending: false }).limit(7);
       return q.then(function (r) { if (r.error) throw r.error; S[t[1]] = r.data || []; });
     })).then(signerMedias);
   }
@@ -193,13 +208,22 @@ window.Studio = (function () {
   function urlEspace(e, champ) { return e && (e[champ.replace("_path", "_url")] || S.urls[e[champ]]) || ""; }
 
   // Écritures : appliquées tout de suite à l'écran, puis en base (ou seulement à l'écran en démonstration)
-  var CLES = { publications: "id", medias: "id", commentaires: "id", taches: "id", espaces: "id", espaces_prive: "espace_id", notes_internes: "id", operations: "id", temps_forts: "id", comptes: "id", versions: "id" };
+  var CLES = { publications: "id", medias: "id", commentaires: "id", taches: "id", espaces: "id", espaces_prive: "espace_id", notes_internes: "id", operations: "id", temps_forts: "id", comptes: "id", versions: "id",
+    briefs: "espace_id", reglages: "cle", briefs_jour: "jour" };
   var LOCALE = { publications: "publications", medias: "medias", commentaires: "commentaires", taches: "taches", espaces: "espaces", espaces_prive: "prives",
-    notes_internes: "notes", operations: "operations", temps_forts: "tempsForts", comptes: "comptes", publication_medias: "pubMedias", versions: "versions" };
+    notes_internes: "notes", operations: "operations", temps_forts: "tempsForts", comptes: "comptes", publication_medias: "pubMedias", versions: "versions",
+    briefs: "briefs", messages: "messages", rapports: "rapports", veille: "veille", partenaires: "partenaires", temps: "temps", devis: "devis", factures: "factures",
+    prospects: "prospects", reglages: "reglages", briefs_jour: "briefsJour", membres: "membres", personnes: "personnes" };
+  // Tables sans colonne « cree_le » (la base refuserait une colonne inconnue)
+  var SANS_DATE = ["espaces_prive", "comptes", "operations", "temps_forts", "publication_medias", "briefs", "rapports", "temps", "reglages"];
   function maj(table, id, champs) {
     var cle = CLES[table] || "id", liste = S[LOCALE[table]] || [], ligne = liste.filter(function (x) { return x[cle] === id; })[0], avant = ligne ? Object.assign({}, ligne) : null;
     if (ligne) Object.assign(ligne, champs);
-    if (X.demo) { if (table === "publications") effetsDemo(ligne, avant); return Promise.resolve(ligne); }
+    if (X.demo) {
+      if (table === "publications") effetsDemo(ligne, avant);
+      if (table === "factures" && ligne && ["emise", "payee"].indexOf(ligne.statut) >= 0 && !ligne.numero) { ligne.numero = prochainNumero(); ligne.date_facture = ligne.date_facture || iso(new Date()); }
+      return Promise.resolve(ligne);
+    }
     return X.db.from(table).update(champs).eq(cle, id).select().then(function (r) {
       if (r.error) { if (ligne && avant) Object.assign(ligne, avant); signaler("Non enregistré : " + r.error.message, true); throw r.error; }
       if (ligne && r.data && r.data[0]) Object.assign(ligne, r.data[0]);
@@ -207,12 +231,14 @@ window.Studio = (function () {
     });
   }
   function creer(table, ligne) {
-    if (!ligne.id && table !== "publication_medias" && table !== "espaces_prive") ligne.id = uuid();
-    ligne.cree_le = ligne.cree_le || new Date().toISOString();
+    if (!ligne.id && (CLES[table] || "id") === "id" && table !== "publication_medias") ligne.id = uuid();
+    if (SANS_DATE.indexOf(table) < 0) ligne.cree_le = ligne.cree_le || new Date().toISOString();
     var liste = S[LOCALE[table]]; if (liste) liste.push(ligne);
     if (X.demo) {
       if (table === "commentaires") { ligne.auteur_id = S.moi.id; if (ligne.cible === "visuel" && !ligne.parent_id) ligne.numero = Math.max.apply(null, [0].concat(commentairesDe(ligne.publication_id).map(function (c) { return c.numero || 0; }))) + 1; }
-      if (table === "publications") { ligne.auteur_id = S.moi.id; ligne.version_courante = 0; }
+      if (table === "publications") { ligne.auteur_id = ligne.auteur_id || S.moi.id; ligne.version_courante = 0; }
+      if (table === "messages") ligne.auteur_id = S.moi.id;
+      if (table === "factures" && ["emise", "payee"].indexOf(ligne.statut) >= 0 && !ligne.numero) ligne.numero = prochainNumero();
       return Promise.resolve(ligne);
     }
     var envoi = Object.assign({}, ligne);
@@ -221,6 +247,26 @@ window.Studio = (function () {
       if (r.error) { if (liste) liste.splice(liste.indexOf(ligne), 1); signaler("Non enregistré : " + r.error.message, true); throw r.error; }
       if (r.data && r.data[0]) Object.assign(ligne, r.data[0]);
       return ligne;
+    });
+  }
+  // Enregistrer une ligne dont la clé n'est pas « id » (brief d'un espace, réglage) : créée ou remplacée
+  function enregistrer(table, ligne) {
+    var cle = CLES[table], liste = S[LOCALE[table]] || [], deja = liste.filter(function (x) { return x[cle] === ligne[cle]; })[0];
+    if (deja) Object.assign(deja, ligne); else liste.push(ligne);
+    if (X.demo) return Promise.resolve(deja || ligne);
+    return X.db.from(table).upsert(ligne, { onConflict: cle }).select().then(function (r) {
+      if (r.error) { signaler("Non enregistré : " + r.error.message, true); throw r.error; }
+      if (r.data && r.data[0]) Object.assign(deja || ligne, r.data[0]);
+      return deja || ligne;
+    });
+  }
+  // En démonstration seulement : imite la numérotation des factures (en ligne, c'est la base qui numérote)
+  function prochainNumero() { return Math.max.apply(null, [91].concat(S.factures.map(function (f) { return f.numero || 0; }))) + 1; }
+  // Appel d'une fonction serveur (Supabase Edge Functions) ; l'erreur rendue est celle que la fonction explique
+  function appel(nom, corps) {
+    return X.db.functions.invoke(nom, { body: corps || {} }).then(function (r) {
+      if (r.error) return (r.error.context && r.error.context.json ? r.error.context.json().catch(function () { return {}; }) : Promise.resolve({})).then(function (j) { throw new Error((j && j.erreur) || r.error.message); });
+      return r.data;
     });
   }
   function supprimer(table, filtre) {
@@ -337,13 +383,18 @@ window.Studio = (function () {
       lienCote("#calendrier", "Calendrier", "calendrier", r.nom === "calendrier", null, "C"),
       lienCote("#publications", "Publications", "publications", r.nom === "publications", aValider.length || null, "P"),
       lienCote("#mediatheque", "Médiathèque", "mediatheque", r.nom === "mediatheque", null, "M"),
-      lienCote("#mails", "Mails", "mail", r.nom === "mails", null, "E")
+      lienCote("#mails", "Mails", "mail", r.nom === "mails", null, "E"),
+      lienCote("#taches", "Tâches", "taches", r.nom === "taches", S.taches.filter(function (t) { return t.statut !== "fait" && t.echeance && t.echeance <= iso(new Date()); }).length || null),
+      lienCote("#prospects", "Prospects", "prospects", r.nom === "prospects")
     ] : [
       lienCote("#", "Accueil", "aujourdhui", r.nom === ""),
       lienCote("#valider", "À valider", "valider", r.nom === "valider", aValider.length || null),
       lienCote("#calendrier", "Calendrier", "calendrier", r.nom === "calendrier"),
       lienCote("#publications", "Publications", "publications", r.nom === "publications"),
-      lienCote("#mediatheque", "Médiathèque", "mediatheque", r.nom === "mediatheque")
+      lienCote("#mediatheque", "Médiathèque", "mediatheque", r.nom === "mediatheque"),
+      lienCote("#brief", "Brief", "brief", r.nom === "brief"),
+      lienCote("#rapports", "Rapports", "rapports", r.nom === "rapports"),
+      lienCote("#messages", "Messages", "commentaire", r.nom === "messages")
     ]);
     var clients = lili ? [el("p", { class: "cote-titre", text: "Clients" }), el("nav", { class: "cote-clients", "aria-label": "Clients" }, espacesActifs().map(function (e, i) {
       var actif = r.nom === "client" && r.param === e.slug;
@@ -359,12 +410,14 @@ window.Studio = (function () {
       el("button", { type: "button", class: "cote-lien", id: "btn-notifications", onclick: function () { if (V.notifications) V.notifications(); } },
         [icone("cloche"), el("span", { class: "cote-texte", text: "Notifications" }), nonLues ? el("span", { class: "cote-compte", text: String(nonLues) }) : null]),
       el("button", { type: "button", class: "installer", "data-installer": "", hidden: !window.__installable, onclick: function () { if (window.__installer) window.__installer(); } }, [icone("installer"), "Installer l'application"]),
+      lili ? lienCote("#reglages", "Réglages", "reglages", r.nom === "reglages") : null,
       el("button", { type: "button", class: "cote-lien", onclick: function () { if (X.verrouiller) X.verrouiller(); } }, [icone("cadenas"), el("span", { class: "cote-texte", text: "Verrouiller" })]),
       el("button", { type: "button", class: "cote-lien", onclick: function () { if (X.quitter) X.quitter(); } }, [icone("sortir"), el("span", { class: "cote-texte", text: "Se déconnecter" })])
     ]);
     var cote = el("aside", { class: "cote", id: "cote", "aria-label": "Menu" }, [
       el("div", { class: "cote-haut" }, [tete, el("button", { type: "button", class: "btn-icone fermer-menu", "aria-label": "Fermer le menu", onclick: function () { menu(false); } }, [icone("fermer")])]),
       lili ? el("button", { type: "button", class: "cote-nouveau", title: "Nouvelle publication (touche N)", onclick: function () { nouvellePublication(); } }, [icone("plus"), el("span", { text: "Nouvelle publication" }), el("kbd", { text: "N" })]) : null,
+      lili ? el("button", { type: "button", class: "cote-assistant", title: "Demander à " + (MARQUE.assistant || "l'assistant") + " (touche /)", onclick: function () { if (V.assistant) V.assistant(); } }, [icone("etincelle"), el("span", { text: "Demander à " + (MARQUE.assistant || "l'assistant") }), el("kbd", { text: "/" })]) : null,
       nav
     ].concat(clients).concat([bas]));
     var fil = el("nav", { class: "fil", "aria-label": "Fil d'Ariane" }, filAriane());
@@ -386,7 +439,8 @@ window.Studio = (function () {
   function menu(ouvert) { document.documentElement.classList.toggle("menu-ouvert", ouvert); }
   function filAriane() {
     var r = S.route, morceaux = [];
-    var noms = { "": estLili() ? "Aujourd'hui" : "Accueil", calendrier: "Calendrier", publications: "Publications", mediatheque: "Médiathèque", valider: "À valider", mails: "Mails" };
+    var noms = { "": estLili() ? "Aujourd'hui" : "Accueil", calendrier: "Calendrier", publications: "Publications", mediatheque: "Médiathèque", valider: "À valider", mails: "Mails",
+      taches: "Tâches", prospects: "Prospects", reglages: "Réglages", brief: "Brief et ligne éditoriale", rapports: "Rapports", messages: "Messages" };
     if (r.nom === "client") {
       var e = espaceSlug(r.param);
       morceaux.push(el("a", { href: "#" + r.param, text: e ? e.nom : "" }));
@@ -406,7 +460,10 @@ window.Studio = (function () {
     return el("span", { class: "logo-espace " + (taille || ""), style: { "--c": (e && e.couleur) || "#1E1A17", "--cf": foncee((e && e.couleur) || "#1E1A17") } }, [u ? el("img", { src: u, alt: "" }) : el("b", { text: initiales(e && e.nom) })]);
   }
   function rubriquesClient() {
-    return [{ id: "calendrier", nom: "Calendrier", icone: "calendrier" }, { id: "publications", nom: "Publications", icone: "publications" }, { id: "mediatheque", nom: "Médiathèque", icone: "mediatheque" }];
+    return [{ id: "calendrier", nom: "Calendrier", icone: "calendrier" }, { id: "publications", nom: "Publications", icone: "publications" }, { id: "mediatheque", nom: "Médiathèque", icone: "mediatheque" },
+      { id: "brief", nom: "Brief", icone: "brief" }, { id: "messages", nom: "Messages", icone: "commentaire" }, { id: "rapports", nom: "Rapports", icone: "rapports" },
+      { id: "veille", nom: "Veille", icone: "oeil" }, { id: "partenariats", nom: "Partenariats", icone: "lien" }, { id: "facturation", nom: "Temps et facturation", icone: "euro" },
+      { id: "notes", nom: "Notes internes", icone: "cadenas" }, { id: "equipe", nom: "Équipe", icone: "personnes" }];
   }
 
   // En démonstration : voir le studio comme Lili, ou comme la cliente d'une des marques
@@ -431,7 +488,7 @@ window.Studio = (function () {
   // ======================================================================
   // Routeur et rendu
   // ======================================================================
-  var RESERVES = ["", "calendrier", "publications", "mediatheque", "valider", "p", "mails"];
+  var RESERVES = ["", "calendrier", "publications", "mediatheque", "valider", "p", "mails", "taches", "prospects", "reglages", "brief", "rapports", "messages"];
   function lireRoute() {
     var h = decodeURIComponent(location.hash.replace(/^#/, "")), q = {}, i = h.indexOf("?");
     if (i >= 0) { new URLSearchParams(h.slice(i + 1)).forEach(function (v, k) { q[k] = v; }); h = h.slice(0, i); }
@@ -454,6 +511,8 @@ window.Studio = (function () {
     if (r.nom === "publications") return V.publications(r);
     if (r.nom === "mediatheque") return V.mediatheque(r);
     if (r.nom === "mails") return estLili() ? V.mails(r) : introuvable();
+    if (["taches", "prospects", "reglages"].indexOf(r.nom) >= 0) return estLili() ? V[r.nom](r) : introuvable();
+    if (["brief", "rapports", "messages"].indexOf(r.nom) >= 0) { var ec = espacesClient()[0]; return !estLili() && ec ? V["rub_" + r.nom](r, ec) : introuvable(); }
     if (r.nom === "p") return publication(r.param) && visible(publication(r.param)) ? V.publication(r) : introuvable();
     if (r.nom === "client") { var e = espaceSlug(r.param); return e && estLili() ? V.client(r, e) : introuvable(); }
     return introuvable();
@@ -503,6 +562,7 @@ window.Studio = (function () {
     else if (k === "p" || k === "P") aller("publications");
     else if (k === "m" || k === "M") aller("mediatheque");
     else if (estLili() && (k === "e" || k === "E")) aller("mails");
+    else if (estLili() && k === "/") { ev.preventDefault(); if (V.assistant) V.assistant(); }
     else if (estLili() && /^[1-9]$/.test(k)) { var e = espacesActifs()[+k - 1]; if (e) aller(e.slug); }
     else if (k === "Escape" && r.nom === "client" && r.rubrique) aller(r.param);
     else if (k === "Escape" && r.nom === "p") history.back();
@@ -519,7 +579,8 @@ window.Studio = (function () {
   function abonner() {
     if (X.demo || X.canal) return;
     X.canal = X.db.channel("studio");
-    ["publications", "publication_medias", "commentaires", "medias", "versions", "espaces", "taches", "journal", "operations", "notifications", "comptes_mail"].forEach(function (t) {
+    ["publications", "publication_medias", "commentaires", "medias", "versions", "espaces", "taches", "journal", "operations", "notifications", "comptes_mail",
+      "briefs", "messages", "rapports", "veille", "partenaires", "temps", "devis", "factures", "prospects", "membres", "briefs_jour"].forEach(function (t) {
       X.canal.on("postgres_changes", { event: "*", schema: "public", table: t }, function () {
         clearTimeout(attente); attente = setTimeout(function () {
           if (enSaisie() || document.querySelector("dialog[open]") || X.glisse) { enAttente = true; return; }
@@ -559,7 +620,7 @@ window.Studio = (function () {
     espace: espace, espaceSlug: espaceSlug, personne: personne, publication: publication, media: media, prive: prive, mediasDe: mediasDe,
     commentairesDe: commentairesDe, comptesDe: comptesDe, estLili: estLili, publicationsVisibles: function () { return publicationsVisibles().filter(visible); },
     espacesActifs: espacesActifs, espacesClient: espacesClient, avance: avance, visible: visible, rubriquesClient: rubriquesClient,
-    image: image, urlMedia: urlMedia, maj: maj, creer: creer, supprimer: supprimer, repondre: repondre, televerser: televerser, charger: charger,
+    image: image, urlMedia: urlMedia, maj: maj, creer: creer, enregistrer: enregistrer, appel: appel, supprimer: supprimer, repondre: repondre, televerser: televerser, charger: charger,
     signaler: signaler, fenetre: fenetre, dessiner: dessiner, aller: aller, nouvellePublication: nouvellePublication, ouvrir: ouvrir, fermer: fermer
   };
 })();

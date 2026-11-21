@@ -49,7 +49,7 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   deux gestes, médiathèque). Styles : `assets/studio.css` (piste Papier, téléphone compris).
 - Adresses : `#`, `#calendrier?vue=mois|semaine|liste&jour=…&client=…`, `#publications?statut=…`, `#mediatheque`,
   `#p/<id>`, `#valider` (client), `#<slug-client>` et `#<slug>/calendrier|publications|mediatheque`.
-  Clavier : N nouvelle publication, 0 accueil, C calendrier, P publications, M médiathèque, 1-9 clients, Échap retour,
+  Clavier : / assistant, N nouvelle publication, 0 accueil, C calendrier, P publications, M médiathèque, 1-9 clients, Échap retour,
   ← → rubriques ou période du calendrier, T aujourd'hui.
 - Étape 5, en direct et notifications : `assets/vues/direct.js` (présence Realtime sur `#p/<id>` : avatars de qui
   regarde, « … écrit » diffusé sans rien enregistrer ; cloche des notifications et abonnement de l'appareil au Web Push).
@@ -63,6 +63,17 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   `messagerie` (Gmail : dossiers, liste, lecture, pièces, ranger, envoyer, brouillon ; Lili avec code seulement).
   Partagé : `_partage/commun.ts` (appelant, aal2, clé de synchro), `google.ts`, `gmail.ts` (repris du cockpit).
   Clés : `~/.lili/vapid.env` et `~/.lili/cle-synchro` (créées par le déploiement), secrets Supabase.
+- Étape 7 : `assets/vues/rubriques.js` = rubriques d'un client (`#<slug>/brief|messages|rapports|veille|partenariats|
+  facturation|notes|equipe`), pages `#taches`, `#prospects`, `#reglages` (identité de l'entreprise, en-tête des factures),
+  fiche d'un client (bouton « Fiche » : couleur, logo, réseaux, facturation interne), assistant (touche /, micro),
+  brief du jour (bloc d'Aujourd'hui). Côté client : `#brief`, `#rapports`, `#messages` (seulement ce qui est partagé).
+  Factures : brouillon, puis « Émettre » (numéro donné par la base), PDF = page imprimable ; devis D<année>-<n°>.
+  Fonctions : `inviter` (lien de connexion 24 h, envoyé depuis le Gmail de Lili ou rendu pour qu'elle le copie ;
+  rôle posé côté serveur), `assistant` (Claude Opus 5.5, outils sur les données du studio, crée seulement des
+  brouillons « idée » internes ; repli automatique de modèle activé, beta `server-side-fallback-2026-07-01`),
+  `brief-du-jour` (pg_cron 5 h UTC ; texte sans IA si pas de clé). `_partage/envoi.ts` : envoi depuis le Gmail de Lili.
+  Migration `20261121130000_etape7.sql` : `reglages`, `briefs_jour`, `assistant_journal`, numérotation des devis.
+  Clé `ANTHROPIC_API_KEY` : à poser dans `~/.lili/anthropic.env` puis relancer le déploiement (secret Supabase).
 - Page Mails (`#mails`, touche E, Lili seule) : `assets/vues/mails.js` ; HTML des mails dans un iframe isolé, images
   distantes bloquées jusqu'au clic ; expéditeur rapproché de son client (adresse d'un membre).
 - **Démonstration** : `?demo` (comme Lili) ou `?demo=<slug>` (comme la cliente de cette marque), données fictives de
@@ -139,7 +150,9 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
 6. Import réel des données Notion. **Fait le 21/11/2026** (`outils/import-notion.mjs`, rejouable : identifiants Notion et
    chemins de fichiers stables ; correspondance des clients privée dans `~/.lili/import-espaces.json`). Vérification de
    l'affichage sur les vraies données sans compte : `.donnees/extraire.mjs` puis `.donnees/reel.html?demo` (local, privé).
-7. Brief, Veille, Partenariats, Rapports, Temps & facturation, Prospects, assistant IA.
+7. Brief, Veille, Partenariats, Rapports, Temps & facturation, Prospects, assistant IA. **Fait le 21/11/2026**
+   (plus invitations des clients, tâches en colonnes, réglages, fiche client ; vérifié en démonstration ordinateur et
+   téléphone, comme Lili et comme cliente). En attente : la clé Anthropic (assistant), sinon brief du jour sans IA.
 8. PWA, page de connexion, page de confidentialité (RGPD, hébergement Supabase UE).
 9. Recette : espace « client démo » (marque fictive), parcours complets ordinateur et téléphone, tests RLS, Lighthouse > 90.
 10. Guides : `docs/guide-lili.md` et « Comment valider vos publications ».
