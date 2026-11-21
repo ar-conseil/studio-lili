@@ -17,7 +17,9 @@
     var duJour = pubs.filter(function (p) { return p.date_prevue && St.memeJour(p.date_prevue, maintenant); }).sort(function (a, b) { return a.date_prevue.localeCompare(b.date_prevue); });
     var aValider = pubs.filter(function (p) { return p.statut === "a-valider"; }).sort(function (a, b) { return String(a.envoye_le).localeCompare(String(b.envoye_le)); });
     var modifs = pubs.filter(function (p) { return p.statut === "modifs-demandees"; });
-    var enRetard = pubs.filter(function (p) { return p.date_prevue && new Date(p.date_prevue) < St.debutJour(maintenant) && ["publie", "programme"].indexOf(p.statut) < 0; });
+    // En retard : ce qui était en cours (pas les vieilles idées) et dont la date est passée depuis moins de 30 jours
+    var il30 = St.ajouterJours(St.debutJour(maintenant), -30);
+    var enRetard = pubs.filter(function (p) { var d = p.date_prevue && new Date(p.date_prevue); return d && d < St.debutJour(maintenant) && d >= il30 && ["en-creation", "a-valider", "modifs-demandees", "valide"].indexOf(p.statut) >= 0; });
     var hier = Date.now() - 36 * 3600000;
     var comms = S.commentaires.filter(function (c) { var a = St.personne(c.auteur_id); return a && a.role !== "proprietaire" && new Date(c.cree_le) > hier; })
       .sort(function (a, b) { return String(b.cree_le).localeCompare(String(a.cree_le)); });

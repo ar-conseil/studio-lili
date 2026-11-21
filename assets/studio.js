@@ -53,6 +53,16 @@ window.Studio = (function () {
     var h = Math.round(m / 60); if (h < 24) return "il y a " + h + " h";
     var j = Math.round(h / 24); return j === 1 ? "hier" : "il y a " + j + " jours";
   }
+  // Couleur de marque lisible sous un texte blanc (contraste AA ≥ 4,5) : foncée par petits pas si elle est trop claire
+  var cacheFonce = {};
+  function foncee(hex) {
+    if (!hex || hex.charAt(0) !== "#" || hex.length !== 7) return hex;
+    if (cacheFonce[hex]) return cacheFonce[hex];
+    var c = [1, 3, 5].map(function (i) { return parseInt(hex.substr(i, 2), 16); });
+    var lum = function (v) { return v.map(function (x) { x /= 255; return x <= .03928 ? x / 12.92 : Math.pow((x + .055) / 1.055, 2.4); }).reduce(function (t, x, i) { return t + x * [.2126, .7152, .0722][i]; }, 0); };
+    for (var k = 0; k < 30 && 1.05 / (lum(c) + .05) < 4.5; k++) c = c.map(function (x) { return Math.round(x * .92); });
+    return (cacheFonce[hex] = "#" + c.map(function (x) { return x.toString(16).padStart(2, "0"); }).join(""));
+  }
   function uuid() { return crypto.randomUUID ? crypto.randomUUID() : "x".repeat(32).replace(/x/g, function () { return (Math.random() * 16 | 0).toString(16); }).replace(/^(.{8})(.{4})(.{4})(.{4})/, "$1-$2-4$3-$4-").slice(0, 36); }
   function initiales(nom) { return String(nom || "?").replace(/[^A-Za-zÀ-ÿ ]/g, "").split(/\s+/).filter(Boolean).slice(0, 2).map(function (m) { return m[0]; }).join("").toUpperCase(); }
   function enSaisie() { var a = document.activeElement; return !!(a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT" || a.isContentEditable)); }
@@ -393,7 +403,7 @@ window.Studio = (function () {
   }
   function logoEspace(e, taille) {
     var u = urlEspace(e, "logo_path");
-    return el("span", { class: "logo-espace " + (taille || ""), style: { "--c": (e && e.couleur) || "#1E1A17" } }, [u ? el("img", { src: u, alt: "" }) : el("b", { text: initiales(e && e.nom) })]);
+    return el("span", { class: "logo-espace " + (taille || ""), style: { "--c": (e && e.couleur) || "#1E1A17", "--cf": foncee((e && e.couleur) || "#1E1A17") } }, [u ? el("img", { src: u, alt: "" }) : el("b", { text: initiales(e && e.nom) })]);
   }
   function rubriquesClient() {
     return [{ id: "calendrier", nom: "Calendrier", icone: "calendrier" }, { id: "publications", nom: "Publications", icone: "publications" }, { id: "mediatheque", nom: "Médiathèque", icone: "mediatheque" }];
@@ -457,7 +467,7 @@ window.Studio = (function () {
       X.page.appendChild(v);
       var e = S.route.nom === "client" ? espaceSlug(S.route.param) : S.route.nom === "p" && publication(S.route.param) ? espace(publication(S.route.param).espace_id) : !estLili() ? espacesClient()[0] : null;
       document.documentElement.style.setProperty("--marque", (e && e.couleur) || "var(--encre)");
-      if (e && e.couleur) X.page.style.setProperty("--c", e.couleur);   // la couleur du client teinte sa page (boutons, halo)
+      if (e && e.couleur) { X.page.style.setProperty("--c", e.couleur); X.page.style.setProperty("--cf", foncee(e.couleur)); }   // la couleur du client teinte sa page
       document.title = (filAriane().map(function (x) { return x.textContent; }).filter(function (t) { return t && t !== "/"; }).reverse().join(" · ") || "Studio") + " · " + (MARQUE.outil || "Studio");
     };
     if (transition) avecTransition(function () { faire(); window.scrollTo(0, 0); });
@@ -542,7 +552,7 @@ window.Studio = (function () {
   function fermer() { X.demarre = false; if (X.canal && X.db) { X.db.removeChannel(X.canal); X.canal = null; } if (V.quitterPresence) V.quitterPresence(); }
 
   return {
-    S: S, X: X, V: V, el: el, icone: icone, fmt: fmt, iso: iso, hm: hm, quand: quand, ilya: ilya, memeJour: memeJour, joursEntre: joursEntre,
+    S: S, X: X, V: V, el: el, foncee: foncee, icone: icone, fmt: fmt, iso: iso, hm: hm, quand: quand, ilya: ilya, memeJour: memeJour, joursEntre: joursEntre,
     debutJour: debutJour, ajouterJours: ajouterJours, lundi: lundi, pad: pad, uuid: uuid, initiales: initiales, enSaisie: enSaisie,
     STATUTS: STATUTS, ORDRE_STATUTS: ORDRE_STATUTS, RESEAUX: RESEAUX, FORMATS: FORMATS, ETAPES: ETAPES, HEURES: HEURES,
     pastilleStatut: pastilleStatut, pastillesReseaux: pastillesReseaux, logoEspace: logoEspace, urlEspace: urlEspace,

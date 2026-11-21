@@ -4,9 +4,11 @@
   "description": "Outils du studio de Lili (le site lui-même n'a ni dépendance ni étape de construction)",
   "type": "module",
   "scripts": {
-    "test": "node outils/tester-droits.mjs"
+    "test": "node outils/tester-droits.mjs",
+    "import-apercu": "node outils/import-notion.mjs"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "0.2.17"
+    "@electric-sql/pglite": "0.2.17",
+    "@supabase/supabase-js": "2.45.4"
   }
 }

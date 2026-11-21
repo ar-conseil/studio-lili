@@ -1,7 +1,13 @@
 # Plan d'import Notion -> cockpit
 
 > État au 21 novembre 2026 : export de « Mon espace CM » reçu et analysé (Markdown & CSV, sous-pages incluses).
-> **À valider par Antonin avant tout import.** Réponses du 21/11/2026 reportées en fin de page ; deux questions restent ouvertes.
+> **Import réalisé le 21/11/2026** par `outils/import-notion.mjs --ecrire` (aperçu sans `--ecrire`), après validation
+> d'Antonin de la liste des espaces, des comptes Palomano (ceux de Lille) et des logos et couleurs trouvés en ligne.
+> Résultat en base : 11 espaces (10 logos, 6 couvertures), 19 comptes, 362 publications (241 visibles des clients),
+> 136 visuels (124 vignettes, 12 vidéos) et 201 liens, 114 notes internes (texte des fiches Notion et colonnes NOTES /
+> BROUILLONS), 33 tâches, 14 opérations, 4 absences, 47 factures (n° 42 à 91) et leurs PDF. Deux clients facturés
+> autrefois sans espace : leurs factures sont gardées sans espace (objet = « Community management · <client> »).
+> La correspondance client par client (marques, raisons sociales, comptes) est privée : `~/.lili/import-espaces.json`.
 > Ce fichier est public : il décrit des structures et des volumes, jamais des contenus. Les noms des clients et la
 > correspondance client par client sont dans `~/.lili/import-notion-clients.md` (hors dépôt).
 
@@ -159,7 +165,7 @@ historique) ; `idee` et `en-creation` -> `interne`.
    sans la mention « art. 293 B » prévue au brief de départ (taux gardé par ligne, pour le cas d'une autre TVA).
 2. **Réglé** : les numéros manquants (48, 77, 78) ne posent pas de problème ; l'historique est importé tel quel et la
    suite démarre à 92.
-3. **Qui est un client ?** (ouvert) « État de programmation » compte 12 lignes pour 8 calendriers, et la base
+3. **Réglé le 21/11/2026** (liste des 11 espaces validée par Antonin). Rappel de la question : « État de programmation » compte 12 lignes pour 8 calendriers, et la base
    « Clients » de la facturation porte les raisons sociales, dont plusieurs ne ressemblent pas au nom de la marque.
    Pour chaque raison sociale : quelle marque ? Pour chaque ligne sans calendrier : espace à part, ou compte d'un autre
    espace ? Tableau à compléter : `~/.lili/import-notion-clients.md` (une recherche en ligne aide à le pré-remplir).
@@ -172,6 +178,6 @@ historique) ; `idee` et `en-creation` -> `interne`.
    d'Antonin (fonction serveur lancée par pg_cron) : brief préparé chaque matin, puis tenu à jour au fil de la journée
    (validations, commentaires, retards, publications du jour). Étape 7.
 8. **Réglé** : seuils validés (en retard sous 0 jour, urgent 0 à 2, cette semaine 3 à 7, OK 8 à 14, bonne avance au-delà).
-9. **Client partagé** (ouvert) : son propriétaire peut-il fournir un export, ou démarre-t-on son espace à neuf ?
+9. **Réglé** : l'espace du client partagé est créé vide (son Notion n'était pas dans l'export).
 10. **Réglé** : logos, couleurs et comptes cherchés en ligne (sources officielles), rangés dans `~/.lili/logos-clients/`
     et soumis à validation avant usage.

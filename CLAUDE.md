@@ -83,7 +83,9 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   part), `outils/logo/icones.sh` rend les PNG avec Chrome sans écran. Les deux autres pistes restent dans
   `assets/marque/pistes/` (planche : `pistes/planche.html`).
 - Aperçu local : `python3 -m http.server 8772 --bind 127.0.0.1` à la racine (le port 8771 est pris par un autre outil).
-- `docs/import-notion.md` : plan de correspondance Notion -> cockpit (à valider par Antonin avant tout import).
+- `docs/import-notion.md` : plan de correspondance Notion -> studio et bilan de l'import ; `outils/import-notion.mjs`.
+- Couleur de marque lisible : `Studio.foncee(couleur)` fonce une couleur trop claire jusqu'au contraste AA sous du texte
+  blanc (variable CSS `--cf`, utilisée pour les boutons et pastilles ; `--c` reste la couleur d'origine pour les teintes).
 - `outils/notion-analyse.mjs` : lit l'export Notion (`~/.lili/notion-export/`) et décrit sa STRUCTURE (bases, colonnes,
   valeurs des statuts, arborescence) sans recopier de contenu client. Sortie dans `~/.lili/` uniquement.
 - `supabase/migrations/20261121100000_studio.sql` : tout le schéma, les fonctions de droits, les automatismes et le
@@ -134,7 +136,9 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
 5. Temps réel (présence, commentaires, statuts), notifications e-mail et Web Push. **Fait le 21/11/2026**, plus la page
    Mails (Gmail de Lili). À faire par Lili : relier sa boîte Gmail (page Mails), activer les notifications sur ses
    appareils (cloche). Les e-mails aux clients partent dès que sa boîte est reliée.
-6. Import réel des données Notion.
+6. Import réel des données Notion. **Fait le 21/11/2026** (`outils/import-notion.mjs`, rejouable : identifiants Notion et
+   chemins de fichiers stables ; correspondance des clients privée dans `~/.lili/import-espaces.json`). Vérification de
+   l'affichage sur les vraies données sans compte : `.donnees/extraire.mjs` puis `.donnees/reel.html?demo` (local, privé).
 7. Brief, Veille, Partenariats, Rapports, Temps & facturation, Prospects, assistant IA.
 8. PWA, page de connexion, page de confidentialité (RGPD, hébergement Supabase UE).
 9. Recette : espace « client démo » (marque fictive), parcours complets ordinateur et téléphone, tests RLS, Lighthouse > 90.

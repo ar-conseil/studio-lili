@@ -73,7 +73,7 @@
     return { nom: (c && c.nom_affiche) || e.nom || "", identifiant: (c && c.identifiant) || "", avatar: c && c.avatar_path && S.urls[c.avatar_path], espace: e };
   }
   function avatar(compte, classe) {
-    return el("span", { class: "ap-avatar " + (classe || ""), style: { "--c": compte.espace.couleur || "#1E1A17" } }, [compte.avatar ? el("img", { src: compte.avatar, alt: "" }) : el("b", { text: St.initiales(compte.espace.nom || compte.nom) })]);
+    return el("span", { class: "ap-avatar " + (classe || ""), style: { "--c": compte.espace.couleur || "#1E1A17", "--cf": St.foncee(compte.espace.couleur || "#1E1A17") } }, [compte.avatar ? el("img", { src: compte.avatar, alt: "" }) : el("b", { text: St.initiales(compte.espace.nom || compte.nom) })]);
   }
   function texteLegende(p, max) {
     var t = (p.legende || "").trim(), h = (p.hashtags || []).map(function (x) { return "#" + x; }).join(" ");
