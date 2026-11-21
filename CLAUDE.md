@@ -164,7 +164,11 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
    (`client-demo@studio-lili.invalid`), se connecte comme lui sur la base en ligne par lien magique vérifié par le
    script, fait 34 vérifications (voir, faire, et surtout ne pas pouvoir), puis remet tout dans l'état de départ.
    Parcours client vérifié sur le vrai site (validation, brief, messages ; ordinateur et téléphone) ; côté Lili,
-   59 adresses en démonstration sans erreur ni débordement. Lighthouse (page d'entrée en ligne) : voir la note d'étape.
+   59 adresses en démonstration sans erreur ni débordement. Lighthouse en ligne (lighthouse@12.2.1) :
+   accessibilité et bonnes pratiques 100 partout ; performance ordinateur 99-100, téléphone 87-94 selon l'essai
+   (entrée, démo) et 98 (confidentialité). SEO 63 : plafonné exprès par `noindex` (espace privé). GitHub injecte un
+   script anti-robot (adresses aléatoires sur ar-conseil.github.io) aux Chrome sans écran : il pèse sur les mesures,
+   pas sur les vraies visites.
 10. Guides : `docs/guide-lili.md` et « Comment valider vos publications ».
 
 Après chaque étape : commit clair, mise à jour de ce fichier, note à Antonin (ce qui est fait, ce qu'il doit faire).
