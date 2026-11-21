@@ -1,0 +1,8 @@
+# Données de départ et exports : jamais dans le dépôt (données clients)
+.donnees/
+notion-export/
+*.zip
+node_modules/
+.DS_Store
+# Fichier généré par outils/deployer.sh (seulement l'URL et la clé anon, mais propre à chaque projet)
+# Il est commité volontairement : GitHub Pages en a besoin. Ne jamais y mettre la clé service_role.
