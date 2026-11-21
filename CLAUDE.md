@@ -188,12 +188,14 @@ Après chaque étape : commit clair, mise à jour de ce fichier, note à Antonin
   d'adresse depuis la boîte Gmail reliée de Lili, à ses couleurs. Tant que la boîte n'est pas reliée, ces envois
   échouent proprement (« demandez un lien à Lili ») ; « Renvoyer un lien » (Équipe) reste la solution de secours.
   **Boîte reliée le 21/11/2026** (lili.vergote@gmail.com, à la demande d'Antonin, par la même autorisation Google
-  que le bouton de la page Mails) ; l'API Gmail a été activée dans le projet Google Cloud `studio-lili-515417`
+  que le bouton de la page Mails) ; l'API Gmail a été activée dans le projet Google Cloud `studio-lili-515417` (désormais au compte de Lili)
   (elle ne l'était pas : erreur SERVICE_DISABLED). L'application Google n'est pas validée par Google : écran
   « application non validée » à chaque nouvelle autorisation, à passer par « Paramètres avancés ».
   Mentions légales et Réglages remplis le 21/11/2026 (SIRET, adresse de Hem, e-mail ; TVA FR16519399273 calculée
   depuis le SIREN, à vérifier par Lili).
-- 21/11/2026 : **connexion Google** : projet Google Cloud « Studio Lili » (`studio-lili-515417`, compte d'Antonin),
+- 21/11/2026 : **connexion Google** : projet Google Cloud « Studio Lili » (`studio-lili-515417`) ; **transféré le
+  21/11/2026 au compte Google de Lili** (lili.vergote@gmail.com, seule propriétaire, contact d'assistance et développeur ;
+  Antonin retiré). Créé à l'origine avec le compte d'Antonin,
   client OAuth web (retours : `…supabase.co/auth/v1/callback` et `…/functions/v1/connexion-google` pour Gmail), clés
   dans `~/.lili/oauth.env`, activée dans Supabase. Passage « en production » à confirmer par Antonin (bouton refusé
   par la sécurité de l'agent) ; sinon seuls les utilisateurs test peuvent entrer avec Google. Microsoft : reporté
