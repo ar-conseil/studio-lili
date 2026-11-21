@@ -182,11 +182,13 @@ Après chaque étape : commit clair, mise à jour de ce fichier, note à Antonin
   cockpit d'Antonin ni les autres outils de l'espace « Default ». Clé « studio-lili assistant » (expire le 01/12/2027)
   dans `~/.lili/anthropic.env` et en secret Supabase ; l'ancienne clé (espace Default) est désactivée. Invitation de
   Lili envoyée le 21/11/2026 depuis la boîte d'Antonin ; ses infos légales (SIRET, adresse, e-mail) sont demandées.
-- 21/11/2026 : **pas de service d'envoi d'e-mails branché** : l'envoi intégré de Supabase n'écrit qu'aux membres de
-  l'organisation. « Mot de passe oublié » et « Recevoir un lien » ne joignent donc ni les clients ni Lili ; l'écran
-  d'entrée le dit et renvoie vers Lili. Solution en place : « Renvoyer un lien » (Équipe) donne un lien de type
-  recovery qui fait choisir un nouveau mot de passe. Pour que ces boutons marchent seuls : SMTP personnalisé dans
-  Supabase (Gmail de Lili avec mot de passe d'application, ou un service d'envoi), à décider avec Antonin.
+- 21/11/2026 : **e-mails de connexion par la boîte Gmail de Lili** : le service intégré de Supabase n'écrit qu'aux
+  membres de l'organisation. Crochet Supabase « Send Email Hook » -> fonction `envoi-auth` (signature Standard
+  Webhooks, secret `~/.lili/crochet-email`), qui envoie « mot de passe oublié », « lien de connexion » et changement
+  d'adresse depuis la boîte Gmail reliée de Lili, à ses couleurs. Tant que la boîte n'est pas reliée, ces envois
+  échouent proprement (« demandez un lien à Lili ») ; « Renvoyer un lien » (Équipe) reste la solution de secours.
+  Mentions légales et Réglages remplis le 21/11/2026 (SIRET, adresse de Hem, e-mail ; TVA FR16519399273 calculée
+  depuis le SIREN, à vérifier par Lili).
 - 21/11/2026 : **connexion Google** : projet Google Cloud « Studio Lili » (`studio-lili-515417`, compte d'Antonin),
   client OAuth web (retours : `…supabase.co/auth/v1/callback` et `…/functions/v1/connexion-google` pour Gmail), clés
   dans `~/.lili/oauth.env`, activée dans Supabase. Passage « en production » à confirmer par Antonin (bouton refusé
@@ -199,8 +201,8 @@ Après chaque étape : commit clair, mise à jour de ce fichier, note à Antonin
   Schéma déployé et tests des droits passés en ligne le 21/11/2026. Même jour, à la demande d'Antonin, les projets
   `hvb-app` (club) et `palomano-equipe` ont été transférés dans cette organisation Pro (environ 45 $/mois au total) ;
   le cockpit d'Antonin est sur un autre compte Supabase et n'a pas bougé ; Evoalys est chez Scaleway.
-  Compte propriétaire de Lili créé (rôle « proprietaire » côté serveur et dans `personnes` ; son adresse n'est pas
-  écrite ici, dépôt public) ; lien d'invitation (24 h) dans `~/.lili/invitation.txt`. L'envoi d'e-mails intégré de
+  Compte propriétaire de Lili créé (rôle « proprietaire » côté serveur et dans `personnes` ; son adresse e-mail est
+  publiée dans les mentions légales à sa demande, `assets/marque.js`) ; lien d'invitation (24 h) dans `~/.lili/invitation.txt`. L'envoi d'e-mails intégré de
   Supabase ne sert que les membres de l'organisation : invitations et notifications aux clients demanderont un
   service d'envoi (étape 5). Mot de passe de la base généré par Supabase, non
   conservé (inutile : tout passe par l'API d'administration ; le régénérer dans le tableau de bord au besoin).

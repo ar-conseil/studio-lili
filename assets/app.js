@@ -222,7 +222,7 @@
     if (APERCU) return vue("vue-lien");
     db.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname } }).then(function (r) {
       // Même réponse que le compte existe ou non : on ne révèle pas qui a accès.
-      if (r.error && /authoriz|smtp|sending|rate limit/i.test(r.error.message)) return dire(SANS_ENVOI, true);
+      if (r.error && /authoriz|smtp|sending|rate limit|hook|unexpected/i.test(r.error.message)) return dire(SANS_ENVOI, true);
       if (r.error && !/not allowed|signups/i.test(r.error.message)) return dire(r.error.message, true);
       vue("vue-lien");
     });
@@ -232,7 +232,7 @@
     if (!email) { dire("Indiquez d'abord votre e-mail.", true); $("email").focus(); return; }
     if (APERCU) return dire("Un e-mail de réinitialisation vient de partir.");
     db.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname }).then(function (r) {
-      if (r.error && /authoriz|smtp|sending|rate limit/i.test(r.error.message)) return dire(SANS_ENVOI, true);
+      if (r.error && /authoriz|smtp|sending|rate limit|hook|unexpected/i.test(r.error.message)) return dire(SANS_ENVOI, true);
       dire("Si ce compte existe, un e-mail de réinitialisation vient de partir. Rien reçu ? Demandez un nouveau lien à Lili.");
     });
   });

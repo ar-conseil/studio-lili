@@ -10,6 +10,6 @@ window.MARQUE = {
   logoClair: "assets/marque/logo-clair.svg",
   icone: "assets/marque/icone.svg",
   // Mentions légales (page confidentialite.html#mentions) : informations publiques de l'entreprise de Lili.
-  // Vides = la ligne n'est pas affichée. À remplir avec Lili : SIRET, adresse professionnelle, e-mail de contact.
-  mentions: { statut: "Entrepreneuse individuelle (micro-entreprise)", siret: "", adresse: "", email: "" }
+  // Vides = la ligne n'est pas affichée. Communiquées par Lili le 21/11/2026 pour être publiées.
+  mentions: { statut: "Entrepreneuse individuelle (micro-entreprise)", siret: "519 399 273 00050", adresse: "33 rue Jean Jaurès, 59510 Hem", email: "lilivergote@gmail.com" }
 };

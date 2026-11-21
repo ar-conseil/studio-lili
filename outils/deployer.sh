@@ -47,7 +47,7 @@ c = {
   "password_min_length": 10,
   "mfa_totp_enroll_enabled": True, "mfa_totp_verify_enabled": True, "mfa_max_enrolled_factors": 10,
   "mailer_otp_exp": 86400,                     # liens valables 24 h (invitation, connexion)
-  # E-mails en français (envoyés une fois un service d'envoi relié, étape 5 ; celui de Supabase ne sert que l'équipe)
+  # Modèles de Supabase (inutilisés tant que le crochet envoi-auth est actif : c'est lui qui rédige et envoie)
   "mailer_subjects_invite": "Votre espace avec Lili Rouzier",
   "mailer_templates_invite_content": "<p>Bonjour,</p><p>Lili Rouzier vous ouvre votre espace : calendrier, publications à valider, médiathèque et messages.</p><p><a href=\"{{ .ConfirmationURL }}\">Entrer dans mon espace</a></p><p>Vous choisirez votre mot de passe en arrivant.</p>",
   "mailer_subjects_magic_link": "Votre lien de connexion",
@@ -69,11 +69,13 @@ code=$(curl -s -o "$PRIVE/reponse.json" -w '%{http_code}' -X PATCH "$API/config/
 
 echo "5. Fonctions serveur, leurs secrets et la tâche planifiée des notifications"
 [ -f ~/.lili/cle-synchro ] || ( umask 077; openssl rand -hex 24 > ~/.lili/cle-synchro )
+# Secret du crochet d'envoi des e-mails de connexion (Standard Webhooks : « v1,whsec_ » + 32 octets en base64)
+[ -f ~/.lili/crochet-email ] || ( umask 077; printf 'v1,whsec_%s\n' "$(openssl rand -base64 32)" > ~/.lili/crochet-email )
 if [ ! -f ~/.lili/vapid.env ]; then   # clés des notifications sur téléphone et ordinateur (Web Push), créées une fois
   ( umask 077; npx --yes web-push@3.6.7 generate-vapid-keys --json | python3 -I -c 'import json,sys; k=json.load(sys.stdin); print("VAPID_PUBLIQUE="+k["publicKey"]); print("VAPID_PRIVEE="+k["privateKey"])' > ~/.lili/vapid.env )
 fi
 ( umask 077
-  printf 'CLE_SYNCHRO=%s\nSITE_URL=%s\n' "$(cat ~/.lili/cle-synchro)" "$SITE" > "$PRIVE/secrets.env"
+  printf 'CLE_SYNCHRO=%s\nSITE_URL=%s\nSEND_EMAIL_HOOK_SECRET=%s\n' "$(cat ~/.lili/cle-synchro)" "$SITE" "$(cat ~/.lili/crochet-email)" > "$PRIVE/secrets.env"
   cat ~/.lili/vapid.env >> "$PRIVE/secrets.env"
   [ -f ~/.lili/oauth.env ] && grep -E '^GOOGLE_CLIENT_(ID|SECRET)=.+' ~/.lili/oauth.env >> "$PRIVE/secrets.env" || true
   [ -f ~/.lili/anthropic.env ] && grep -E '^ANTHROPIC_API_KEY=.+' ~/.lili/anthropic.env >> "$PRIVE/secrets.env" || true )
@@ -83,6 +85,13 @@ for f in $fonctions; do f=${f:h:t}
   # chaque fonction vérifie elle-même l'appelant (session de Lili, ou clé de synchro des tâches planifiées)
   "${SB[@]}" functions deploy "$f" --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt --use-api >/dev/null && echo "   $f déployée"
 done
+# E-mails de connexion (mot de passe oublié, lien) : Supabase les confie à la fonction envoi-auth, qui les envoie
+# depuis la boîte Gmail de Lili (le service intégré de Supabase n'écrit qu'aux membres de l'organisation)
+python3 -I -c 'import json,sys; json.dump({"hook_send_email_enabled": True, "hook_send_email_uri": sys.argv[1], "hook_send_email_secrets": open(sys.argv[2]).read().strip()}, open(sys.argv[3], "w"))' \
+  "https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/envoi-auth" ~/.lili/crochet-email "$PRIVE/crochet.json"
+code=$(curl -s -o "$PRIVE/reponse.json" -w '%{http_code}' -X PATCH "$API/config/auth" -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" --data-binary @"$PRIVE/crochet.json")
+[[ "$code" == 2* ]] && echo "   e-mails de connexion confiés à envoi-auth (boîte Gmail de Lili)" || { echo "   ERREUR crochet $code : $(head -c 600 "$PRIVE/reponse.json")"; exit 1; }
 cat > "$PRIVE/cron.sql" <<SQL
 create extension if not exists pg_cron;
 create extension if not exists pg_net;

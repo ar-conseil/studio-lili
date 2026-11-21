@@ -97,9 +97,9 @@ Rubrique **Équipe** du client › **Inviter** : nom, e-mail, fonction, et le r�
 
 Si ta boîte Gmail est reliée, l'invitation part depuis ton adresse. Sinon, le studio te donne un lien à copier et à
 lui envoyer toi-même (valable 24 heures, une seule fois). À son arrivée, il choisit son mot de passe.
-**« Renvoyer un lien »** lui en refait un, qui lui fait choisir un nouveau mot de passe : c'est la réponse quand un
-client a oublié le sien (le bouton « Mot de passe oublié » de la page d'entrée dépend d'un service d'e-mails qui
-n'est pas encore branché). Joins-lui le guide « Comment valider vos publications » :
+**« Renvoyer un lien »** lui en refait un, qui lui fait choisir un nouveau mot de passe. Un client qui a oublié le
+sien peut aussi cliquer « Mot de passe oublié » sur la page d'entrée : l'e-mail part de ta boîte Gmail (une fois
+reliée, voir 10), comme les liens de connexion. Joins-lui le guide « Comment valider vos publications » :
 https://ar-conseil.github.io/studio-lili/guide.html
 
 Pour un nouveau client venu d'un prospect : page **Prospects** › sa fiche › « Signé : créer son espace ».
@@ -136,7 +136,8 @@ Tes anciennes factures importées de Notion gardent leur PDF d'origine.
 - **Mails** (touche **E**) : ta boîte Gmail dans le studio. La première fois, « Relier ma boîte Gmail » et accepte
   l'accès demandé par Google. Les images des mails sont bloquées jusqu'à ton clic. Une fois la boîte reliée, les
   e-mails aux clients (invitations, publication à valider, nouveau message) partent depuis ton adresse, regroupés,
-  et **seulement après un geste de ta part** : rien d'interne ne part jamais.
+  et **seulement après un geste de ta part** : rien d'interne ne part jamais. Les e-mails « mot de passe oublié » et
+  « lien de connexion », demandés par la personne elle-même, partent aussi de ta boîte.
 - **Notifications** (la cloche) : ce que tes clients ont fait. « Recevoir les notifications sur cet appareil » les
   active sur l'ordinateur ou le téléphone ; sur iPhone, il faut d'abord avoir installé l'application sur l'écran
   d'accueil.
