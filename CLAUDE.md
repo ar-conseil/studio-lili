@@ -177,6 +177,11 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
 Après chaque étape : commit clair, mise à jour de ce fichier, note à Antonin (ce qui est fait, ce qu'il doit faire).
 
 ## Décisions
+- 21/11/2026 : **assistant dans son propre espace de travail Anthropic** « Studio Lili » (organisation « Palomano Lille »),
+  limite de dépenses 15 $/mois : la clé de l'assistant est seule dans cet espace, la limite ne touche donc ni le
+  cockpit d'Antonin ni les autres outils de l'espace « Default ». Clé « studio-lili assistant » (expire le 01/12/2027)
+  dans `~/.lili/anthropic.env` et en secret Supabase ; l'ancienne clé (espace Default) est désactivée. Invitation de
+  Lili envoyée le 21/11/2026 depuis la boîte d'Antonin ; ses infos légales (SIRET, adresse, e-mail) sont demandées.
 - 21/11/2026 : **pas de service d'envoi d'e-mails branché** : l'envoi intégré de Supabase n'écrit qu'aux membres de
   l'organisation. « Mot de passe oublié » et « Recevoir un lien » ne joignent donc ni les clients ni Lili ; l'écran
   d'entrée le dit et renvoie vers Lili. Solution en place : « Renvoyer un lien » (Équipe) donne un lien de type
