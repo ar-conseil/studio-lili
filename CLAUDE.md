@@ -55,9 +55,8 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
 - Aucune suppression définitive sans confirmation ; corbeille de 30 jours pour publications et médias.
 
 ## Ordre de travail et état
-1. Lecture du modèle + plan d'import Notion + ce fichier -> validation d'Antonin. **En cours** (21 novembre 2026) :
-   modèle lu ; dépôt local créé (`~/studio-lili`) ; export Notion demandé (Markdown & CSV) — Lili est connectée à
-   Notion dans un autre profil Chrome, sans l'extension Claude, donc export manuel.
+1. Lecture du modèle + plan d'import Notion + ce fichier -> validation d'Antonin. **En attente de validation**
+   (21 novembre 2026) : modèle lu, export analysé, plan rédigé, 9 questions ouvertes pour Lili en fin de plan.
 2. Trois pistes visuelles (maquettes HTML statiques) -> choix.
 3. Schéma Supabase complet + RLS + tests de droits.
 4. Coquille, Aujourd'hui, Clients, Calendrier, Publication avec aperçus, validation client, commentaires épinglés, médiathèque.
@@ -71,4 +70,11 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
 Après chaque étape : commit clair, mise à jour de ce fichier, note à Antonin (ce qui est fait, ce qu'il doit faire).
 
 ## Décisions
-- 21/11/2026 : dépôt local `~/studio-lili` (à côté de `~/cockpit`), branche `main`.
+- 21/11/2026 : dépôt local `~/studio-lili` (à côté de `~/cockpit`), branche `main` ; dépôt GitHub public créé.
+- 21/11/2026 : **Lili est redevable de la TVA depuis octobre 2024** (factures à 20 %). Pas de mention « art. 293 B »
+  (le brief de départ se trompait). Taux de TVA stocké par ligne de devis / facture.
+- 21/11/2026 : export Notion reçu (`~/.lili/notion-export/`, 373 publications, 47 factures n° 42 à 91, 138 visuels).
+  Plan de correspondance dans `docs/import-notion.md` ; correspondance client par client dans
+  `~/.lili/import-notion-clients.md` (hors dépôt). Constats retenus pour le modèle : comptes multiples par espace
+  (profils LinkedIn des dirigeants), opérations commerciales datées, étapes de création séparées du statut,
+  clients qui proposent des idées, état de programmation calculé et non saisi.
