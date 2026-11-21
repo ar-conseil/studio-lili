@@ -22,10 +22,10 @@ window.DEMO_DONNEES = function () {
     boutique: "1441986300917-64674bd600d8", portants: "1470309864661-68328b2cd0a5"
   };
   var espaces = [
-    { id: E.ondine, slug: "maison-ondine", nom: "Maison Ondine", statut: "actif", couleur: "#3E5B4A", reseaux: ["instagram", "facebook"], ordre: 1, couverture_url: u(PHOTOS.tulipes, 1400, 600), metier: "Fleuriste" },
-    { id: E.lumiere, slug: "cafe-lumiere", nom: "Café Lumière", statut: "actif", couleur: "#8A5A3C", reseaux: ["instagram", "facebook"], ordre: 2, couverture_url: u(PHOTOS.cafe, 1400, 600), metier: "Café" },
-    { id: E.sable, slug: "atelier-sable", nom: "Atelier Sable", statut: "actif", couleur: "#2F4A6B", reseaux: ["linkedin", "instagram"], ordre: 3, couverture_url: u(PHOTOS.cadres, 1400, 600), metier: "Céramiste" },
-    { id: E.ecrin, slug: "studio-ecrin", nom: "Studio Écrin", statut: "actif", couleur: "#9C4660", reseaux: ["instagram", "tiktok"], ordre: 4, couverture_url: u(PHOTOS.serum, 1400, 600), metier: "Onglerie" }
+    { id: E.ondine, slug: "maison-ondine", nom: "Maison Ondine", statut: "actif", couleur: "#3E5B4A", reseaux: ["instagram", "facebook"], ordre: 1, couverture_url: u(PHOTOS.tulipes, 900, 386), metier: "Fleuriste" },
+    { id: E.lumiere, slug: "cafe-lumiere", nom: "Café Lumière", statut: "actif", couleur: "#8A5A3C", reseaux: ["instagram", "facebook"], ordre: 2, couverture_url: u(PHOTOS.cafe, 900, 386), metier: "Café" },
+    { id: E.sable, slug: "atelier-sable", nom: "Atelier Sable", statut: "actif", couleur: "#2F4A6B", reseaux: ["linkedin", "instagram"], ordre: 3, couverture_url: u(PHOTOS.cadres, 900, 386), metier: "Céramiste" },
+    { id: E.ecrin, slug: "studio-ecrin", nom: "Studio Écrin", statut: "actif", couleur: "#9C4660", reseaux: ["instagram", "tiktok"], ordre: 4, couverture_url: u(PHOTOS.serum, 900, 386), metier: "Onglerie" }
   ];
   var prives = [
     { espace_id: E.ondine, raison_sociale: "Ondine SARL (fictive)", forfait_mensuel_ht: 650, heures_forfait: 12 },

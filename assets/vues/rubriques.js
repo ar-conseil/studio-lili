@@ -38,7 +38,7 @@
       '<link rel="stylesheet" href="' + new URL("assets/polices/polices.css", location.href).href + '">' +
       '<style>@page{size:A4;margin:16mm}body{font:13px/1.5 Geist,system-ui,sans-serif;color:#1E1A17;margin:0}h1,h2{font-family:"Bodoni Moda",Georgia,serif;font-weight:500;margin:0}' +
       'h1{font-size:30px}h2{font-size:18px;margin:22px 0 8px}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{text-align:left;padding:8px 6px;border-bottom:1px solid #E7E0D5;vertical-align:top}' +
-      'th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8B8178;font-weight:600}.n{text-align:right;font-family:"Geist Mono",monospace;white-space:nowrap}' +
+      'th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6F665E;font-weight:600}.n{text-align:right;font-family:"Geist Mono",monospace;white-space:nowrap}' +
       '.deux{display:flex;justify-content:space-between;gap:30px;margin:18px 0}.petit{color:#5F574F;font-size:12px}.filet{height:3px;background:#A9553A;width:46px;margin:10px 0 18px}' +
       '.totaux{margin-left:auto;width:280px}.totaux td{border:0;padding:4px 6px}.totaux tr:last-child td{font-weight:600;border-top:1px solid #1E1A17;padding-top:8px}' +
       'q{font-family:"Bodoni Moda",Georgia,serif;font-style:italic;font-size:15px}.brouillon{position:fixed;top:40%;left:0;right:0;text-align:center;font:600 60px Geist;color:rgba(169,85,58,.12);transform:rotate(-18deg)}' +
