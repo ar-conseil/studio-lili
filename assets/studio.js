@@ -7,7 +7,7 @@ window.Studio = (function () {
   var MARQUE = window.MARQUE || {};
   var S = {
     moi: null, role: "proprietaire", espaces: [], prives: [], comptes: [], membres: [], personnes: [], medias: [], publications: [],
-    pubMedias: [], commentaires: [], versions: [], operations: [], tempsForts: [], taches: [], journal: [], notes: [],
+    pubMedias: [], commentaires: [], versions: [], operations: [], tempsForts: [], taches: [], journal: [], notes: [], notifications: [], boitesMail: [],
     urls: {}, route: { nom: "", param: "", rubrique: "", query: {} }, voirCommeEspace: null
   };
   var X = { db: null, demo: false, quitter: null, verrouiller: null, coquille: null, page: null, demarre: false };
@@ -70,7 +70,9 @@ window.Studio = (function () {
     deposer: '<path d="M8 11V3M5 6l3-3 3 3M3 12.5h10"/>', oeil: '<path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/>',
     cadenas: '<rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/>', sortir: '<path d="M6 13.5H3.5a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1H6M10.5 11 13.5 8l-3-3M13.5 8H6"/>',
     corbeille: '<path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 9h5.8l.6-9"/>', lien: '<path d="M6.5 9.5a3 3 0 0 0 4.2 0l2-2a3 3 0 0 0-4.2-4.2l-.6.6M9.5 6.5a3 3 0 0 0-4.2 0l-2 2a3 3 0 0 0 4.2 4.2l.6-.6"/>',
-    installer: '<path d="M8 2.5v7.5M5 7l3 3 3-3M3 12.5h10"/>'
+    installer: '<path d="M8 2.5v7.5M5 7l3 3 3-3M3 12.5h10"/>',
+    mail: '<rect x="1.5" y="3" width="13" height="10" rx="2"/><path d="m2.5 4.5 5.5 4 5.5-4"/>',
+    cloche: '<path d="M4 11.5V7a4 4 0 0 1 8 0v4.5l1 1.5H3zM6.5 14.5a1.6 1.6 0 0 0 3 0"/>'
   };
   function icone(nom, classe) { var s = el("span", { class: "ic " + (classe || ""), "aria-hidden": "true" }); s.innerHTML = '<svg viewBox="0 0 16 16">' + (ICONES[nom] || "") + "</svg>"; return s; }
 
@@ -122,8 +124,9 @@ window.Studio = (function () {
   // Lecture : tout ce que la personne connectée a le droit de voir (les règles de la base filtrent)
   var TABLES = [["espaces", "espaces"], ["comptes", "comptes"], ["membres", "membres"], ["personnes", "personnes"], ["medias", "medias"],
     ["publications", "publications"], ["publication_medias", "pubMedias"], ["commentaires", "commentaires"], ["versions", "versions"],
-    ["operations", "operations"], ["temps_forts", "tempsForts"]];
-  var TABLES_LILI = [["espaces_prive", "prives"], ["taches", "taches"], ["journal", "journal"], ["notes_internes", "notes"]];
+    ["operations", "operations"], ["temps_forts", "tempsForts"], ["journal", "journal"], ["notifications", "notifications"]];
+  var TABLES_LILI = [["espaces_prive", "prives"], ["taches", "taches"], ["notes_internes", "notes"],
+    ["comptes_mail", "boitesMail", "id, email, droits, derniere_erreur, cree_le"]];
   function charger() {
     if (X.demo) {
       if (!X.donneesDemo) {
@@ -132,6 +135,7 @@ window.Studio = (function () {
         S.espaces = d.espaces; S.prives = d.espaces_prive; S.comptes = d.comptes; S.membres = d.membres; S.personnes = d.personnes;
         S.medias = d.medias; S.publications = d.publications; S.pubMedias = d.publication_medias; S.commentaires = d.commentaires;
         S.versions = d.versions; S.operations = d.operations; S.tempsForts = d.temps_forts; S.taches = d.taches; S.journal = d.journal; S.notes = d.notes_internes;
+        S.notifications = d.journal.map(function (j, i) { return { id: i + 1, personne_id: d.lili, journal_id: j.id, lue_le: null, cree_le: j.cree_le }; });
         S.medias.forEach(function (m) { S.urls[m.chemin] = m.url; if (m.apercu_url) S.urls[m.chemin + "#apercu"] = m.apercu_url; });
         // ?demo=maison-ondine : ouvre directement la démonstration comme la cliente de cette marque
         var vc = (new URLSearchParams(location.search).get("demo") || "").trim(), ev = vc && S.espaces.filter(function (e) { return e.slug === vc; })[0];
@@ -142,8 +146,9 @@ window.Studio = (function () {
     }
     var liste = TABLES.concat(estLili() ? TABLES_LILI : []);
     return Promise.all(liste.map(function (t) {
-      var q = X.db.from(t[0]).select("*");
-      if (t[0] === "journal") q = q.order("cree_le", { ascending: false }).limit(200);
+      var q = X.db.from(t[0]).select(t[2] || "*");
+      if (t[0] === "journal") q = q.order("cree_le", { ascending: false }).limit(300);
+      if (t[0] === "notifications") q = q.order("cree_le", { ascending: false }).limit(100);
       return q.then(function (r) { if (r.error) throw r.error; S[t[1]] = r.data || []; });
     })).then(signerMedias);
   }
@@ -321,7 +326,8 @@ window.Studio = (function () {
       lienCote("#", "Aujourd'hui", "aujourdhui", r.nom === "", null, "0"),
       lienCote("#calendrier", "Calendrier", "calendrier", r.nom === "calendrier", null, "C"),
       lienCote("#publications", "Publications", "publications", r.nom === "publications", aValider.length || null, "P"),
-      lienCote("#mediatheque", "Médiathèque", "mediatheque", r.nom === "mediatheque", null, "M")
+      lienCote("#mediatheque", "Médiathèque", "mediatheque", r.nom === "mediatheque", null, "M"),
+      lienCote("#mails", "Mails", "mail", r.nom === "mails", null, "E")
     ] : [
       lienCote("#", "Accueil", "aujourdhui", r.nom === ""),
       lienCote("#valider", "À valider", "valider", r.nom === "valider", aValider.length || null),
@@ -337,8 +343,11 @@ window.Studio = (function () {
       })));
       return a;
     }))] : [];
+    var nonLues = S.notifications.filter(function (n) { return !n.lue_le && (!S.moi || n.personne_id === S.moi.id); }).length;
     var bas = el("div", { class: "cote-bas" }, [
       X.demo ? voirComme() : null,
+      el("button", { type: "button", class: "cote-lien", id: "btn-notifications", onclick: function () { if (V.notifications) V.notifications(); } },
+        [icone("cloche"), el("span", { class: "cote-texte", text: "Notifications" }), nonLues ? el("span", { class: "cote-compte", text: String(nonLues) }) : null]),
       el("button", { type: "button", class: "installer", "data-installer": "", hidden: !window.__installable, onclick: function () { if (window.__installer) window.__installer(); } }, [icone("installer"), "Installer l'application"]),
       el("button", { type: "button", class: "cote-lien", onclick: function () { if (X.verrouiller) X.verrouiller(); } }, [icone("cadenas"), el("span", { class: "cote-texte", text: "Verrouiller" })]),
       el("button", { type: "button", class: "cote-lien", onclick: function () { if (X.quitter) X.quitter(); } }, [icone("sortir"), el("span", { class: "cote-texte", text: "Se déconnecter" })])
@@ -367,7 +376,7 @@ window.Studio = (function () {
   function menu(ouvert) { document.documentElement.classList.toggle("menu-ouvert", ouvert); }
   function filAriane() {
     var r = S.route, morceaux = [];
-    var noms = { "": estLili() ? "Aujourd'hui" : "Accueil", calendrier: "Calendrier", publications: "Publications", mediatheque: "Médiathèque", valider: "À valider" };
+    var noms = { "": estLili() ? "Aujourd'hui" : "Accueil", calendrier: "Calendrier", publications: "Publications", mediatheque: "Médiathèque", valider: "À valider", mails: "Mails" };
     if (r.nom === "client") {
       var e = espaceSlug(r.param);
       morceaux.push(el("a", { href: "#" + r.param, text: e ? e.nom : "" }));
@@ -412,7 +421,7 @@ window.Studio = (function () {
   // ======================================================================
   // Routeur et rendu
   // ======================================================================
-  var RESERVES = ["", "calendrier", "publications", "mediatheque", "valider", "p"];
+  var RESERVES = ["", "calendrier", "publications", "mediatheque", "valider", "p", "mails"];
   function lireRoute() {
     var h = decodeURIComponent(location.hash.replace(/^#/, "")), q = {}, i = h.indexOf("?");
     if (i >= 0) { new URLSearchParams(h.slice(i + 1)).forEach(function (v, k) { q[k] = v; }); h = h.slice(0, i); }
@@ -434,6 +443,7 @@ window.Studio = (function () {
     if (r.nom === "calendrier") return V.calendrier(r);
     if (r.nom === "publications") return V.publications(r);
     if (r.nom === "mediatheque") return V.mediatheque(r);
+    if (r.nom === "mails") return estLili() ? V.mails(r) : introuvable();
     if (r.nom === "p") return publication(r.param) && visible(publication(r.param)) ? V.publication(r) : introuvable();
     if (r.nom === "client") { var e = espaceSlug(r.param); return e && estLili() ? V.client(r, e) : introuvable(); }
     return introuvable();
@@ -482,6 +492,7 @@ window.Studio = (function () {
     else if (k === "c" || k === "C") aller("calendrier");
     else if (k === "p" || k === "P") aller("publications");
     else if (k === "m" || k === "M") aller("mediatheque");
+    else if (estLili() && (k === "e" || k === "E")) aller("mails");
     else if (estLili() && /^[1-9]$/.test(k)) { var e = espacesActifs()[+k - 1]; if (e) aller(e.slug); }
     else if (k === "Escape" && r.nom === "client" && r.rubrique) aller(r.param);
     else if (k === "Escape" && r.nom === "p") history.back();
@@ -498,7 +509,7 @@ window.Studio = (function () {
   function abonner() {
     if (X.demo || X.canal) return;
     X.canal = X.db.channel("studio");
-    ["publications", "publication_medias", "commentaires", "medias", "versions", "espaces", "taches", "journal", "operations"].forEach(function (t) {
+    ["publications", "publication_medias", "commentaires", "medias", "versions", "espaces", "taches", "journal", "operations", "notifications", "comptes_mail"].forEach(function (t) {
       X.canal.on("postgres_changes", { event: "*", schema: "public", table: t }, function () {
         clearTimeout(attente); attente = setTimeout(function () {
           if (enSaisie() || document.querySelector("dialog[open]") || X.glisse) { enAttente = true; return; }
@@ -528,7 +539,7 @@ window.Studio = (function () {
     return pret.then(function () { X.demarre = true; S.route = lireRoute(); dessiner(false); abonner(); })
       .catch(function (e) { X.coquille.textContent = ""; X.coquille.appendChild(el("p", { class: "erreur-page", text: "Le studio n'a pas pu se charger : " + e.message })); });
   }
-  function fermer() { X.demarre = false; if (X.canal && X.db) { X.db.removeChannel(X.canal); X.canal = null; } }
+  function fermer() { X.demarre = false; if (X.canal && X.db) { X.db.removeChannel(X.canal); X.canal = null; } if (V.quitterPresence) V.quitterPresence(); }
 
   return {
     S: S, X: X, V: V, el: el, icone: icone, fmt: fmt, iso: iso, hm: hm, quand: quand, ilya: ilya, memeJour: memeJour, joursEntre: joursEntre,

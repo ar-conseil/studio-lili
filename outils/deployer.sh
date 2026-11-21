@@ -67,13 +67,37 @@ code=$(curl -s -o "$PRIVE/reponse.json" -w '%{http_code}' -X PATCH "$API/config/
   -H "Content-Type: application/json" --data-binary @"$PRIVE/auth.json")
 [[ "$code" == 2* ]] || { echo "   ERREUR $code : $(head -c 600 "$PRIVE/reponse.json")"; exit 1; }
 
-echo "5. Fonctions serveur"
+echo "5. Fonctions serveur, leurs secrets et la tâche planifiée des notifications"
+[ -f ~/.lili/cle-synchro ] || ( umask 077; openssl rand -hex 24 > ~/.lili/cle-synchro )
+if [ ! -f ~/.lili/vapid.env ]; then   # clés des notifications sur téléphone et ordinateur (Web Push), créées une fois
+  ( umask 077; npx --yes web-push@3.6.7 generate-vapid-keys --json | python3 -I -c 'import json,sys; k=json.load(sys.stdin); print("VAPID_PUBLIQUE="+k["publicKey"]); print("VAPID_PRIVEE="+k["privateKey"])' > ~/.lili/vapid.env )
+fi
+( umask 077
+  printf 'CLE_SYNCHRO=%s\nSITE_URL=%s\n' "$(cat ~/.lili/cle-synchro)" "$SITE" > "$PRIVE/secrets.env"
+  cat ~/.lili/vapid.env >> "$PRIVE/secrets.env"
+  [ -f ~/.lili/oauth.env ] && grep -E '^GOOGLE_CLIENT_(ID|SECRET)=.+' ~/.lili/oauth.env >> "$PRIVE/secrets.env" || true
+  [ -f ~/.lili/anthropic.env ] && grep -E '^ANTHROPIC_API_KEY=.+' ~/.lili/anthropic.env >> "$PRIVE/secrets.env" || true )
+"${SB[@]}" secrets set --project-ref "$SUPABASE_PROJECT_REF" --env-file "$PRIVE/secrets.env" >/dev/null && echo "   secrets à jour"
 fonctions=(supabase/functions/*/index.ts(N))
-if (( ${#fonctions} )); then
-  for f in $fonctions; do f=${f:h:t}
-    "${SB[@]}" functions deploy "$f" --project-ref "$SUPABASE_PROJECT_REF" --use-api >/dev/null && echo "   $f déployée"
-  done
-else echo "   aucune pour l'instant"; fi
+for f in $fonctions; do f=${f:h:t}
+  # chaque fonction vérifie elle-même l'appelant (session de Lili, ou clé de synchro des tâches planifiées)
+  "${SB[@]}" functions deploy "$f" --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt --use-api >/dev/null && echo "   $f déployée"
+done
+cat > "$PRIVE/cron.sql" <<SQL
+create extension if not exists pg_cron;
+create extension if not exists pg_net;
+select vault.create_secret('$(cat ~/.lili/cle-synchro)', 'cle_synchro') where not exists (select 1 from vault.secrets where name = 'cle_synchro');
+select cron.unschedule('notifier') where exists (select 1 from cron.job where jobname = 'notifier');
+select cron.schedule('notifier', '*/5 * * * *', \$\$ select net.http_post(url := 'https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/notifier',
+    headers := jsonb_build_object('Content-Type', 'application/json',
+      'x-cle-synchro', (select decrypted_secret from vault.decrypted_secrets where name = 'cle_synchro')),
+    body := '{}'::jsonb, timeout_milliseconds := 60000) \$\$);
+-- Ménage : journal des tâches 7 jours, notifications traitées 60 jours
+select cron.unschedule('menage') where exists (select 1 from cron.job where jobname = 'menage');
+select cron.schedule('menage', '23 3 * * *', \$\$ delete from cron.job_run_details where end_time < now() - interval '7 days';
+  delete from public.notifications where cree_le < now() - interval '60 days'; \$\$);
+SQL
+sql "$PRIVE/cron.sql" && echo "   tâche « notifier » toutes les 5 minutes"
 
 echo "6. Clé publique du site (assets/config.js)"
 curl -s "$API/api-keys" -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" > "$PRIVE/cles.json"

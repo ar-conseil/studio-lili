@@ -43,7 +43,7 @@
       ]));
       var ap = St.apercu(p, etat.reseau, {
         index: etat.index, bulles: bulles, active: etat.bulle, plein: true,
-        changer: function (i) { etat.index = i; dessinerApercu(); },
+        changer: function (i) { etat.index = i; dessinerApercu(); if (St.presence) St.presence(p.id, i + 1); },
         choisirBulle: function (c) { etat.bulle = c.id; dessinerApercu(); var t = document.getElementById("com-" + c.id); if (t) t.scrollIntoView({ behavior: "smooth", block: "center" }); },
         surClic: etat.commenter ? function (x, y, mediaId, zone) { epingler(x, y, mediaId, zone); } : null
       });
@@ -54,7 +54,7 @@
     // Bulle posée à l'endroit cliqué : un champ s'ouvre sur place
     function epingler(x, y, mediaId, zone) {
       var vieux = zone.querySelector(".bulle-saisie"); if (vieux) vieux.remove();
-      var champ = el("textarea", { rows: 3, placeholder: "Votre remarque à cet endroit…", "aria-label": "Commentaire épinglé" });
+      var champ = el("textarea", { rows: 3, placeholder: "Votre remarque à cet endroit…", "aria-label": "Commentaire épinglé", oninput: function () { if (St.signalerFrappe) St.signalerFrappe(); } });
       var interne = lili ? el("label", { class: "case-interne" }, [el("input", { type: "checkbox" }), "Lili seule"]) : null;
       var boite = el("form", { class: "bulle-saisie", style: { left: Math.min(x * 100, 62) + "%", top: (y * 100) + "%" }, onclick: function (ev) { ev.stopPropagation(); }, onsubmit: function (ev) {
         ev.preventDefault(); var t = champ.value.trim(); if (!t) return;
@@ -248,6 +248,7 @@
       var tous = St.commentairesDe(p.id).filter(function (c) { return lili || c.visibilite === "partage"; });
       var racines = tous.filter(function (c) { return !c.parent_id; });
       fil.appendChild(el("h2", { text: "Échanges" }));
+      fil.appendChild(el("p", { class: "frappe", id: "frappe-pub", hidden: true }));
       if (!racines.length) fil.appendChild(el("p", { class: "vide", text: lili ? "Pas encore d'échange. Épinglez une remarque sur le visuel ou écrivez ci-dessous." : "Une question, une remarque ? Écrivez-la ici ou cliquez sur « Commenter le visuel »." }));
       racines.forEach(function (c) {
         var reponses = tous.filter(function (x) { return x.parent_id === c.id; });
@@ -271,6 +272,7 @@
           .then(function () { dessinerFil(); });
       } }, [champ, el("div", { class: "rangee" }, [cible, interne, el("span", { class: "espace" }), el("button", { type: "submit", class: "btn-plein", text: "Envoyer" })])]));
       champ.addEventListener("keydown", function (ev) { if (ev.key === "Enter" && (ev.metaKey || ev.ctrlKey)) champ.form.requestSubmit(); });
+      champ.addEventListener("input", function () { if (St.signalerFrappe) St.signalerFrappe(); });
     }
     function message(c, racine) {
       var a = St.personne(c.auteur_id) || {}, moi = a.role === "proprietaire";
@@ -285,7 +287,7 @@
     }
     function repondre(c, bloc) {
       if (bloc.querySelector(".com-reponse")) return;
-      var champ = el("textarea", { rows: 2, placeholder: "Votre réponse…", "aria-label": "Réponse" });
+      var champ = el("textarea", { rows: 2, placeholder: "Votre réponse…", "aria-label": "Réponse", oninput: function () { if (St.signalerFrappe) St.signalerFrappe(); } });
       var f = el("form", { class: "com-reponse", onsubmit: function (ev) {
         ev.preventDefault(); var t = champ.value.trim(); if (!t) return;
         St.creer("commentaires", { publication_id: p.id, parent_id: c.id, cible: c.cible, contenu: t, visibilite: c.visibilite, resolu: false, version: p.version_courante }).then(dessinerFil);
@@ -308,11 +310,13 @@
     var e2 = St.espace(p.espace_id) || {};
     page.appendChild(el("header", { class: "pub-tete" }, [
       el("a", { class: "retour-client", href: lili ? "#" + e2.slug : "#", onclick: function (ev) { if (history.length > 1) { ev.preventDefault(); history.back(); } } }, [St.icone("retour"), St.logoEspace(e2, "petit"), el("span", { text: e2.nom })]),
+      el("div", { class: "presence", id: "presence-pub", "aria-live": "polite" }),
       St.pastilleStatut(p.statut)
     ]));
     page.appendChild(el("div", { class: "pub-colonnes" }, [colApercu, colFiche]));
     page.appendChild(fil);
     dessinerApercu(); dessinerFiche(); dessinerFil();
+    if (St.presence) St.presence(p.id, etat.index + 1);
     return page;
   };
 })(window.Studio);

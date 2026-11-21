@@ -51,6 +51,20 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   `#p/<id>`, `#valider` (client), `#<slug-client>` et `#<slug>/calendrier|publications|mediatheque`.
   Clavier : N nouvelle publication, 0 accueil, C calendrier, P publications, M médiathèque, 1-9 clients, Échap retour,
   ← → rubriques ou période du calendrier, T aujourd'hui.
+- Étape 5, en direct et notifications : `assets/vues/direct.js` (présence Realtime sur `#p/<id>` : avatars de qui
+  regarde, « … écrit » diffusé sans rien enregistrer ; cloche des notifications et abonnement de l'appareil au Web Push).
+  Base : `supabase/migrations/20261121120000_mails_notifications.sql` (table `comptes_mail` : jetons Gmail jamais
+  lisibles par le navigateur ; déclencheur `journal_notifier` : un client qui agit prévient Lili ; Lili prévient les
+  clients seulement pour ce qui vient de son geste et leur est destiné : envoi pour validation, publication en ligne,
+  commentaire ou message partagé. Jamais d'e-mail à un client sans un clic de Lili ; rien d'interne ne part).
+  Fonctions : `supabase/functions/notifier` (pg_cron toutes les 5 min : un Web Push par personne et par passage ; un
+  e-mail groupé par client quand la plus ancienne nouveauté a 10 min, envoyé depuis le Gmail de Lili ; GET = clé
+  publique VAPID ; POST {test} = essai), `connexion-google` (relier le Gmail de Lili, OAuth, état signé),
+  `messagerie` (Gmail : dossiers, liste, lecture, pièces, ranger, envoyer, brouillon ; Lili avec code seulement).
+  Partagé : `_partage/commun.ts` (appelant, aal2, clé de synchro), `google.ts`, `gmail.ts` (repris du cockpit).
+  Clés : `~/.lili/vapid.env` et `~/.lili/cle-synchro` (créées par le déploiement), secrets Supabase.
+- Page Mails (`#mails`, touche E, Lili seule) : `assets/vues/mails.js` ; HTML des mails dans un iframe isolé, images
+  distantes bloquées jusqu'au clic ; expéditeur rapproché de son client (adresse d'un membre).
 - **Démonstration** : `?demo` (comme Lili) ou `?demo=<slug>` (comme la cliente de cette marque), données fictives de
   `assets/demo.js` (dates calculées autour d'aujourd'hui), rien n'est enregistré ; un sélecteur « Voir comme » est dans
   la barre latérale. Sert aussi à vérifier chaque écran avant mise en ligne.
@@ -117,7 +131,9 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
    **Fait le 21/11/2026** (vérifié en démonstration sur ordinateur et téléphone : validation, demande de modification,
    bulle épinglée, glisser du calendrier). Pas encore : présence en direct, notifications (étape 5), grille Instagram,
    tâches en colonnes.
-5. Temps réel (présence, commentaires, statuts), notifications e-mail et Web Push.
+5. Temps réel (présence, commentaires, statuts), notifications e-mail et Web Push. **Fait le 21/11/2026**, plus la page
+   Mails (Gmail de Lili). À faire par Lili : relier sa boîte Gmail (page Mails), activer les notifications sur ses
+   appareils (cloche). Les e-mails aux clients partent dès que sa boîte est reliée.
 6. Import réel des données Notion.
 7. Brief, Veille, Partenariats, Rapports, Temps & facturation, Prospects, assistant IA.
 8. PWA, page de connexion, page de confidentialité (RGPD, hébergement Supabase UE).

@@ -67,6 +67,7 @@ insert into public.temps (espace_id, minutes) values ('10000000-0000-4000-a000-0
 insert into public.factures (espace_id, objet, statut, numero) values ('10000000-0000-4000-a000-00000000000a', 'Octobre', 'payee', 91);
 insert into public.briefs (espace_id, ton, visibilite) values ('10000000-0000-4000-a000-00000000000a', 'Chaleureux', 'partage');
 insert into public.rapports (espace_id, mois, reseau, abonnes, visibilite) values ('10000000-0000-4000-a000-00000000000a', '2026-10-01', 'instagram', 1200, 'interne');
+insert into public.comptes_mail (personne_id, email, refresh_token, jeton_acces) values ('00000000-0000-4000-a000-000000000001', 'lili-gmail@essai.invalid', 'jeton-secret', 'acces-secret');
 
 -- ---------- Personne non connectée : rien ----------
 set local role anon;
@@ -97,7 +98,15 @@ select essais.verifier((select visibilite from public.publications where id = '2
 -- Facture émise : numéro suivant
 insert into public.factures (espace_id, objet, statut) values ('10000000-0000-4000-a000-00000000000a', 'Novembre', 'emise');
 select essais.verifier((select max(numero) from public.factures) = 92, 'la facture émise prend le numéro 92');
+select essais.verifier((select count(*) from public.comptes_mail) = 1, 'Lili voit sa boîte Gmail reliée');
+select essais.doit_echouer('select refresh_token from public.comptes_mail', 'le navigateur de Lili lit le jeton Gmail');
+select essais.doit_echouer('select jeton_acces from public.comptes_mail', 'le navigateur de Lili lit le jeton d''accès Gmail');
 reset role;
+-- L'envoi pour validation (geste de Lili, partagé) prévient les deux personnes du client A, et personne d'autre
+select essais.verifier((select count(distinct personne_id) from public.notifications n join public.journal j on j.id = n.journal_id
+  where j.objet_id = '20000000-0000-4000-a000-000000000001' and j.details ->> 'vers' = 'a-valider') = 2, 'l''envoi pour validation prévient les 2 personnes du client A');
+select essais.verifier(not exists (select 1 from public.notifications n join public.journal j on j.id = n.journal_id where j.visibilite = 'interne'), 'aucune notification pour une activité interne');
+select essais.verifier(not exists (select 1 from public.notifications where personne_id = '00000000-0000-4000-a000-0000000000b1'), 'le client B n''est prévenu de rien chez A');
 
 -- ---------- Client A ----------
 select essais.devenir('00000000-0000-4000-a000-0000000000a1', 'aal1');
@@ -122,6 +131,9 @@ select essais.verifier(not exists (select 1 from public.journal where objet_id =
 select essais.verifier((select count(*) from storage.objects where bucket_id = 'medias') = 1, 'A ne lit que le fichier du média partagé');
 select essais.verifier((select count(*) from storage.objects where bucket_id = 'livrables') = 1, 'A lit le rapport partagé, pas la facture');
 select essais.verifier((select count(*) from public.versions) = 1, 'A voit la version envoyée');
+select essais.verifier((select count(*) from public.notifications) >= 1 and not exists (select 1 from public.notifications where personne_id <> '00000000-0000-4000-a000-0000000000a1'), 'A ne voit que ses propres notifications');
+select essais.verifier((select count(*) from public.comptes_mail) = 0, 'A ne voit pas la boîte Gmail de Lili');
+select essais.doit_echouer($$update public.notifications set personne_id = '00000000-0000-4000-a000-0000000000b1'$$, 'A détourne une notification');
 -- Écritures interdites
 select essais.doit_echouer($$insert into public.publications (espace_id, titre, statut, auteur_id, visibilite) values ('10000000-0000-4000-a000-00000000000b', 'intrusion', 'idee', '00000000-0000-4000-a000-0000000000a1', 'partage')$$, 'A crée une publication chez B');
 select essais.doit_echouer($$insert into public.publications (espace_id, titre, statut, auteur_id, visibilite) values ('10000000-0000-4000-a000-00000000000a', 'auto-validé', 'valide', '00000000-0000-4000-a000-0000000000a1', 'partage')$$, 'A crée une publication déjà validée');
@@ -149,6 +161,8 @@ select essais.verifier((select statut from public.publications where id = '20000
 select essais.verifier((select valide_par from public.publications where id = '20000000-0000-4000-a000-000000000001') = '00000000-0000-4000-a000-0000000000a1', 'la validation est au nom de A');
 select essais.verifier((select numero from public.commentaires where contenu = 'Plus de lumière ici') = 1, 'la bulle sur le visuel porte le numéro 1');
 select essais.verifier((select auteur_id from public.commentaires where contenu = 'Plus de lumière ici') = '00000000-0000-4000-a000-0000000000a1', 'le commentaire est au nom de A');
+select essais.verifier(exists (select 1 from public.notifications n join public.journal j on j.id = n.journal_id
+  where n.personne_id = '00000000-0000-4000-a000-000000000001' and j.details ->> 'vers' = 'valide'), 'la validation de A prévient Lili');
 
 -- ---------- Client B : rien de A ----------
 select essais.devenir('00000000-0000-4000-a000-0000000000b1', 'aal1');
