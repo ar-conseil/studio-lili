@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logo de Lili — trois pistes</title>
+<style>
+  :root { --encre:#1E1A17; --creme:#F4EFE7; --papier:#FBF8F3; }
+  body { margin:0; background:var(--papier); color:var(--encre); font:15px/1.5 system-ui, -apple-system, sans-serif; padding:32px 16px 64px; }
+  h1 { font-weight:500; font-size:22px; margin:0 auto 24px; max-width:1120px; }
+  .piste { max-width:1120px; margin:0 auto 28px; display:grid; grid-template-columns: 1.4fr 1fr 1fr; gap:14px; }
+  .piste h2 { grid-column:1/-1; margin:8px 0 0; font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:#8a8078; font-weight:600; }
+  .case { border-radius:14px; display:grid; place-items:center; padding:28px; min-height:220px; }
+  .clair { background:#fff; border:1px solid #ebe5dc; } .sombre { background:var(--encre); }
+  .case img { max-width:100%; height:auto; }
+  .icones { display:flex; gap:18px; align-items:flex-end; }
+  .icones img { border-radius:22.5%; box-shadow:0 6px 18px -8px rgb(30 26 23 / .45); }
+  @media (max-width:800px) { .piste { grid-template-columns:1fr; } }
+</style></head><body>
+<h1>Logo de Lili Rouzier — trois pistes</h1>
+<section class="piste"><h2>1 · Signature</h2>
+  <div class="case clair"><img src="signature-logo.svg" alt="Piste signature"></div>
+  <div class="case sombre"><img src="signature-icone.svg" width="180" alt=""></div>
+  <div class="case clair"><div class="icones"><img src="signature-icone.svg" width="128" alt=""><img src="signature-icone.svg" width="64" alt=""><img src="signature-icone.svg" width="32" alt=""></div></div>
+</section>
+<section class="piste"><h2>2 · Didone (retenue)</h2>
+  <div class="case clair"><img src="didone-logo.svg" alt="Piste didone"></div>
+  <div class="case clair"><img src="didone-icone.svg" width="180" alt=""></div>
+  <div class="case clair"><div class="icones"><img src="didone-icone.svg" width="128" alt=""><img src="didone-icone.svg" width="64" alt=""><img src="didone-icone.svg" width="32" alt=""></div></div>
+</section>
+<section class="piste"><h2>3 · Arche</h2>
+  <div class="case clair"><img src="arche-logo.svg" alt="Piste arche"></div>
+  <div class="case clair"><img src="arche-icone.svg" width="180" alt=""></div>
+  <div class="case clair"><div class="icones"><img src="arche-icone.svg" width="128" alt=""><img src="arche-icone.svg" width="64" alt=""><img src="arche-icone.svg" width="32" alt=""></div></div>
+</section>
+</body></html>

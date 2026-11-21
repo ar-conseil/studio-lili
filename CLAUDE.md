@@ -37,6 +37,21 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
 - Journal d'activité par espace : base des notifications et de l'historique.
 
 ## Où sont les choses
+- Entrée et coquille : `index.html`, `assets/app.js`, `assets/style.css`. `assets/marque.js` = LA constante du nom de
+  l'outil, de la propriétaire, de l'assistant et des fichiers du logo. `assets/config.js` vide = mode aperçu
+  (écrans visibles sans base ; `?ecran=code|enrolement|nouveau|app` pour en voir un).
+- Entrée comme Evoalys : e-mail + mot de passe (ou lien par e-mail), puis **code à 6 chiffres** (Supabase MFA TOTP,
+  QR code à scanner à la première connexion). Code obligatoire pour Lili et les invités, facultatif pour les clients
+  (`app_metadata.role = "client"`, posé côté serveur). Code redemandé après 30 min d'absence ou d'inactivité, et par
+  « Verrouiller » ; 5 codes faux = déconnexion. Les politiques RLS de Lili exigeront `aal2` (étape 3).
+- Application installable (`manifest.webmanifest`, `sw.js` sans cache) : bouton « Installer l'application » (Chrome,
+  Edge : bureau du Mac ou du PC), astuce affichée sur iPhone (Partager › Sur l'écran d'accueil) et Safari Mac
+  (Fichier › Ajouter au Dock).
+- Logo (piste « Didone » choisie le 21/11/2026, LR en Bodoni Moda, filet terre cuite) : `assets/marque/` ;
+  `outils/logo/dessiner.py <polices>` vectorise les lettres (fonttools + uharfbuzz, dans un environnement Python à
+  part), `outils/logo/icones.sh` rend les PNG avec Chrome sans écran. Les deux autres pistes restent dans
+  `assets/marque/pistes/` (planche : `pistes/planche.html`).
+- Aperçu local : `python3 -m http.server 8772 --bind 127.0.0.1` à la racine (le port 8771 est pris par un autre outil).
 - `docs/import-notion.md` : plan de correspondance Notion -> cockpit (à valider par Antonin avant tout import).
 - `outils/notion-analyse.mjs` : lit l'export Notion (`~/.lili/notion-export/`) et décrit sa STRUCTURE (bases, colonnes,
   valeurs des statuts, arborescence) sans recopier de contenu client. Sortie dans `~/.lili/` uniquement.
@@ -78,3 +93,10 @@ Après chaque étape : commit clair, mise à jour de ce fichier, note à Antonin
   `~/.lili/import-notion-clients.md` (hors dépôt). Constats retenus pour le modèle : comptes multiples par espace
   (profils LinkedIn des dirigeants), opérations commerciales datées, étapes de création séparées du statut,
   clients qui proposent des idées, état de programmation calculé et non saisi.
+- 21/11/2026 (réponses d'Antonin) : tout l'historique importé ; numéros de facture manquants sans importance (suite à 92) ;
+  heure par défaut par réseau ; tâches perso non séparées ; seuils d'avance validés ; logos et couleurs des clients
+  cherchés en ligne puis validés (`~/.lili/logos-clients/`) ; **brief du jour = agent automatique en continu 7 j / 7**
+  (fonction serveur + pg_cron, comme Victor et Evoalys).
+- 21/11/2026 : **entrée par code, comme Evoalys** (« mot de passe et code à 6 chiffres ») : connexion e-mail + mot de
+  passe (ou lien magique), puis code à 6 chiffres d'une application d'authentification (Supabase MFA, TOTP). L'app
+  s'installe sur le bureau et l'écran d'accueil (PWA). Logo de Lili : sobre et classe (`assets/marque/`).

@@ -1,0 +1,21 @@
+{
+  "name": "Studio Lili",
+  "short_name": "Studio Lili",
+  "description": "Le studio de Lili Rouzier, community manager : calendriers, publications, validations et clients.",
+  "id": "./",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "background_color": "#F4EFE7",
+  "theme_color": "#F4EFE7",
+  "categories": ["productivity", "business"],
+  "icons": [
+    { "src": "assets/marque/icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/marque/icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/marque/icone-512-masque.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "assets/marque/icone-bureau.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

@@ -1,7 +1,7 @@
 # Plan d'import Notion -> cockpit
 
 > État au 21 novembre 2026 : export de « Mon espace CM » reçu et analysé (Markdown & CSV, sous-pages incluses).
-> **À valider par Antonin (et Lili pour les questions en fin de page) avant tout import.**
+> **À valider par Antonin avant tout import.** Réponses du 21/11/2026 reportées en fin de page ; deux questions restent ouvertes.
 > Ce fichier est public : il décrit des structures et des volumes, jamais des contenus. Les noms des clients et la
 > correspondance client par client sont dans `~/.lili/import-notion-clients.md` (hors dépôt).
 
@@ -89,7 +89,7 @@ Statuts de publication : `idee` -> `en-creation` -> `a-valider` -> `modifs-deman
 | Notion | Cockpit | Transformation |
 |---|---|---|
 | PUBLICATIONS (titre) | `publications.titre` | tel quel ; 5 lignes sans titre et sans contenu ignorées |
-| DATES | `date`, `fin` | « 21 novembre 2026 » -> date sans heure (heure à 10 h par défaut, à confirmer) ; plage -> début et fin ; 38 sans date -> statut `idee` |
+| DATES | `date`, `fin` | « 21 novembre 2026 » -> date à l'heure par défaut du réseau (question 4) ; plage -> début et fin ; 38 sans date -> statut `idee` |
 | Calendrier d'origine | `reseaux` | base Instagram -> Instagram, base Facebook -> Facebook ; colonne RÉSEAU si remplie ; sinon réseaux par défaut de l'espace. Pour le client à deux calendriers, une publication présente dans les deux le même jour avec le même titre devient une seule publication à deux réseaux |
 | FORMAT | `format` | POST -> post ; CARROUSSEL / CARROUSEL -> carrousel ; REEL -> reel ; STORY -> story ; Couverture -> couverture (format ajouté) ; TIRAGE AU SORT -> post + étiquette « jeu concours » ; À PROGRAMMER, VISUEL À CRÉER, À TOURNER -> statut ou étapes (ligne suivante) |
 | STATUT, CATÉGORIE (quand elle sert de statut), FORMAT parasite, Done | `statut`, `etapes` | voir le tableau des statuts |
@@ -129,7 +129,7 @@ historique) ; `idee` et `en-creation` -> `interne`.
 | « Absences et vacances » | `temps_forts` type `absence`, portée l'espace | Congés, TT -> libellé ; affichés en fond du calendrier de ce client |
 | « Deadlines » | `taches` | Client -> espace ; Statut (Terminé / À faire) -> `fait` / `a-faire` (la case à cocher double le statut) ; échéance ; Catégorie -> catégorie |
 | Listes à cocher de l'accueil et de « NOTES & TO DO » | `taches` sans échéance | rubrique -> catégorie (Créations, Programmation, Autre) ; espace deviné par le nom du client dans le titre, sinon aucun |
-| Éléments personnels des listes | `taches` catégorie Perso, ou rien | selon la réponse de Lili (question 6) ; aucun détail de santé importé |
+| Éléments personnels des listes | `taches` sans espace | importés avec les autres (question 6) |
 | « Notes » de « NOTES & TO DO » | rien | notes personnelles, non importées |
 | « État de programmation » | calcul automatique | « programmé jusqu'au » = dernière publication `programme` de l'espace ; avance = jours d'ici là ; pastille par seuil (question 8) ; affiché sur Aujourd'hui et sur la carte de chaque client. Les notes de la base -> note interne de l'espace |
 | Raccourcis de l'accueil | barre latérale | Aujourd'hui, Tâches, Facturation, Calendrier |
@@ -157,16 +157,21 @@ historique) ; `idee` et `en-creation` -> `interne`.
 
 1. ~~TVA~~ **Réglé le 21/11/2026** : Lili est redevable de la TVA depuis octobre 2024. Devis et factures à 20 %,
    sans la mention « art. 293 B » prévue au brief de départ (taux gardé par ligne, pour le cas d'une autre TVA).
-2. **Numérotation** : les numéros 48, 77 et 78 manquent. Factures annulées, avoirs, ou faites ailleurs ? La suite
-   démarre à 92 ; le cockpit remplace-t-il le logiciel de facturation actuel, ou seulement suit-il les factures ?
-3. **Qui est un client ?** « État de programmation » compte 12 lignes pour 8 calendriers, et la base « Clients » de la
-   facturation porte les raisons sociales, dont plusieurs ne ressemblent pas au nom de la marque. Pour chaque raison
-   sociale : quelle marque ? Pour chaque ligne sans calendrier : espace à part, ou compte d'un autre espace (profil
-   d'un dirigeant, marque d'un même client) ? Le tableau à compléter est dans `~/.lili/import-notion-clients.md`.
-4. **Heure de publication** : Notion n'a que des jours. Heure par défaut à l'import (10 h ?), réglable par client ?
-5. **Publications anciennes** : tout importer (avril à décembre 2026) ou seulement à partir d'une date ?
-6. **Tâches personnelles** mêlées aux tâches de travail : une catégorie « Perso » visible d'elle seule, ou on les laisse ?
-7. **Brief du jour** : que contient la page qu'elle ouvre le matin ? Le cockpit en reprendra le contenu.
-8. **Seuils de l'avance** : en retard sous 0 jour, urgent 0 à 2, cette semaine 3 à 7, OK 8 à 14, bonne avance au-delà ?
-9. **Client partagé** : son propriétaire peut-il fournir un export, ou démarre-t-on son espace à neuf ?
-10. **Logos, couleurs, photos de profil** de chaque client : à déposer dans un dossier, ou à récupérer ensemble.
+2. **Réglé** : les numéros manquants (48, 77, 78) ne posent pas de problème ; l'historique est importé tel quel et la
+   suite démarre à 92.
+3. **Qui est un client ?** (ouvert) « État de programmation » compte 12 lignes pour 8 calendriers, et la base
+   « Clients » de la facturation porte les raisons sociales, dont plusieurs ne ressemblent pas au nom de la marque.
+   Pour chaque raison sociale : quelle marque ? Pour chaque ligne sans calendrier : espace à part, ou compte d'un autre
+   espace ? Tableau à compléter : `~/.lili/import-notion-clients.md` (une recherche en ligne aide à le pré-remplir).
+4. **Réglé** (« le plus pratique ») : heure par défaut selon le réseau, réglable par espace : Instagram, Facebook et
+   TikTok 12 h 30, stories 9 h, LinkedIn 8 h 30, Pinterest 20 h, Google Business 10 h.
+5. **Réglé** : tout l'historique est importé, depuis la première publication.
+6. **Réglé** : pas de séparation ; les tâches personnelles sont importées avec les autres, sans espace client. Les
+   « Notes » personnelles de « NOTES & TO DO » ne sont pas des tâches et restent hors du cockpit.
+7. **Réglé** : le brief du jour devient un agent automatique, en continu 7 j / 7, comme dans Evoalys et le cockpit
+   d'Antonin (fonction serveur lancée par pg_cron) : brief préparé chaque matin, puis tenu à jour au fil de la journée
+   (validations, commentaires, retards, publications du jour). Étape 7.
+8. **Réglé** : seuils validés (en retard sous 0 jour, urgent 0 à 2, cette semaine 3 à 7, OK 8 à 14, bonne avance au-delà).
+9. **Client partagé** (ouvert) : son propriétaire peut-il fournir un export, ou démarre-t-on son espace à neuf ?
+10. **Réglé** : logos, couleurs et comptes cherchés en ligne (sources officielles), rangés dans `~/.lili/logos-clients/`
+    et soumis à validation avant usage.
