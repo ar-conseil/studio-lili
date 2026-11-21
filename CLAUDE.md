@@ -110,6 +110,14 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
 Après chaque étape : commit clair, mise à jour de ce fichier, note à Antonin (ce qui est fait, ce qu'il doit faire).
 
 ## Décisions
+- 21/11/2026 : **projet Supabase `studio-lili`** (ref `jilxunfapbtqtrgkxdha`, Paris eu-west-3, instance Micro) dans
+  l'organisation « Lili Rouzier » du compte Supabase du club (antonin.rouzier@harnes-volleyball.fr), passée au **plan Pro**
+  (25 $/mois, plafond de dépenses actif) : le compte avait déjà ses 2 projets gratuits. Clé d'accès « studio-lili
+  deploiement » limitée à ce seul projet (vérifié : elle ne voit que lui), sans expiration, dans `~/.lili/supabase.env`.
+  Schéma déployé et tests des droits passés en ligne le 21/11/2026. Mot de passe de la base généré par Supabase, non
+  conservé (inutile : tout passe par l'API d'administration ; le régénérer dans le tableau de bord au besoin).
+- 21/11/2026 : **les mails de Lili (Gmail) dans son cockpit**, comme la page Mails du cockpit d'Antonin (fonction
+  `messagerie`, Gmail par OAuth). À faire à l'étape 5, avec le client OAuth Google qui sert aussi à « Continuer avec Google ».
 - 21/11/2026 : dépôt local `~/studio-lili` (à côté de `~/cockpit`), branche `main` ; dépôt GitHub public créé.
 - 21/11/2026 : **Lili est redevable de la TVA depuis octobre 2024** (factures à 20 %). Pas de mention « art. 293 B »
   (le brief de départ se trompait). Taux de TVA stocké par ligne de devis / facture.
