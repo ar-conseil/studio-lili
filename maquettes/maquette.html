@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Maquette · Studio Lili</title>
+<!-- Maquette statique (étape 2) : trois pistes visuelles sur la même page.
+     ?piste=papier|galerie|atelier  &vue=aujourdhui|validation
+     Données de démonstration : marques FICTIVES, photos libres d'Unsplash. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..600;1,6..96,400..500&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&display=swap">
+<link rel="stylesheet" href="maquette.css">
+</head>
+<body>
+<script>
+  (function () {
+    var q = new URLSearchParams(location.search);
+    document.documentElement.dataset.piste = q.get("piste") || "papier";
+    document.documentElement.dataset.vue = q.get("vue") || "aujourdhui";
+  })();
+</script>
+
+<!-- ================= AUJOURD'HUI (Lili, ordinateur) ================= -->
+<div class="ecran-aujourdhui">
+  <aside class="cote">
+    <div class="cote-tete"><img src="../assets/marque/icone.svg" alt="" width="30" height="30"><span><b>Studio Lili</b><small>Lili Rouzier</small></span></div>
+    <button class="cote-nouveau"><i>+</i> Nouvelle publication <kbd>N</kbd></button>
+    <nav class="cote-nav">
+      <a class="actif"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6"/></svg>Aujourd'hui</a>
+      <a><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 6.5h12M5.5 1.8v2.4M10.5 1.8v2.4"/></svg>Calendrier</a>
+      <a><svg viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="11" height="11" rx="2"/><path d="M5 10l2-2.5 1.7 2L10.5 8l1.5 2"/></svg>Publications <span class="nb">12</span></a>
+      <a><svg viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="11" height="11" rx="3"/><path d="m5.5 8 1.8 1.8L10.8 6"/></svg>Tâches</a>
+      <a><svg viewBox="0 0 16 16"><path d="M2.5 4.5h4l1.2 1.5h5.8v6.5h-11z"/></svg>Médiathèque</a>
+    </nav>
+    <p class="cote-titre">Clients</p>
+    <nav class="cote-clients">
+      <a><i style="--c:#3E5B4A"></i>Maison Ondine</a>
+      <a><i style="--c:#8A5A3C"></i>Café Lumière</a>
+      <a><i style="--c:#2F4A6B"></i>Atelier Sable</a>
+      <a><i style="--c:#9C4660"></i>Studio Écrin</a>
+    </nav>
+    <div class="cote-bas"><span class="direct"><i></i>En direct</span></div>
+  </aside>
+
+  <header class="barre">
+    <span class="fil">Aujourd'hui</span>
+    <div class="assistant"><svg viewBox="0 0 16 16"><path d="M8 2.5v1.2M8 12.3v1.2M2.5 8h1.2M12.3 8h1.2M4.1 4.1l.9.9M11 11l.9.9M4.1 11.9l.9-.9M11 5l.9-.9"/></svg><span>Demander à l'assistant : « 5 idées de posts pour Noël pour Café Lumière »</span><kbd>/</kbd></div>
+    <span class="heure">17:40</span>
+  </header>
+
+  <main class="page">
+    <section class="entete">
+      <p class="surtitre">Samedi 21 novembre</p>
+      <h1>Bonjour Lili</h1>
+      <p class="phrase">4 publications aujourd'hui, 3 attendent la réponse d'un client, et Café Lumière a commenté le reel de demain.</p>
+    </section>
+
+    <section class="journee" aria-label="Ma journée">
+      <div class="heures"><span>9 h</span><span>11 h</span><span>13 h</span><span>15 h</span><span>17 h</span><span>19 h</span></div>
+      <div class="piste-jour">
+        <div class="rdv" style="--d:5;--l:10;--c:#3E5B4A"><b>Visio Maison Ondine</b><small>9:30 – 10:30</small></div>
+        <div class="rdv" style="--d:20;--l:20;--c:#8A5A3C"><b>Shooting Café Lumière</b><small>11:00 – 13:00</small></div>
+        <div class="rdv" style="--d:60;--l:15;--c:#9C4660"><b>Tournage reel · Studio Écrin</b><small>15:00 – 16:30</small></div>
+        <div class="maintenant" style="--d:86.7"><span>17:40</span></div>
+      </div>
+    </section>
+
+    <div class="grille">
+      <section class="bloc publications-jour">
+        <header><h2>Publications du jour</h2><span class="compte">4</span></header>
+        <ul>
+          <li><img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=240&h=300&fit=crop&q=70" alt=""><div><p class="client" style="--c:#8A5A3C">Café Lumière</p><b>Deux cafés, un samedi</b><small><span class="res ig">IG</span><span class="res fb">FB</span> Post · 12:30</small></div><span class="statut publie">Publié</span></li>
+          <li><img src="https://images.unsplash.com/photo-1487530811176-3780de880c2d?w=240&h=300&fit=crop&q=70" alt=""><div><p class="client" style="--c:#3E5B4A">Maison Ondine</p><b>Le bouquet de saison</b><small><span class="res ig">IG</span> Carrousel · 18:00</small></div><span class="statut programme">Programmé</span></li>
+          <li><img src="https://images.unsplash.com/photo-1604654894610-df63bc536371?w=240&h=300&fit=crop&q=70" alt=""><div><p class="client" style="--c:#9C4660">Studio Écrin</p><b>Tendance noir laqué</b><small><span class="res ig">IG</span><span class="res tt">TT</span> Reel · 19:00</small></div><span class="statut valider">À valider</span></li>
+          <li><img src="https://images.unsplash.com/photo-1493106641515-6b5631de4bb9?w=240&h=300&fit=crop&q=70" alt=""><div><p class="client" style="--c:#2F4A6B">Atelier Sable</p><b>Les mains dans la terre</b><small><span class="res in">in</span> Article · 20:00</small></div><span class="statut creation">En création</span></li>
+        </ul>
+      </section>
+
+      <div class="pile">
+        <section class="bloc">
+          <header><h2>Attend la réponse des clients</h2><span class="compte">3</span></header>
+          <ul class="attente">
+            <li><span class="pastille-client" style="--c:#9C4660">SÉ</span><div><b>Tendance noir laqué</b><small>Studio Écrin · envoyé il y a 2 jours</small></div><button>Relancer</button></li>
+            <li><span class="pastille-client" style="--c:#3E5B4A">MO</span><div><b>Atelier couronnes de l'Avent</b><small>Maison Ondine · envoyé hier</small></div><button>Relancer</button></li>
+            <li><span class="pastille-client" style="--c:#8A5A3C">CL</span><div><b>Carte de Noël</b><small>Café Lumière · envoyé ce matin</small></div><button>Relancer</button></li>
+          </ul>
+        </section>
+        <section class="bloc">
+          <header><h2>Commentaires depuis hier</h2><span class="compte">2</span></header>
+          <ul class="commentaires">
+            <li><img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=120&h=120&fit=crop&q=70" alt=""><div><p>« On peut garder la tasse en premier plan, mais sans le pot de fleurs ? »</p><small><b>Claire, Café Lumière</b> · sur le visuel · il y a 3 h</small></div></li>
+            <li><img src="https://images.unsplash.com/photo-1525310072745-f49212b5ac6d?w=120&h=120&fit=crop&q=70" alt=""><div><p>« Parfait pour moi, on peut programmer. »</p><small><b>Inès, Maison Ondine</b> · sur la légende · hier</small></div></li>
+          </ul>
+        </section>
+        <section class="bloc">
+          <header><h2>À faire</h2><span class="compte">3</span></header>
+          <ul class="taches">
+            <li class="retard"><i></i>Reporting de novembre · Café Lumière<small>hier</small></li>
+            <li><i></i>Planning de décembre à positionner<small>aujourd'hui</small></li>
+            <li><i></i>Tirage au sort de l'Avent · Maison Ondine<small>lundi</small></li>
+          </ul>
+        </section>
+      </div>
+    </div>
+
+    <section class="clients">
+      <h2>Mes clients</h2>
+      <div class="cartes">
+        <a class="carte" style="--c:#3E5B4A"><img src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=600&h=360&fit=crop&q=70" alt=""><div><span class="logo-client">MO</span><b>Maison Ondine</b><small>Fleuriste · Instagram</small><span class="avance ok">Programmé jusqu'au 4 déc. · 13 j</span></div></a>
+        <a class="carte" style="--c:#8A5A3C"><img src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=600&h=360&fit=crop&q=70" alt=""><div><span class="logo-client">CL</span><b>Café Lumière</b><small>Café · Instagram, Facebook</small><span class="avance semaine">Programmé jusqu'au 27 nov. · 6 j</span></div></a>
+        <a class="carte" style="--c:#2F4A6B"><img src="https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=600&h=360&fit=crop&q=70" alt=""><div><span class="logo-client">AS</span><b>Atelier Sable</b><small>Céramiste · LinkedIn, Instagram</small><span class="avance urgent">Programmé jusqu'au 23 nov. · 2 j</span></div></a>
+        <a class="carte" style="--c:#9C4660"><img src="https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=600&h=360&fit=crop&q=70" alt=""><div><span class="logo-client">SÉ</span><b>Studio Écrin</b><small>Onglerie · Instagram, TikTok</small><span class="avance retard">En retard de 1 j</span></div></a>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ================= VALIDATION (client, téléphone) ================= -->
+<div class="ecran-validation" style="--marque:#3E5B4A">
+  <header class="v-tete">
+    <span class="v-logo">MO</span>
+    <div><b>Maison Ondine</b><small>par Lili Rouzier</small></div>
+    <span class="v-presence" title="Lili est en ligne"><img src="../assets/marque/icone.svg" alt="Lili"><i></i></span>
+  </header>
+  <div class="v-progression"><span>1 sur 3 à valider</span><div class="v-points"><i class="on"></i><i></i><i></i></div></div>
+
+  <article class="v-apercu">
+    <header><span class="v-avatar">MO</span><div><b>maisonondine</b><small>Lille</small></div><span class="v-plus">···</span></header>
+    <div class="v-image">
+      <img src="https://images.unsplash.com/photo-1487530811176-3780de880c2d?w=800&h=1000&fit=crop&q=75" alt="Bouquet de saison">
+      <span class="v-epingle" style="left:58%;top:34%">1</span>
+      <span class="v-carrousel">1/3</span>
+    </div>
+    <div class="v-actions">
+      <svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M20 11.5a8 8 0 0 1-11.6 7.1L4 20l1.4-4.2A8 8 0 1 1 20 11.5z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M21 4 10 14M21 4l-6.5 16-3.5-6-6-3.5z"/></svg>
+      <span class="v-pts"><i class="on"></i><i></i><i></i></span>
+    </div>
+    <p class="v-legende"><b>maisonondine</b> Le bouquet de saison est arrivé : renoncules, eucalyptus et une touche de cuivre pour accompagner les premiers froids. À composer en boutique ou à commander jusqu'à vendredi. <span>#fleuristelille #bouquetdesaison #maisonondine</span></p>
+    <p class="v-quand">Mardi 25 novembre · 12:30 · Instagram · Carrousel</p>
+  </article>
+
+  <section class="v-fil">
+    <div class="v-com"><span class="v-num">1</span><div><p><b>Lili</b> On garde ce cadrage serré pour la première image ? Les deux suivantes montrent la boutique.</p><small>il y a 1 h · <a>Répondre</a></small></div></div>
+    <div class="v-tape"><span class="v-avatar petit">IN</span> Inès écrit<span class="points"><i></i><i></i><i></i></span></div>
+  </section>
+
+  <footer class="v-boutons">
+    <button class="v-modif">Demander une modification</button>
+    <button class="v-valider"><svg viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7"/></svg>Valider</button>
+  </footer>
+</div>
+</body>
+</html>

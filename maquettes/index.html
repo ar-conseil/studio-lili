@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Trois pistes visuelles · Studio Lili</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400..600&family=Bodoni+Moda:opsz,wght@6..96,400..500&display=swap">
+<style>
+  :root { --papier: #FBF8F3; --encre: #1E1A17; --encre-2: #5F574F; --filet: #E7E0D5; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--papier); color: var(--encre); font: 15px/1.55 "Geist", system-ui, sans-serif; padding: 40px 16px 80px; }
+  .tete { max-width: 1200px; margin: 0 auto 36px; }
+  .tete img { width: 150px; height: auto; display: block; margin-bottom: 18px; }
+  h1 { font: 500 44px/1.05 "Bodoni Moda", Didot, serif; margin: 0 0 10px; letter-spacing: -.02em; }
+  .tete p { margin: 0; color: var(--encre-2); max-width: 70ch; }
+  .piste { max-width: 1200px; margin: 0 auto 56px; padding-top: 28px; border-top: 1px solid var(--filet); }
+  .piste h2 { font: 500 30px/1.1 "Bodoni Moda", Didot, serif; margin: 0 0 6px; }
+  .piste > p { margin: 0 0 16px; color: var(--encre-2); max-width: 80ch; }
+  .nuancier { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }
+  .nuancier span { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--encre-2); padding: 4px 10px 4px 4px; border: 1px solid var(--filet); border-radius: 999px; background: #fff; }
+  .nuancier i { width: 20px; height: 20px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .08); }
+  .ecrans { display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; }
+  .ecrans a { display: block; border-radius: 14px; overflow: hidden; border: 1px solid var(--filet); background: #fff; }
+  .ecrans img { width: 100%; height: auto; display: block; }
+  .ecrans .tel { border: 0; background: none; }
+  .liens { margin-top: 10px; font-size: 13px; color: var(--encre-2); }
+  .liens a { color: inherit; }
+  .note { max-width: 1200px; margin: 0 auto; font-size: 13px; color: var(--encre-2); }
+  @media (max-width: 860px) { .ecrans { grid-template-columns: 1fr; } .ecrans .tel { max-width: 320px; } h1 { font-size: 34px; } }
+</style>
+</head>
+<body>
+<header class="tete">
+  <img src="../assets/marque/logo.svg" alt="Lili Rouzier, community manager">
+  <h1>Trois pistes visuelles</h1>
+  <p>La même page « Aujourd'hui » (Lili, sur ordinateur) et la même page de validation (un client, au téléphone), dessinées de trois façons. Le logo Didone va avec les trois. Cliquez sur un écran pour l'ouvrir en grand et en vrai.</p>
+</header>
+
+<section class="piste">
+  <h2>1 · Papier</h2>
+  <p>Éditorial et clair, dans la suite du logo : papier crème, titres en Bodoni, filets fins, cartes blanches légèrement bordées, accent terre cuite. Les légendes et commentaires des clients en italique, comme des citations. Le plus proche de l'esprit du cockpit d'Antonin, en plus chaleureux.</p>
+  <div class="nuancier"><span><i style="background:#FBF8F3"></i>Papier</span><span><i style="background:#1E1A17"></i>Encre</span><span><i style="background:#A9553A"></i>Terre cuite</span><span><i style="background:#E7E0D5"></i>Filet</span></div>
+  <div class="ecrans">
+    <a href="maquette.html?piste=papier&amp;vue=aujourdhui"><img src="captures/papier-aujourdhui.png" alt="Piste Papier, page Aujourd'hui" loading="lazy"></a>
+    <a class="tel" href="telephone.html?piste=papier"><img src="captures/papier-validation.png" alt="Piste Papier, validation client au téléphone" loading="lazy"></a>
+  </div>
+</section>
+
+<section class="piste">
+  <h2>2 · Galerie</h2>
+  <p>Blanc de galerie et noir profond : très grands titres, rubriques en capitales espacées, aucun arrondi, images au carré et plus grandes. Pas de couleur propre à l'outil : seules les couleurs des clients ressortent. Le plus « agence de création ».</p>
+  <div class="nuancier"><span><i style="background:#FFFFFF"></i>Blanc</span><span><i style="background:#0E0E0E"></i>Noir</span><span><i style="background:#C2371F"></i>Alerte seulement</span><span><i style="background:#E6E6E6"></i>Filet</span></div>
+  <div class="ecrans">
+    <a href="maquette.html?piste=galerie&amp;vue=aujourdhui"><img src="captures/galerie-aujourdhui.png" alt="Piste Galerie, page Aujourd'hui" loading="lazy"></a>
+    <a class="tel" href="telephone.html?piste=galerie"><img src="captures/galerie-validation.png" alt="Piste Galerie, validation client au téléphone" loading="lazy"></a>
+  </div>
+</section>
+
+<section class="piste">
+  <h2>3 · Atelier</h2>
+  <p>Chaud et doux : sable rosé, titres en Garamond italique, grandes cartes arrondies sans bordure, pastilles rondes et couleurs pastel pour les statuts, accent prune. Le plus chaleureux et le plus « lifestyle ».</p>
+  <div class="nuancier"><span><i style="background:#F3EAE3"></i>Sable rosé</span><span><i style="background:#2E1F27"></i>Encre prune</span><span><i style="background:#5B3346"></i>Prune</span><span><i style="background:#F4D9E2"></i>Rose poudré</span></div>
+  <div class="ecrans">
+    <a href="maquette.html?piste=atelier&amp;vue=aujourdhui"><img src="captures/atelier-aujourdhui.png" alt="Piste Atelier, page Aujourd'hui" loading="lazy"></a>
+    <a class="tel" href="telephone.html?piste=atelier"><img src="captures/atelier-validation.png" alt="Piste Atelier, validation client au téléphone" loading="lazy"></a>
+  </div>
+</section>
+
+<p class="note">Données de démonstration : Maison Ondine, Café Lumière, Atelier Sable et Studio Écrin sont des marques fictives ; photos libres (Unsplash). Le mode sombre automatique sera décliné pour la piste choisie.</p>
+</body>
+</html>

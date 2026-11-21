@@ -72,7 +72,10 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
 ## Ordre de travail et état
 1. Lecture du modèle + plan d'import Notion + ce fichier -> validation d'Antonin. **En attente de validation**
    (21 novembre 2026) : modèle lu, export analysé, plan rédigé, 9 questions ouvertes pour Lili en fin de plan.
-2. Trois pistes visuelles (maquettes HTML statiques) -> choix.
+2. Trois pistes visuelles (maquettes HTML statiques) -> choix. **En attente du choix** (21/11/2026) : `maquettes/`
+   (Papier, Galerie, Atelier ; `maquette.html?piste=…&vue=aujourdhui|validation`, captures dans `maquettes/captures/`,
+   marques fictives et photos Unsplash). Logos et couleurs des vrais clients trouvés en ligne : `~/.lili/logos-clients/`
+   (hors dépôt), à valider.
 3. Schéma Supabase complet + RLS + tests de droits.
 4. Coquille, Aujourd'hui, Clients, Calendrier, Publication avec aperçus, validation client, commentaires épinglés, médiathèque.
 5. Temps réel (présence, commentaires, statuts), notifications e-mail et Web Push.
