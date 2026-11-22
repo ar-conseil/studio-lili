@@ -728,7 +728,7 @@
     ]);
   };
 
-  St.aides = { champ: champ, texte: texte, choix: choix, confirmer: confirmer, imprimer: imprimer, echapper: echapper, euros: euros, entreprise: entreprise, totaux: totaux, imprimerPiece: function (t, f) { imprimerPiece(t, f); } };
+  St.aides = { champ: champ, texte: texte, choix: choix, confirmer: confirmer, imprimer: imprimer, echapper: echapper, euros: euros, entreprise: entreprise, totaux: totaux, imprimerPiece: function (t, f) { imprimerPiece(t, f); }, tablePieces: tablePieces, editerPiece: editerPiece };
 
   // Résumés des tuiles de la page client
   St.resumes = {

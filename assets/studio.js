@@ -369,13 +369,13 @@ window.Studio = (function () {
       img.src = url;
     });
   }
-  function televerser(fichier, espaceId, dossier) {
+  function televerser(fichier, espaceId, dossier, o) {
     var id = uuid(), ext = (fichier.name.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5);
     var type = /^video\//.test(fichier.type) ? "video" : /^image\//.test(fichier.type) ? "image" : "document";
     var chemin = espaceId + "/" + id + "." + ext;
     return vignette(fichier).then(function (v) {
       var ligne = { id: id, espace_id: espaceId, chemin: chemin, type: type, mime: fichier.type, nom_fichier: fichier.name, taille: fichier.size,
-        largeur: v && v.largeur, hauteur: v && v.hauteur, dossier: dossier || null, etiquettes: [], depose_par: S.moi.id, visibilite: "partage" };
+        largeur: v && v.largeur, hauteur: v && v.hauteur, dossier: dossier || null, etiquettes: [], depose_par: S.moi.id, visibilite: (o && o.visibilite) || "partage" };
       if (X.demo) {
         var u = URL.createObjectURL(fichier); S.urls[chemin] = u; ligne.url = u; return creer("medias", ligne);
       }
@@ -619,7 +619,7 @@ window.Studio = (function () {
   }
   function rubriquesClient() {
     return [{ id: "calendrier", nom: "Calendrier", icone: "calendrier" }, { id: "publications", nom: "Publications", icone: "publications" }, { id: "planning", nom: "Planning (vue client)", icone: "liste" }, { id: "mediatheque", nom: "Médiathèque", icone: "mediatheque" },
-      { id: "brief", nom: "Brief", icone: "brief" }, { id: "messages", nom: "Messages", icone: "commentaire" }, { id: "rapports", nom: "Rapports", icone: "rapports" },
+      { id: "documents", nom: "Documents", icone: "brief" }, { id: "brief", nom: "Brief", icone: "brief" }, { id: "messages", nom: "Messages", icone: "commentaire" }, { id: "rapports", nom: "Rapports", icone: "rapports" },
       { id: "veille", nom: "Veille", icone: "oeil" }, { id: "partenariats", nom: "Partenariats", icone: "lien" }, { id: "facturation", nom: "Temps et facturation", icone: "euro" },
       { id: "notes", nom: "Notes internes", icone: "cadenas" }, { id: "equipe", nom: "Équipe", icone: "personnes" }];
   }
@@ -651,7 +651,7 @@ window.Studio = (function () {
   // ======================================================================
   // Routeur et rendu
   // ======================================================================
-  var RESERVES = ["", "calendrier", "publications", "mediatheque", "valider", "p", "mails", "taches", "prospects", "reglages", "clients", "planning", "brief", "rapports", "messages", "devis", "compte"];
+  var RESERVES = ["", "calendrier", "publications", "mediatheque", "valider", "p", "mails", "taches", "prospects", "reglages", "clients", "planning", "brief", "rapports", "messages", "devis", "compte", "documents"];
   function lireRoute() {
     var h = decodeURIComponent(location.hash.replace(/^#/, "")), q = {}, i = h.indexOf("?");
     if (i >= 0) { new URLSearchParams(h.slice(i + 1)).forEach(function (v, k) { q[k] = v; }); h = h.slice(0, i); }

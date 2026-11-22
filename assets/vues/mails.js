@@ -7,7 +7,7 @@
 (function (St) {
   "use strict";
   var el = St.el, S = St.S, V = St.V, MARQUE = window.MARQUE || {};
-  var M = { dossier: "INBOX", q: "", filtre: "", client: "", fils: [], suite: null, ouvert: null, fil: null, sel: {}, dossiers: [], boites: null,
+  var M = { ranges: {}, dossier: "INBOX", q: "", filtre: "", client: "", fils: [], suite: null, ouvert: null, fil: null, sel: {}, dossiers: [], boites: null,
     charge: false, erreur: "", images: false, curseur: -1, programmes: [], etendus: {}, minute: null };
   var POLICE = "font-family:Arial,sans-serif;font-size:14px;line-height:1.5";
 
@@ -55,7 +55,8 @@
     var h = function (n) { return new Date(Date.now() - n * 3600000).toISOString(); };
     var m = function (id, de, a, date, texte, lu) { return { id: id, de: de, a: a, cc: "", date: date, objet: "", texte: texte, html: "", extrait: texte.slice(0, 90), lu: lu !== false, pieces: [] }; };
     var lili = "Lili Rouzier <lili@demo.exemple>";
-    return [
+    var photo = function (i, nomP) { return { id: "pj" + i, nom: nomP, type: "image/jpeg", taille: 840000 + i * 91000, demo: function () { var ms = S.medias.filter(function (x) { return x.type === "image" && x.url; }); return St.fichierBlob({ media: ms[i % ms.length] }); } }; };
+    var liste = [
       { id: "f1", nb: 3, de: ["Inès Morel <ines@maison-ondine.exemple>", lili], objet: "Photos de l'atelier couronnes", date: h(1), lu: false, suivi: true, pieces: true, libelles: [],
         extrait: "Parfait, je vous envoie aussi celles du stand dès que possible !", messages: [
           m("m1", "Inès Morel <ines@maison-ondine.exemple>", lili, h(26), "Bonjour Lili,\n\nJe vous envoie les photos de l'atelier couronnes de samedi. Dites-moi si la lumière vous convient pour le carrousel.\n\nBelle journée,\nInès"),
@@ -75,6 +76,9 @@
         extrait: "Carrousels, reels courts, coulisses : ce qui marche ce mois-ci.", messages: [
           m("m8", "Newsletter Créa <news@crea.exemple>", lili, h(70), "Carrousels, reels courts, coulisses : ce qui marche ce mois-ci.", false)] }
     ];
+    liste[0].messages[0].pieces = [photo(0, "atelier-couronnes-1.jpg"), photo(1, "atelier-couronnes-2.jpg"), photo(2, "atelier-couronnes-3.jpg")];
+    liste[3].messages[0].pieces = [{ id: "pj9", nom: "Devis flyers A5.pdf", type: "application/pdf", taille: 48000, demo: function () { return Promise.resolve(St.pdfDemo("Imprimerie Duval - Devis flyers A5", ["1 000 flyers A5, recto verso, papier 170 g", "Total : 189,00 EUR TTC", "Document de demonstration."])); } }];
+    return liste;
   }
   function appel(corps) {
     if (St.X.demo) return Promise.resolve({});
@@ -357,21 +361,65 @@
         el("span", { class: "mx-actions-message" }, [outil("retour", "Répondre", function () { ecrire({ mode: "repondre", origine: m }); }), outil("fleche", "Transférer", function () { ecrire({ mode: "transferer", origine: m }); })])]),
       corps,
       (m.pieces || []).length ? el("div", { class: "mx-pieces" }, m.pieces.map(function (p) {
-        return el("button", { type: "button", class: "mx-piece", onclick: function () { telecharger(m, p); } }, [St.icone(/^image\//.test(p.type || "") ? "publications" : "trombone"),
-          el("span", {}, [el("b", { text: p.nom }), el("small", { text: Math.max(1, Math.round((p.taille || 0) / 1024)) + " Ko" })])]);
-      })) : null
+        var range = M.ranges[m.id + "/" + p.id];
+        return el("span", { class: "mx-piece-bloc" }, [
+          el("button", { type: "button", class: "mx-piece", onclick: function () { telecharger(m, p); } }, [St.icone(/^image\//.test(p.type || "") ? "publications" : "trombone"),
+            el("span", {}, [el("b", { text: p.nom }), el("small", { text: range ? "Dans la médiathèque de " + range : St.tailleFichier(p.taille || 0) })])]),
+          el("button", { type: "button", class: "btn-icone petit mx-piece-ranger" + (range ? " fait" : ""), title: "Ajouter à la médiathèque d'un client", "aria-label": "Ajouter « " + p.nom + " » à la médiathèque d'un client",
+            onclick: function () { versMediatheque(m, [p]); } }, [St.icone(range ? "valider" : "mediatheque")])]);
+      }).concat(m.pieces.length > 1 ? [el("button", { type: "button", class: "btn-texte mx-tout-ranger", onclick: function () { versMediatheque(m, m.pieces); } }, [St.icone("mediatheque"), "Tout ajouter à la médiathèque"])] : [])) : null
     ]);
   }
-  function telecharger(m, p) {
-    if (St.X.demo) return St.signaler("Pièce jointe de démonstration.");
-    St.signaler("Téléchargement de « " + p.nom + " »…");
-    appel({ action: "piece", id: m.id, piece: p.id }).then(function (x) {
+  // Octets d'une pièce jointe reçue (Gmail), en fichier prêt à ranger ou à ouvrir
+  function fichierPiece(m, p) {
+    if (p.demo) return p.demo().then(function (b) { return new File([b], p.nom, { type: p.type || b.type }); });
+    if (St.X.demo) return Promise.reject(new Error("pièce jointe de démonstration"));
+    return appel({ action: "piece", id: m.id, piece: p.id }).then(function (x) {
       var octets = atob(x.contenu), tab = new Uint8Array(octets.length); for (var i = 0; i < octets.length; i++) tab[i] = octets.charCodeAt(i);
-      var url = URL.createObjectURL(new Blob([tab], { type: x.type || "application/octet-stream" }));
-      if (/^(image\/|application\/pdf)/.test(x.type || "")) window.open(url, "_blank");
-      else { var a = el("a", { href: url, download: x.nom }); document.body.appendChild(a); a.click(); a.remove(); }
+      return new File([tab], x.nom || p.nom, { type: x.type || p.type || "application/octet-stream" });
+    });
+  }
+  function telecharger(m, p) {
+    St.signaler("Ouverture de « " + p.nom + " »…");
+    var w = /^(image\/|application\/pdf)/.test(p.type || "") ? window.open("", "_blank") : null;
+    fichierPiece(m, p).then(function (f) {
+      var url = URL.createObjectURL(f);
+      if (w) w.location = url; else { var a = el("a", { href: url, download: f.name }); document.body.appendChild(a); a.click(); a.remove(); }
       setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
-    }).catch(function (e) { St.signaler(e.message, true); });
+    }).catch(function (e) { if (w) w.close(); St.signaler(e.message, true); });
+  }
+  // Pièces jointes reçues -> médiathèque d'un client (dossier « Reçu par mail » par défaut)
+  function versMediatheque(m, pieces) {
+    var exp = moi(m.de) ? null : clientDe(m.de), e0 = exp || clientDuFil(M.fil || {}) || null;
+    var choisies = {}; pieces.forEach(function (p) { choisies[p.id] = true; });
+    var client = el("select", { "aria-label": "Client", onchange: function () { majDossiers(); } },
+      [el("option", { value: "", text: "Choisir un client" })].concat(St.espacesActifs().map(function (e) { return el("option", { value: e.id, selected: e0 && e.id === e0.id, text: e.nom }); })));
+    var liste = el("datalist", { id: "mx-dossiers-media" });
+    var dossier = el("input", { type: "text", value: "Reçu par mail", list: "mx-dossiers-media", "aria-label": "Dossier" });
+    function majDossiers() {
+      liste.textContent = "";
+      Array.from(new Set(S.medias.filter(function (x) { return x.espace_id === client.value && x.dossier; }).map(function (x) { return x.dossier; }))).sort().forEach(function (d) { liste.appendChild(el("option", { value: d })); });
+    }
+    majDossiers();
+    var partage = el("input", { type: "checkbox", checked: !!exp });
+    var corps = [St.aides.champ("Client", client), St.aides.champ("Dossier", dossier), liste,
+      el("label", { class: "case-option" }, [partage, el("span", {}, [el("b", { text: "Visible par le client" }), el("small", { text: "Sinon, réservé à vous (vous pourrez le partager plus tard depuis la médiathèque)." })])])];
+    if (pieces.length > 1) corps.push(el("div", { class: "mx-choix-pieces" }, pieces.map(function (p) {
+      return el("label", { class: "case-ligne" }, [el("input", { type: "checkbox", checked: true, onchange: function (ev) { choisies[p.id] = ev.target.checked; } }), el("span", { text: p.nom + " · " + St.tailleFichier(p.taille || 0) })]);
+    })));
+    St.fenetre({ titre: pieces.length > 1 ? "Ajouter les pièces jointes à la médiathèque" : "Ajouter à la médiathèque", sous: pieces.length > 1 ? null : pieces[0].nom, corps: corps,
+      actions: [{ texte: "Annuler" }, { texte: "Ajouter", principal: true, action: function (fermer) {
+        var e = St.espace(client.value); if (!e) { client.focus(); return St.signaler("Choisissez le client", true); }
+        var l = pieces.filter(function (p) { return choisies[p.id]; }); if (!l.length) return;
+        var d = dossier.value.trim() || "Reçu par mail";
+        fermer(); St.signaler("Ajout de " + l.length + " fichier" + (l.length > 1 ? "s" : "") + " à la médiathèque de " + e.nom + "…");
+        l.reduce(function (suite, p) {
+          return suite.then(function () { return fichierPiece(m, p); }).then(function (f) { return St.televerser(f, e.id, d, { visibilite: partage.checked ? "partage" : "interne" }); })
+            .then(function () { M.ranges[m.id + "/" + p.id] = e.nom; });
+        }, Promise.resolve()).then(function () {
+          St.signaler(l.length > 1 ? l.length + " fichiers ajoutés à la médiathèque de " + e.nom : "Ajouté à la médiathèque de " + e.nom + " (dossier " + d + ")"); redessiner();
+        }).catch(function (x) { St.signaler("Ajout impossible : " + x.message, true); redessiner(); });
+      } }] });
   }
   function tache(objet, e, lien) {
     St.creer("taches", { titre: "Répondre : " + objet, notes: lien && lien !== "#" ? "Mail : " + lien : null, espace_id: e ? e.id : null, echeance: St.iso(new Date()), priorite: "moyenne", statut: "a-faire" })
@@ -446,7 +494,11 @@
     } }, [el("option", { value: "", text: "Réponses types…" })].concat(modeles.map(function (m) { return el("option", { value: m.id, text: m.nom }); }))) : null;
     var fichier = el("input", { type: "file", multiple: true, hidden: true, onchange: function () { ajouterFichiers(fichier.files); fichier.value = ""; } });
     var ed = St.editeurRiche(depart, { label: "Message", aide: mode === "transferer" ? "Un mot avant le message transféré…" : "Votre message",
-      extra: [el("span", { class: "espace" }), el("button", { type: "button", class: "btn-icone petit", title: "Joindre un fichier", "aria-label": "Joindre un fichier", onclick: function () { fichier.click(); } }, [St.icone("trombone")]), choixModele, choixSig] });
+      extra: [el("span", { class: "espace" }), el("button", { type: "button", class: "btn-icone petit", title: "Joindre un fichier", "aria-label": "Joindre un fichier", onclick: function () { fichier.click(); } }, [St.icone("trombone")]),
+        St.choisirDocuments ? el("button", { type: "button", class: "btn-icone petit", title: "Joindre depuis le studio (médiathèque, documents, factures)", "aria-label": "Joindre depuis le studio", onclick: function () {
+          var dest = String(a.valeur() || "").split(",").map(function (x) { return clientDe(x); }).filter(Boolean)[0] || (l && clientDe(l.de));
+          St.choisirDocuments({ espace: dest ? dest.id : "" }).then(function (fs) { ajouterFichiers(fs); });
+        } }, [St.icone("mediatheque")]) : null, choixModele, choixSig] });
     var listePieces = el("div", { class: "mx-pieces-jointes" });
     function dessinerPieces() {
       listePieces.textContent = "";
@@ -461,6 +513,7 @@
       });
     }
     dessinerPieces();
+    if (o.fichiers) ajouterFichiers(o.fichiers);
     var titre = el("b", { text: mode === "nouveau" ? "Nouveau message" : mode === "transferer" ? "Transférer" : "Répondre" + (l ? " à " + (moi(l.de) ? nom(l.a) : nom(l.de)) : "") });
     var fen = el("section", { class: "mx-redaction", role: "dialog", "aria-label": "Rédaction",
       ondragover: function (ev) { ev.preventDefault(); fen.classList.add("survol"); }, ondragleave: function () { fen.classList.remove("survol"); },

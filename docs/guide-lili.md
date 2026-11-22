@@ -102,6 +102,7 @@ Ses rubriques (les flèches **← →** passent de l'une à l'autre, **Échap** 
 | Rubrique | Ce que tu y fais | Le client le voit ? |
 |---|---|---|
 | Calendrier, Publications, Médiathèque | son travail | ce qui est partagé |
+| Documents | contrats, chartes, PDF reçus par mail, devis et factures ; « Envoyer par mail » sur chaque fichier | les fichiers que tu partages, jamais les devis et factures d'ici |
 | Brief | cible, ton, piliers, mots à utiliser et à éviter, objectifs | quand tu le partages |
 | Messages | la conversation avec lui | oui |
 | Rapports | les chiffres du mois par réseau, ton commentaire | quand tu partages le mois |
@@ -197,6 +198,12 @@ Tes anciennes factures importées de Notion gardent leur PDF d'origine.
   publication, un clic pour ouvrir son espace.
 - **Recherche** (touche **/**) comme dans Gmail (`de:inès`, `has:attachment`, `after:2026/11/01`…) et filtres
   Non lus, Pièces jointes, Clients.
+- **Actualiser** : la petite flèche au bout du champ de recherche relit ta boîte tout de suite.
+- **Pièces jointes reçues** : l'icône dossier à côté d'une pièce (ou « Tout ajouter à la médiathèque ») la range
+  chez le client de ton choix, dans le dossier « Reçu par mail » (modifiable). Une photo, une vidéo va dans sa
+  Médiathèque ; un PDF ou un document Word, dans ses **Documents**. Visible par le client si tu coches la case.
+- **Joindre depuis le studio** : dans un message, l'icône dossier à côté du trombone ouvre la médiathèque et les
+  documents de tes clients (et les PDF des factures importées) : coche, « Joindre ».
 - **Sélection multiple** : coche plusieurs conversations puis Archiver, Corbeille, Lu ou Non lu, Suivre, Libellé.
 - **Écrire** (touche **C** ou « Nouveau message ») : texte mis en forme (gras, listes, liens, citation), ta
   **signature** ajoutée toute seule, tes **réponses types** en un clic, pièces jointes glissées dans la fenêtre,

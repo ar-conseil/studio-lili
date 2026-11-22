@@ -1250,3 +1250,55 @@ a.pl-ligne:hover .pl-ouvrir, a.pl-ligne:focus-visible .pl-ouvrir { opacity: 1; }
   .sig-apercu { zoom: .56; }
   .sig-actions > * { flex: 1 1 100%; }
 }
+
+/* ---------- Médiathèque : par client, genre et tri ; documents (22/11/2026) ---------- */
+.med-titre { font: 500 20px/1.2 var(--titres); margin: 0 0 12px; }
+.med-clients-bloc { margin-bottom: 30px; }
+.med-clients { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.med-client { display: grid; gap: 4px; padding: 8px 8px 12px; border: 1px solid var(--filet); border-radius: 16px; background: var(--blanc); text-decoration: none; color: var(--encre); transition: border-color .2s, transform .2s var(--doux); }
+.med-client:hover { border-color: color-mix(in srgb, var(--c) 55%, var(--filet)); transform: translateY(-2px); }
+.med-client-mos { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 3px; aspect-ratio: 16 / 10; border-radius: 11px; overflow: hidden; background: color-mix(in srgb, var(--c) 12%, var(--creme)); margin-bottom: 6px; }
+.med-client-mos img, .med-client-mos video { width: 100%; height: 100%; object-fit: cover; min-height: 0; }
+.med-client-mos > :first-child { grid-row: span 2; }
+.med-client-mos.n1 > :first-child { grid-column: span 2; } .med-client-mos.n2 > :nth-child(2) { grid-row: span 2; }
+.med-client-mos.n0 { display: grid; place-items: center; grid-template-columns: 1fr; } .med-client-mos.n0 .ic { width: 26px; height: 26px; color: var(--c); grid-row: auto; }
+.med-client-nom { display: flex; align-items: center; gap: 4px; padding: 0 4px; font-size: 14px; } .med-client-nom b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.med-client small { padding: 0 6px; color: var(--encre-3); font-size: 12px; }
+.med-outils { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 0 0 12px; }
+.tri { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--encre-3); } .tri select { min-height: 36px; width: auto; }
+.doc-vignette { display: grid; place-content: center; justify-items: center; gap: 6px; width: 100%; height: 100%; padding: 12px; background: var(--creme); color: var(--encre-2); text-align: center; }
+.doc-vignette .ic { width: 28px; height: 28px; color: var(--terre); }
+.doc-vignette b { font: 600 12px var(--mono); letter-spacing: .08em; color: var(--terre); padding: 2px 8px; border: 1px solid color-mix(in srgb, var(--terre) 40%, transparent); border-radius: 999px; background: var(--blanc); }
+.doc-vignette small { font-size: 12px; color: var(--encre-2); max-width: 100%; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
+.media-grand .doc-vignette { min-height: 260px; border-radius: 14px; }
+.vue-documents.depot { outline: 2px dashed var(--terre); outline-offset: 8px; border-radius: 18px; }
+.vue-documents .barre-outils { justify-content: flex-start; } .vue-documents .barre-outils .puces-filtre { margin: 0; } .vue-documents .barre-outils .espace { flex: 1; }
+.liste-docs { list-style: none; margin: 12px 0 0; padding: 0; display: grid; }
+.liste-docs li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--filet); } .liste-docs li:first-child { border-top: 0; }
+.doc-ligne { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 4px; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; border-radius: 10px; }
+.doc-ligne:hover { background: var(--creme); }
+.doc-ext { flex: none; display: grid; place-items: center; width: 42px; height: 48px; border-radius: 8px; background: var(--creme); border: 1px solid var(--filet); font: 600 10.5px var(--mono); letter-spacing: .06em; color: var(--terre); }
+.doc-ligne-nom { display: grid; min-width: 0; } .doc-ligne-nom b { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .doc-ligne-nom small { color: var(--encre-3); font-size: 12.5px; }
+.etiquette-partage { font-size: 10.5px; font-weight: 600; letter-spacing: .04em; color: var(--encre-3); border: 1px solid var(--filet); border-radius: 999px; padding: 1px 7px; white-space: nowrap; }
+.liste-docs .actions-ligne { flex: none; display: flex; gap: 2px; }
+/* Fenêtre « Joindre depuis le studio » */
+.doc-choix { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; max-height: min(52vh, 460px); overflow: auto; padding: 2px; }
+.doc-choix-el { position: relative; display: grid; grid-template-rows: auto auto; gap: 6px; padding: 6px; border: 1.5px solid var(--filet); border-radius: 12px; background: var(--blanc); font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.doc-choix-el > :first-child { aspect-ratio: 1; width: 100%; height: auto; object-fit: cover; border-radius: 8px; overflow: hidden; }
+.doc-choix-el .doc-vignette { padding: 6px; }
+.doc-choix-nom { display: grid; min-width: 0; padding: 0 2px; } .doc-choix-nom b { font-size: 12.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .doc-choix-nom small { font-size: 11px; color: var(--encre-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.doc-coche { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--blanc); border: 1.5px solid var(--filet-fort); color: transparent; }
+.doc-coche .ic { width: 14px; height: 14px; }
+.doc-choix-el.choisi { border-color: var(--terre); box-shadow: 0 0 0 3px color-mix(in srgb, var(--terre) 18%, transparent); }
+.doc-choix-el.choisi .doc-coche { background: var(--terre); border-color: var(--terre); color: #fff; }
+.doc-choix-el.indispo { opacity: .5; }
+/* Pièces jointes reçues : ranger dans une médiathèque */
+.mx-piece-bloc { display: inline-flex; align-items: center; gap: 2px; }
+.mx-piece-ranger.fait { color: var(--terre); }
+.mx-tout-ranger { align-self: center; font-size: 13px; }
+.mx-choix-pieces { display: grid; gap: 4px; }
+@media (max-width: 700px) {
+  .med-clients { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .doc-choix { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .liste-docs .etiquette-interne, .liste-docs .etiquette-partage { display: none; }
+}

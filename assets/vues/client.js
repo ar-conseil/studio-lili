@@ -151,16 +151,24 @@
   V.mediatheque = function (r, eForce) {
     var q = r.query || {}, lili = St.estLili();
     var eId = eForce ? eForce.id : !lili ? (St.espacesClient()[0] || {}).id : q.client || "";
-    var tous = S.medias.filter(function (m) { return !m.corbeille_le && (!eId || m.espace_id === eId) && (lili || m.visibilite === "partage"); })
-      .sort(function (a, b) { return String(b.cree_le).localeCompare(String(a.cree_le)); });
-    var dossiers = Array.from(new Set(tous.map(function (m) { return m.dossier || "Sans dossier"; }))).sort();
+    // Tri (gardé sur cet appareil) et genre : photos, vidéos, documents
+    var triGarde = ""; try { triGarde = localStorage.getItem("studio.tri-medias") || ""; } catch (x) {}
+    var tri = q.tri || triGarde || "recents", genre = q.type || "";
+    var tousGenres = St.trierFichiers(S.medias.filter(function (m) { return !m.corbeille_le && (!eId || m.espace_id === eId) && (lili || m.visibilite === "partage"); }), tri);
+    var tous = tousGenres.filter(function (m) { return !genre || m.type === genre; });
+    var dossiers = Array.from(new Set(tous.map(function (m) { return m.dossier || "Sans dossier"; }))).sort(function (a, b) { return a.localeCompare(b, "fr"); });
     var dossier = q.dossier || "";
     var liste = tous.filter(function (m) { return !dossier || (m.dossier || "Sans dossier") === dossier; });
     var base = eForce ? "#" + eForce.slug + "/mediatheque" : "#mediatheque";
-    var lien = function (o) { var x = Object.assign({ dossier: dossier, client: eForce ? "" : eId }, o); var s = []; if (x.dossier) s.push("dossier=" + encodeURIComponent(x.dossier)); if (x.client && lili && !eForce) s.push("client=" + x.client); return base + (s.length ? "?" + s.join("&") : ""); };
+    var lien = function (o) {
+      var x = Object.assign({ dossier: dossier, client: eForce ? "" : eId, tri: q.tri || "", type: genre }, o), s = [];
+      if (x.dossier) s.push("dossier=" + encodeURIComponent(x.dossier)); if (x.client && lili && !eForce) s.push("client=" + x.client);
+      if (x.type) s.push("type=" + x.type); if (x.tri) s.push("tri=" + x.tri);
+      return base + (s.length ? "?" + s.join("&") : "");
+    };
 
     var page = el("div", { class: "vue-mediatheque" });
-    var fichier = el("input", { type: "file", accept: "image/*,video/*", multiple: true, hidden: true, onchange: function (ev) { deposer(ev.target.files); } });
+    var fichier = el("input", { type: "file", accept: lili ? null : "image/*,video/*", multiple: true, hidden: true, onchange: function (ev) { deposer(ev.target.files); } });
     var cibleDepot = eId || (lili ? null : (St.espacesClient()[0] || {}).id);
     function deposer(fichiers) {
       var l = Array.prototype.slice.call(fichiers || []); if (!l.length) return;
@@ -179,12 +187,31 @@
       el("button", { type: "button", class: "btn-plein", onclick: function () { fichier.click(); } }, [St.icone("deposer"), lili ? "Déposer" : "Déposer des photos"]), fichier];
     if (!eForce) page.appendChild(St.entete(null, "Médiathèque", lili ? "Glissez des fichiers n'importe où sur la page." : "Vos photos et vidéos, et celles que prépare Lili. Glissez-en ici ou choisissez-les sur votre téléphone.", actions));
     else page.appendChild(el("div", { class: "barre-outils" }, actions));
+    // Une médiathèque par client : dans la vue « Tous les clients », une carte par client (photos récentes, nombre)
+    if (lili && !eId && !eForce) {
+      var cartes = St.espacesActifs().map(function (e) {
+        var ms = S.medias.filter(function (m) { return m.espace_id === e.id && !m.corbeille_le; });
+        var imgs = ms.filter(function (m) { return m.type === "image"; }).sort(function (a, b) { return String(b.cree_le).localeCompare(String(a.cree_le)); }).slice(0, 3);
+        return el("a", { class: "med-client", href: "#" + e.slug + "/mediatheque", style: { "--c": e.couleur } }, [
+          el("span", { class: "med-client-mos n" + imgs.length }, imgs.length ? imgs.map(function (m) { return St.image(m); }) : [St.icone("mediatheque")]),
+          el("span", { class: "med-client-nom" }, [el("i", { class: "pastille-client" }), el("b", { text: e.nom })]),
+          el("small", { text: ms.length ? ms.length + " fichier" + (ms.length > 1 ? "s" : "") : "Vide" })]);
+      });
+      page.appendChild(el("section", { class: "med-clients-bloc" }, [el("h2", { class: "med-titre", text: "Par client" }), el("div", { class: "med-clients" }, cartes)]));
+      page.appendChild(el("h2", { class: "med-titre", text: "Tous les fichiers" }));
+    }
+    // Genre et tri
+    var genres = [["", "Tout"], ["image", "Photos"], ["video", "Vidéos"], ["document", "Documents"]].filter(function (g) { return !g[0] || tousGenres.some(function (m) { return m.type === g[0]; }); });
+    page.appendChild(el("div", { class: "med-outils" }, [
+      genres.length > 2 ? el("nav", { class: "vues", "aria-label": "Genre" }, genres.map(function (g) { return el("a", { href: lien({ type: g[0], dossier: "" }), class: genre === g[0] ? "actif" : "", "aria-current": genre === g[0] ? "true" : null, text: g[1] }); })) : el("span"),
+      el("label", { class: "tri" }, [el("span", { text: "Trier" }), el("select", { "aria-label": "Trier les fichiers", onchange: function (ev) { try { localStorage.setItem("studio.tri-medias", ev.target.value); } catch (x) {} St.aller(lien({ tri: ev.target.value }).slice(1)); } },
+        [["recents", "Plus récents"], ["anciens", "Plus anciens"], ["nom", "Nom (A à Z)"], ["type", "Type"], ["taille", "Plus lourds"]].map(function (t) { return el("option", { value: t[0], selected: t[0] === tri, text: t[1] }); }))])]));
     page.appendChild(el("nav", { class: "puces-filtre", "aria-label": "Dossiers" }, [el("a", { href: lien({ dossier: "" }), class: "puce" + (!dossier ? " active" : "") }, ["Tout", el("span", { text: String(tous.length) })])]
       .concat(dossiers.map(function (d) { return el("a", { href: lien({ dossier: d }), class: "puce" + (d === dossier ? " active" : "") }, [d, el("span", { text: String(tous.filter(function (m) { return (m.dossier || "Sans dossier") === d; }).length) })]); }))));
     page.appendChild(liste.length ? el("div", { class: "grille-medias" }, liste.map(function (m) {
       var e = St.espace(m.espace_id) || {}, utilise = S.pubMedias.filter(function (x) { return x.media_id === m.id; }).length;
       return el("button", { type: "button", class: "media-tuile", style: { "--c": e.couleur }, onclick: function () { ouvrirMedia(m); } }, [
-        St.image(m), m.type === "video" ? el("span", { class: "media-type", text: "Vidéo" }) : null,
+        St.vignette(m), m.type === "video" ? el("span", { class: "media-type", text: "Vidéo" }) : null,
         m.visibilite === "interne" ? el("span", { class: "etiquette-interne", text: "Lili seule" }) : null,
         el("span", { class: "media-legende" }, [!eId ? el("i", { class: "pastille-client", style: { "--c": e.couleur } }) : null, el("span", { text: m.dossier || "Sans dossier" }), utilise ? el("small", { text: " · " + utilise + " publi." }) : null])
       ]);
@@ -203,7 +230,10 @@
     var datePub = pubs.map(function (p) { return p.date_prevue; }).filter(Boolean).sort().pop();
     var quand = m.notion_id && datePub ? "publication du " + St.fmt(datePub, { day: "numeric", month: "long", year: "numeric" }) : "ajouté " + St.ilya(m.cree_le);
     var infos = [nomLisible, auteur.nom ? "déposé par " + auteur.nom : null, quand, lili ? e.nom : null].filter(Boolean).join(" · ");
-    var corps = [el("div", { class: "media-grand" }, [St.image(m, { apercu: false })]), el("p", { class: "aside", text: infos })];
+    var corps = [el("div", { class: "media-grand" }, [St.vignette(m, { apercu: false })]), el("p", { class: "aside", text: infos })];
+    var liens = [m.type === "document" ? el("button", { type: "button", class: "btn-texte", onclick: function () { St.ouvrirFichier(m); } }, [St.icone("oeil"), "Ouvrir"]) : null,
+      lili && St.envoyerParMail ? el("button", { type: "button", class: "btn-texte", onclick: function () { var d = document.querySelector("dialog[open]"); if (d) d.close(); St.envoyerParMail(m); } }, [St.icone("mail"), "Envoyer par mail"]) : null].filter(Boolean);
+    if (liens.length) corps.push(el("div", { class: "actions-ligne", style: { "justify-content": "flex-start" } }, liens));
     if (peutModifier) corps.push(el("div", { class: "pile-serree" }, [dossier, etiquettes]));
     if (pubs.length) corps.push(el("p", { class: "aside" }, ["Utilisé dans : "].concat(pubs.map(function (p, i) { return el("a", { href: "#p/" + p.id, text: (i ? ", " : "") + (p.titre || "Sans titre") }); }))));
     var actions = [{ texte: "Fermer" }];

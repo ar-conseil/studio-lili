@@ -93,7 +93,15 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   glissées, brouillon auto (Gmail), annulation d'envoi (délai réglable), envoi programmé (table `mails_programmes`,
   cron « mails-programmes » chaque minute -> `messagerie` {action: programmes}), « Créer une tâche », raccourcis
   façon Gmail (`V.toucheMails`, prioritaire sur la page Mails ; ? pour la liste) ; bouton « Actualiser » (flèche qui
-  tourne) au bout du champ de recherche, comme Evoalys. HTML des mails dans un iframe isolé,
+  tourne) au bout du champ de recherche, comme Evoalys.
+  Pièces jointes reçues -> médiathèque d'un client (`versMediatheque`, dossier « Reçu par mail », visible du client au
+  choix ; `M.ranges` marque ce qui est rangé) ; « Joindre depuis le studio » dans la rédaction (`St.choisirDocuments`).
+- **Documents** (22/11/2026) : `assets/vues/documents.js` = rubrique `#<slug>/documents` (fichiers `medias.type =
+  'document'`, devis et factures via `St.aides.tablePieces`), `St.choisirDocuments`, `St.fichierBlob` (médias ou PDF
+  du bucket livrables), `St.ouvrirFichier`, `St.envoyerParMail`, `St.vignette` (carte pour un document),
+  `St.trierFichiers`, `St.pdfDemo` (PDF fabriqué pour la démonstration). Documents déposés : « Lili seule » par défaut.
+  Médiathèque : tri (`?tri=recents|anciens|nom|type|taille`, gardé dans `studio.tri-medias`), genre (`?type=`),
+  et « Par client » (une carte par client) dans la vue Tous les clients. `St.televerser(f, espace, dossier, {visibilite})`. HTML des mails dans un iframe isolé,
   images distantes bloquées jusqu'au clic ; le HTML envoyé est nettoyé côté serveur (`nettoyerHtml`).
 - **Ma signature** (22/11/2026, comme Evoalys) : `assets/vues/signature.js`, en tête de Réglages › Signatures de mail.
   Photo (recadrée au carré dans le navigateur, anneau terre cuite dessiné en canvas ; initiales sans photo),
