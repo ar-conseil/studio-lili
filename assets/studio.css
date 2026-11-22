@@ -287,16 +287,13 @@ button.som-une { font: inherit; text-align: left; cursor: pointer; width: 100%; 
 .carte-pub.compacte .carte-pub-visuel { aspect-ratio: 1; } .carte-pub.compacte b { font-size: 15.5px; }
 
 /* ---------- Calendrier ---------- */
-/* Le sélecteur Mois / Semaine / Jour / Liste ne bouge jamais : sur grand écran tout tient sur une ligne (le titre
-   se raccourcit s'il le faut) ; en dessous, toujours deux lignes, quelle que soit la longueur du titre. */
-.cal-outils { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: nowrap; margin-bottom: 10px; min-height: 44px; }
-.cal-nav { display: flex; align-items: center; gap: 4px; flex: 1 1 0; min-width: 0; } .cal-nav > a { flex: none; }
+/* Le sélecteur Mois / Semaine / Jour / Liste ne bouge jamais : le titre (dont la longueur change d'une vue à
+   l'autre) a toujours sa propre ligne, et les outils sont sur la ligne suivante, toujours au même endroit. */
+.cal-outils { display: grid; gap: 10px; margin-bottom: 10px; }
+.cal-nav { display: flex; align-items: center; gap: 4px; min-width: 0; } .cal-nav > a { flex: none; }
 .cal-titre { margin: 0 0 0 10px; font-size: 26px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .cal-titre::first-letter { text-transform: uppercase; }
-.cal-choix { display: flex; align-items: center; gap: 8px; flex: none; flex-wrap: nowrap; }
-@media (max-width: 1320px) {
-  .cal-outils { flex-direction: column; align-items: stretch; gap: 8px; }
-  .cal-nav { flex: none; } .cal-choix { flex-wrap: wrap; }
-}
+.cal-choix { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cal-choix > .vues { order: -1; margin-right: auto; }
 @media (max-width: 640px) { .cal-titre { font-size: 19px; margin-left: 4px; } .cal-nav { gap: 0; } .cal-nav > .btn-texte { padding-left: 8px; padding-right: 8px; } }
 .vues { display: inline-flex; padding: 3px; border-radius: 11px; background: var(--creme); border: 1px solid var(--filet); }
 .vues a { padding: 6px 13px; border-radius: 8px; text-decoration: none; color: var(--encre-2); font-size: 13.5px; font-weight: 500; }
