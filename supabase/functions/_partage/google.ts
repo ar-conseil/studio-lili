@@ -10,7 +10,12 @@ export type CompteMail = { id: string; personne_id: string; email: string; refre
 
 const b64 = (o: Uint8Array) => btoa(String.fromCharCode(...o)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const deB64 = (s: string) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), (c) => c.charCodeAt(0));
-const cle = () => crypto.subtle.importKey("raw", new TextEncoder().encode(env("CLE_SYNCHRO") || "studio"), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
+// Clé de l'état signé : la clé de synchro du studio, sans valeur de secours (une clé devinable laisserait forger l'état)
+const cle = () => {
+  const k = env("CLE_SYNCHRO");
+  if (!k || k.length < 16) throw new Error("clé de synchro absente : relancez le déploiement");
+  return crypto.subtle.importKey("raw", new TextEncoder().encode(k), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
+};
 
 // État signé (15 min) : il dit, au retour de Google, pour qui la boîte est reliée
 export async function signerEtat(personne: string): Promise<string> {

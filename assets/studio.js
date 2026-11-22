@@ -683,9 +683,14 @@ window.Studio = (function () {
     X.canal = X.db.channel("studio");
     ["publications", "publication_medias", "commentaires", "medias", "versions", "espaces", "taches", "journal", "operations", "notifications", "comptes_mail",
       "briefs", "messages", "rapports", "veille", "partenaires", "temps", "devis", "factures", "prospects", "membres", "briefs_jour", "devis_signatures", "temps_forts", "reglages", "securite_alertes"].forEach(function (t) {
-      X.canal.on("postgres_changes", { event: "*", schema: "public", table: t }, function () {
-        aRecharger[t] = true;
-        clearTimeout(attente); attente = setTimeout(rafraichir, 400);
+      // Les suppressions ne passent pas par les règles de la base (Supabase envoie l'identifiant de toute ligne
+      // effacée) : seule Lili les écoute ; chez un client, la corbeille est une modification, et le reste se voit
+      // au retour sur l'onglet.
+      (estLili() ? ["*"] : ["INSERT", "UPDATE"]).forEach(function (ev) {
+        X.canal.on("postgres_changes", { event: ev, schema: "public", table: t }, function () {
+          aRecharger[t] = true;
+          clearTimeout(attente); attente = setTimeout(rafraichir, 400);
+        });
       });
     });
     X.canal.subscribe();

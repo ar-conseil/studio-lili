@@ -198,6 +198,9 @@ delete from public.publications where id = '20000000-0000-4000-a000-000000000001
 insert into public.publications (espace_id, titre, statut, auteur_id, visibilite) values ('10000000-0000-4000-a000-00000000000a', 'Idée de A', 'idee', '00000000-0000-4000-a000-0000000000a1', 'partage');
 insert into public.commentaires (publication_id, cible, x, y, contenu) values ('20000000-0000-4000-a000-000000000001', 'visuel', .4, .3, 'Plus de lumière ici');
 select essais.doit_echouer($$update public.commentaires set publication_id = '20000000-0000-4000-a000-000000000002' where contenu = 'Plus de lumière ici'$$, 'A déplace son commentaire sur une idée interne');
+select essais.doit_echouer($q$insert into storage.objects (bucket_id, name) values ('medias', '10000000-0000-4000-a000-00000000000a/30000000-0000-4000-a000-0000000000f1.svg')$q$, 'A dépose un SVG (qui peut contenir du code)');
+select essais.doit_echouer($q$insert into storage.objects (bucket_id, name) values ('medias', '10000000-0000-4000-a000-00000000000a/page.html')$q$, 'A dépose une page web');
+select essais.doit_echouer('truncate public.reglages', 'A vide une table');
 update public.commentaires set contenu = 'Plus de lumière ici' , resolu = false where contenu = 'Plus de lumière ici';
 insert into public.medias (id, espace_id, chemin, apercu_chemin, depose_par, nom_fichier) values ('30000000-0000-4000-a000-00000000000d', '10000000-0000-4000-a000-00000000000a', '10000000-0000-4000-a000-00000000000a/30000000-0000-4000-a000-00000000000d.jpg', '10000000-0000-4000-a000-00000000000a/30000000-0000-4000-a000-00000000000d-apercu.jpg', '00000000-0000-4000-a000-0000000000a1', 'depot.jpg');
 insert into storage.objects (bucket_id, name) values ('medias', '10000000-0000-4000-a000-00000000000a/30000000-0000-4000-a000-00000000000d.jpg');

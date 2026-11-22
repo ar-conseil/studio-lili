@@ -6,7 +6,7 @@
 // vérification, date et heure de signature, adresse IP, navigateur, empreinte SHA-256 du contenu du devis.
 // Le code part de la boîte Gmail de Lili, à la demande du client lui-même (son clic « Recevoir mon code »).
 // deno-lint-ignore-file no-explicit-any
-import { appelant, base, cors, json } from "../_partage/commun.ts";
+import { appelant, base, cors, ipAppelant, json } from "../_partage/commun.ts";
 import { envoyerDepuisLili, gabarit } from "../_partage/envoi.ts";
 
 const auj = () => new Intl.DateTimeFormat("fr-CA", { timeZone: "Europe/Paris" }).format(new Date());
@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
 
   const contenu = JSON.stringify({ numero: d.numero, objet: d.objet, lignes: d.lignes, total_ht: d.total_ht, total_tva: d.total_tva, total_ttc: d.total_ttc, valable_jusque: d.valable_jusque });
   const empreinte = await sha(contenu);
-  const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || req.headers.get("cf-connecting-ip") || null;
+  const ip = ipAppelant(req);
   const signe_le = new Date().toISOString();
   const { error } = await db.from("devis_signatures").insert({ devis_id: d.id, personne_id: a.id, nom_signataire: nom, signature, empreinte, ip,
     agent: (req.headers.get("user-agent") ?? "").slice(0, 300), signe_le, email_verifie: c.email, code_verifie_le: verifieLe });

@@ -170,6 +170,11 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   heure, code à 6 chiffres exigé du client qui l'a activé ; présence en direct sur canaux privés (politiques
   `studio_presence_*` sur `realtime.messages`, vérifiées par `npm run recette`, 37 vérifications) ; Échap et
   « retour » ne quittent plus le site (`St.revenir`). Vérifié faux : un invité ne voit déjà pas les clients.
+  Fin (migration `20261122150000_audit3.sql`) : droits techniques (truncate, references, trigger) retirés à anon et
+  authenticated ; buckets limités à 35 types de fichiers ; un client ne dépose ni SVG ni HTML ni script ; `garde`
+  plafonné à 600 traces par minute au total et adresse IP lue par `ipAppelant` (Cloudflare d'abord, vérifié : une
+  adresse forgée est ignorée) ; clé d'état OAuth sans valeur de secours ; un client n'écoute pas les suppressions en
+  temps réel ; mails reçus : règle de sécurité du cadre (img-src, styles et polices externes bloqués jusqu'au clic).
 - Supabase : mots de passe fuités refusés (HIBP), `rate_limit_verify` 15, `rate_limit_otp` 10 (dans le déploiement).
 - Anti-IA : balises robots (noindex, noarchive, noai, noimageai) sur toutes les pages, `robots.txt` refusant les robots
   d'IA connus ; la vraie barrière reste la connexion avec code (rien de privé n'est lisible sans compte).

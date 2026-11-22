@@ -329,10 +329,13 @@
     var corps;
     if (m.html) {
       var html = m.html.replace(/cid:([^"'\s)]+)/g, function (x, cid) { return (m.images || {})[cid] || x; });
-      var bloque = !M.images && /<img[^>]+src=["']?https?:/i.test(html);
+      // Tout ce qui viendrait d'ailleurs (images, srcset, fonds, styles, polices) est bloqué par une règle de sécurité
+      // du cadre lui-même, pas seulement les balises <img> : rien ne peut signaler à l'expéditeur que le mail est lu.
+      var bloque = !M.images && /(src|srcset|background|poster)\s*=\s*["']?\s*(https?:)?\/\/|url\(\s*["']?\s*(https?:)?\/\/|@import/i.test(html);
       if (bloque) html = html.replace(/(<img[^>]+)src=(["']?)https?:/gi, "$1data-bloque=$2https:");
       var cadre = el("iframe", { class: "mx-html", sandbox: "allow-popups allow-popups-to-escape-sandbox", title: "Contenu du mail", referrerpolicy: "no-referrer" });
-      cadre.srcdoc = '<base target="_blank"><meta name="referrer" content="no-referrer"><style>body{font:14px/1.55 -apple-system,Segoe UI,Arial,sans-serif;color:#1E1A17;background:#fff;margin:4px 2px;word-wrap:break-word}img{max-width:100%;height:auto}blockquote{margin:0 0 0 .8ex;border-left:2px solid #ddd;padding-left:1ex;color:#555}</style>' + html;
+      var regle = "default-src 'none'; style-src 'unsafe-inline'; font-src data:; media-src data: blob:; img-src data: blob:" + (M.images ? " https: http:" : "");
+      cadre.srcdoc = '<meta http-equiv="Content-Security-Policy" content="' + regle + '"><base target="_blank"><meta name="referrer" content="no-referrer"><style>body{font:14px/1.55 -apple-system,Segoe UI,Arial,sans-serif;color:#1E1A17;background:#fff;margin:4px 2px;word-wrap:break-word}img{max-width:100%;height:auto}blockquote{margin:0 0 0 .8ex;border-left:2px solid #ddd;padding-left:1ex;color:#555}</style>' + html;
       cadre.addEventListener("load", function () { try { cadre.style.height = Math.min(6000, cadre.contentDocument.documentElement.scrollHeight + 12) + "px"; } catch (x) { cadre.style.height = "60vh"; } });
       corps = el("div", {}, [bloque ? el("p", { class: "aside" }, ["Images distantes bloquées (elles peuvent servir à pister la lecture). ", el("button", { type: "button", class: "btn-texte petit", text: "Les afficher", onclick: function () { M.images = true; redessiner(); } })]) : null, cadre]);
     } else corps = el("div", { class: "mx-texte", text: m.texte || "" });

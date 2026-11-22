@@ -33,3 +33,7 @@ export const parCron = (req: Request) => {
   const c = Deno.env.get("CLE_SYNCHRO") ?? "";
   return !!c && req.headers.get("x-cle-synchro") === c;
 };
+// Adresse IP de l'appelant : d'abord l'en-tête posé par l'infrastructure (Cloudflare, impossible à imiter), puis
+// x-real-ip ; x-forwarded-for en dernier recours seulement (sa première valeur peut être écrite par le navigateur).
+export const ipAppelant = (req: Request) =>
+  req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || (req.headers.get("x-forwarded-for") ?? "").split(",").map((x) => x.trim()).filter(Boolean).pop() || null;

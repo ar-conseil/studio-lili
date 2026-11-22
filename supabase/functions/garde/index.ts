@@ -4,7 +4,7 @@
 // L'adresse e-mail n'est jamais gardée en clair : une version masquée (l•••@gmail.com) et son empreinte SHA-256.
 // Protégée contre l'inondation : au plus 60 traces par minute et par adresse IP.
 // deno-lint-ignore-file no-explicit-any
-import { base, cors, json } from "../_partage/commun.ts";
+import { base, cors, ipAppelant, json } from "../_partage/commun.ts";
 
 const TYPES = ["echec_connexion", "echec_code", "piege", "automate", "trop_rapide"];
 const masque = (e: string) => e.replace(/^(.)(.*)(@.*)$/, (_, a, b, c) => a + "•".repeat(Math.min(5, Math.max(1, b.length))) + c);
@@ -15,7 +15,10 @@ Deno.serve(async (req) => {
   const b = await req.json().catch(() => ({}));
   if (!TYPES.includes(b.type)) return json({ erreur: "type inconnu" }, 400);
   const db = base();
-  const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || req.headers.get("cf-connecting-ip") || null;
+  const ip = ipAppelant(req);
+  // Au plus 600 traces par minute au total : une rafale venue de mille adresses ne remplit pas le journal
+  const { data: libre } = await db.rpc("garde_place_libre");
+  if (libre === false) return json({ ok: true });
   if (ip) {
     const { count } = await db.from("securite_evenements").select("id", { count: "exact", head: true }).eq("ip", ip).gte("cree_le", new Date(Date.now() - 60000).toISOString());
     if ((count ?? 0) >= 60) return json({ ok: true });   // inondation : on n'écrit plus, la vigie a déjà de quoi alerter
