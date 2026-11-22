@@ -238,7 +238,13 @@ img.charge { background: var(--creme); }
 .som-dossier small { font: 12.5px var(--mono); color: var(--encre-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .som-dossier small.a-faire { color: var(--cf, var(--c, var(--terre))); }
 .som-dossier .som-fleche { align-self: center; }
-@media (max-width: 1180px) { .som-unes { grid-template-columns: repeat(2, minmax(0, 1fr)); } .som-une { min-height: 196px; } }
+.som-unes.trois { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+button.som-une { font: inherit; text-align: left; cursor: pointer; width: 100%; }
+.som-invite { margin: 0; align-self: center; font: italic 500 24px/1.25 var(--titres); padding-right: 46px; } .som-invite i { color: var(--cf, var(--c, var(--terre))); }
+.som-plus { position: absolute; right: 18px; bottom: 16px; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--cf, var(--c, var(--terre))); color: #fff; transition: transform .35s cubic-bezier(.2, .7, .2, 1); }
+.som-plus svg { width: 16px; height: 16px; } .som-une:hover .som-plus, .som-une:focus-visible .som-plus { transform: rotate(90deg) scale(1.06); }
+.som-idee .som-pied { padding-right: 52px; }
+@media (max-width: 1180px) { .som-unes:not(.trois) { grid-template-columns: repeat(2, minmax(0, 1fr)); } .som-une { min-height: 196px; } }
 @media (max-width: 860px) { .som-dossier ol { grid-template-columns: 1fr; } }
 @media (max-width: 640px) {
   .sommaire { gap: 26px; } .som-unes { gap: 10px; } .som-une { min-height: 168px; padding: 14px; gap: 10px; }
@@ -247,6 +253,7 @@ img.charge { background: var(--creme); }
   .som-mosaique { grid-template-columns: repeat(2, 1fr) !important; } .som-img { aspect-ratio: 1 !important; }
   .som-dossier a { grid-template-columns: 26px auto minmax(12px, 1fr) auto; padding: 14px 2px; } .som-dossier a > b { font-size: 19px; } .som-dossier .som-fleche { display: none; }
   .som-fleche { opacity: 1; transform: none; }
+  .som-unes.trois { grid-template-columns: repeat(2, minmax(0, 1fr)); } .som-unes.trois .som-idee { grid-column: 1 / -1; min-height: 132px; } .som-invite { font-size: 20px; }
 }
 @media (prefers-reduced-motion: reduce) { .som-une, .som-une::before, .som-img, .som-dossier a, .som-fleche { transition: none; } }
 .tuiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 30px; }

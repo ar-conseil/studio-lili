@@ -28,6 +28,47 @@
       } }] });
   };
 
+  // ---------- Sommaire du client : trois unes (calendrier, photos, idée), puis « Votre espace » en table des matières ----------
+  function sommaireClient(e, pubs) {
+    var une = function (classe, titre, corps, pied, o) {
+      var enfants = [el("span", { class: "som-sur" }, [el("span", { text: titre }), St.icone("fleche", "som-fleche")]), corps, pied ? el("small", { class: "som-pied", text: pied }) : null];
+      return o.href ? el("a", { class: "som-une " + classe, href: o.href }, enfants) : el("button", { type: "button", class: "som-une " + classe, onclick: o.action }, enfants);
+    };
+    var p0 = pubs.filter(function (p) { return p.date_prevue && new Date(p.date_prevue) >= St.debutJour(new Date()); }).sort(function (x, y) { return x.date_prevue.localeCompare(y.date_prevue); })[0];
+    var d0 = p0 && new Date(p0.date_prevue);
+    var calendrier = une("som-calendrier", "Calendrier", p0 ? el("div", { class: "som-date" }, [el("b", { text: String(d0.getDate()) }),
+      el("span", {}, [el("i", { text: St.fmt(d0, { weekday: "long" }) }), el("em", { text: St.fmt(d0, { month: "long" }) + " · " + St.hm(p0.date_prevue) })])])
+      : el("div", { class: "som-date vide" }, [el("b", { text: "—" })]), p0 ? (p0.titre || "Sans titre") : "Rien de prévu pour l'instant", { href: "#calendrier" });
+    var medias = S.medias.filter(function (m) { return (!e.id || m.espace_id === e.id) && !m.corbeille_le; });
+    var derniers = medias.filter(function (m) { return m.type !== "video" || m.apercu_chemin; }).sort(function (x, y) { return String(y.cree_le).localeCompare(String(x.cree_le)); }).slice(0, 4);
+    var photos = une("som-mediatheque", "Vos photos", el("div", { class: "som-mosaique n" + derniers.length }, derniers.length ? derniers.map(function (m) { return St.image(m, { classe: "som-img" }); })
+      : [el("p", { class: "som-rien", text: "Vos photos arrivent ici" })]), "Déposer des photos, directement depuis votre téléphone", { href: "#mediatheque" });
+    var idee = une("som-idee", "Une idée ?", el("p", { class: "som-invite" }, ["Une actualité, un produit, une envie", el("i", { text: "…" })]),
+      "Proposez-la à " + (((window.MARQUE || {}).proprietaire || "Lili").split(" ")[0]) + " en deux lignes", { action: function () { St.proposerIdee(); } });
+    idee.appendChild(el("span", { class: "som-plus", "aria-hidden": "true" }, [St.icone("plus")]));
+    // Votre espace
+    var R = St.resumes || {}, brief = R.brief ? R.brief(e) : "", devis = (S.devis || []).filter(function (d) { return d.espace_id === e.id && d.statut !== "brouillon"; });
+    var aSigner = devis.filter(function (d) { return d.statut === "envoye"; }).length;
+    var lignes = [
+      ["#planning", "Planning", pubs.length + " publication" + (pubs.length > 1 ? "s" : "")],
+      ["#brief", "Brief", /^Partagé · /.test(brief) ? brief.replace("Partagé · ", "") : "Bientôt disponible"],
+      ["#rapports", "Rapports", R.rapports ? R.rapports(e).replace("Aucun chiffre", "Bientôt disponibles") : ""],
+      ["#messages", "Messages", R.messages ? R.messages(e) : ""],
+      devis.length ? ["#devis", "Devis", aSigner ? aSigner + " à signer" : devis.length + " devis", aSigner] : null,
+      ["guide.html", "Comment ça marche", "Le guide en 2 minutes"]
+    ].filter(Boolean);
+    return el("nav", { class: "sommaire", "aria-label": "Votre espace" }, [
+      el("div", { class: "som-unes trois" }, [calendrier, photos, idee]),
+      el("div", { class: "som-dossier" }, [
+        el("h2", {}, [el("span", { text: "Votre espace" }), el("small", { text: e.nom || "" })]),
+        el("ol", {}, lignes.map(function (x, i) {
+          return el("li", {}, [el("a", { href: x[0] }, [el("i", { class: "som-no", text: "0" + (i + 1) }), el("b", { text: x[1] }), el("span", { class: "som-points", "aria-hidden": "true" }),
+            el("small", { class: x[3] ? "a-faire" : "", text: x[2] }), St.icone("fleche", "som-fleche")])]);
+        }))
+      ])
+    ]);
+  }
+
   // ---------- Accueil du client ----------
   V.accueilClient = function () {
     var e = St.espacesClient()[0] || {}, attente = aValider(), h = new Date().getHours();
@@ -47,11 +88,7 @@
         el("span", { class: "btn-plein" }, ["Commencer", St.icone("fleche")])
       ]) : el("div", { class: "appel-valider calme" }, [el("div", {}, [el("b", { text: "Tout est à jour" }), el("small", { text: "Rien n'attend votre réponse. Lili vous préviendra pour la suite." })])]),
       aVenir.length ? el("section", { class: "a-venir" }, [el("h2", { text: "Bientôt en ligne" }), el("div", { class: "grille-cartes" }, aVenir.map(function (p) { return St.cartePublication(p, { sansClient: true }); }))]) : null,
-      el("section", { class: "raccourcis-client" }, [
-        el("a", { class: "tuile", href: "#mediatheque" }, [St.icone("deposer", "tuile-ic"), el("span", {}, [el("b", { text: "Déposer des photos" }), el("small", { text: "Directement depuis votre téléphone" })]), St.icone("fleche", "tuile-fleche")]),
-        el("button", { type: "button", class: "tuile", onclick: function () { St.proposerIdee(); } }, [St.icone("plus", "tuile-ic"), el("span", {}, [el("b", { text: "Proposer une idée" }), el("small", { text: "Une actualité, un produit, une envie" })]), St.icone("fleche", "tuile-fleche")]),
-        el("a", { class: "tuile", href: "#calendrier" }, [St.icone("calendrier", "tuile-ic"), el("span", {}, [el("b", { text: "Calendrier" }), el("small", { text: "Tout ce qui est prévu" })]), St.icone("fleche", "tuile-fleche")])
-      ]),
+      sommaireClient(e, pubs),
       recentes.length ? el("section", { class: "a-venir" }, [el("h2", { text: "Récemment publiées" }), el("div", { class: "grille-cartes" }, recentes.map(function (p) { return St.cartePublication(p, { sansClient: true }); }))]) : null
     ]);
   };

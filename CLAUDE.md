@@ -150,6 +150,7 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
 - Page d'un client (`V.client`, lili.js) : sommaire éditorial (`sommaire()`, classes `som-*`) à la place des tuiles :
   quatre « unes » vivantes (prochaine date en grand, publications avec barre des statuts, prochaines lignes du
   planning, derniers visuels), puis « Le dossier » en table des matières numérotée (résumés de `St.resumes`).
+  Accueil du client : même sommaire (`sommaireClient()`, client.js) : Calendrier, Vos photos, Une idée ?, puis « Votre espace ».
 - Couleur de marque lisible : `Studio.foncee(couleur)` fonce une couleur trop claire jusqu'au contraste AA sous du texte
   blanc (variable CSS `--cf`, utilisée pour les boutons et pastilles ; `--c` reste la couleur d'origine pour les teintes).
 - `outils/notion-analyse.mjs` : lit l'export Notion (`~/.lili/notion-export/`) et décrit sa STRUCTURE (bases, colonnes,
