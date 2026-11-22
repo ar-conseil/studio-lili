@@ -1,6 +1,6 @@
-/* Calendrier éditorial : mois, semaine ou liste ; tous les clients ou un seul ; publications glissées d'un jour à l'autre
+/* Calendrier éditorial : mois, semaine, jour ou liste ; tous les clients ou un seul ; publications glissées d'un jour à l'autre
    (souris, ou appui long au doigt) ; en fond : jours fériés, temps forts commerciaux, opérations et absences du client.
-   Adresse : #calendrier?vue=mois|semaine|liste&jour=AAAA-MM-JJ&client=<id>  (ou #<client>/calendrier) ; ← → période, T aujourd'hui. */
+   Adresse : #calendrier?vue=mois|semaine|jour|liste&jour=AAAA-MM-JJ&client=<id>  (ou #<client>/calendrier) ; ← → période, T aujourd'hui. */
 (function (St) {
   "use strict";
   var el = St.el, S = St.S, V = St.V;
@@ -113,7 +113,7 @@
   }
 
   // ---------- La page ----------
-  var etat = { ref: null };
+  var etat = { ref: null }, lienJour = null;
   V.calendrier = function (r, eForce) {
     var q = r.query || {}, etroit = matchMedia("(max-width: 760px)").matches;
     var vue = q.vue || (etroit ? "liste" : "mois"), ref = q.jour ? new Date(q.jour + "T12:00:00") : new Date();
@@ -125,6 +125,7 @@
     Object.keys(parJour).forEach(function (k) { parJour[k].sort(function (a, b) { return a.date_prevue.localeCompare(b.date_prevue); }); });
     var sansDate = St.publicationsVisibles().filter(function (p) { return !p.date_prevue && (!eId || p.espace_id === eId) && p.statut !== "publie"; });
 
+    lienJour = function (k) { return lien({ vue: "jour", jour: k }); };
     var titre, corps, precedent, suivant;
     if (vue === "mois") {
       var d1 = new Date(ref.getFullYear(), ref.getMonth(), 1), debut = St.lundi(d1);
@@ -140,6 +141,54 @@
       var l = St.lundi(ref); titre = "Semaine du " + St.fmt(l, { day: "numeric", month: "long" });
       precedent = St.ajouterJours(ref, -7); suivant = St.ajouterJours(ref, 7);
       corps = el("div", { class: "cal-semaine" }, Array.from({ length: 7 }, function (_, k) { var j = St.ajouterJours(l, k); return caseJour(j, parJour[St.iso(j)] || [], false, eId, 99, true); }));
+    } else if (vue === "jour") {
+      // Une journée, heure par heure : rendez-vous et publications à leur heure, ligne de l'heure qu'il est
+      var jr = St.debutJour(ref), kj = St.iso(jr), repJ = reperesJour(jr, eId), estAuj = St.memeJour(jr, new Date());
+      titre = St.fmt(jr, { weekday: "long", day: "numeric", month: "long" }); titre = titre.charAt(0).toUpperCase() + titre.slice(1);
+      precedent = St.ajouterJours(jr, -1); suivant = St.ajouterJours(jr, 1);
+      var psJ = parJour[kj] || [], rdvs = St.estLili() ? St.rdvDu(jr).filter(function (x) { return !eId || x.espace_id === eId; }) : [];
+      var heures = psJ.map(function (p) { return new Date(p.date_prevue).getHours(); }).concat(rdvs.map(function (x) { return new Date(x.debut).getHours(); }));
+      var hMin = Math.min.apply(null, [8].concat(heures)), hMax = Math.max.apply(null, [19].concat(heures)), mnt = new Date();
+      var rangees = [];
+      for (var hh = hMin; hh <= hMax; hh++) (function (h) {
+        var pubsH = psJ.filter(function (p) { return new Date(p.date_prevue).getHours() === h; }), rdvH = rdvs.filter(function (x) { return new Date(x.debut).getHours() === h; });
+        var plein = pubsH.length || rdvH.length, ici = estAuj && mnt.getHours() === h;
+        rangees.push(el("div", { class: "cj-heure" + (plein ? " plein" : "") + (ici ? " maintenant" : "") }, [
+          el("span", { class: "cj-h", text: (h < 10 ? "0" : "") + h + ":00" }),
+          el("div", { class: "cj-contenu" }, [
+            ici ? el("i", { class: "cj-ligne", style: { top: Math.round(mnt.getMinutes() / 60 * 100) + "%" }, "aria-label": "Maintenant, " + St.hm(mnt) }) : null,
+            rdvH.length ? el("div", { class: "cj-rdvs" }, rdvH.map(function (x) {
+              var ex = St.espace(x.espace_id);
+              return el("button", { type: "button", class: "cj-rdv", style: ex ? { "--c": ex.couleur } : null, onclick: function () { St.editerRdv(x); } }, [
+                el("b", { text: St.libelleRdv(x) }), el("span", { text: x.titre }), el("small", { text: [ex && ex.nom, x.lieu].filter(Boolean).join(" · ") })]);
+            })) : null,
+            pubsH.length ? el("div", { class: "cj-pubs" }, pubsH.map(function (p) {
+              var ep = St.espace(p.espace_id) || {}, m = St.mediasDe(p.id)[0];
+              return el("a", { class: "cj-pub", href: "#p/" + p.id, style: { "--c": ep.couleur } }, [
+                m ? St.image(m, { classe: "cj-pub-img" }) : el("span", { class: "cj-pub-img vide" }, [St.icone("publications")]),
+                el("span", { class: "cj-pub-texte" }, [el("small", {}, [el("b", { text: St.hm(p.date_prevue) }), !eId && ep.nom ? " · " + ep.nom : ""]),
+                  el("b", { text: p.titre || "Sans titre" }), el("small", {}, [St.pastillesReseaux(p.reseaux), " " + (St.FORMATS[p.format] || "")])]),
+                el("span", { class: "pl-tag pl-statut s-" + p.statut }, [el("i"), St.STATUTS[p.statut] || p.statut])]);
+            })) : null
+          ])
+        ]));
+      })(hh);
+      var compte = [psJ.length ? psJ.length + " publication" + (psJ.length > 1 ? "s" : "") : null, rdvs.length ? rdvs.length + " rendez-vous" : null].filter(Boolean).join(" · ") || "Journée libre";
+      corps = el("div", { class: "cal-jour-vue", "data-jour": kj }, [
+        el("aside", { class: "cj-tete" + (estAuj ? " aujourdhui" : "") }, [
+          el("span", { class: "cj-semaine", text: St.fmt(jr, { weekday: "long" }) }),
+          el("b", { class: "cj-num", text: String(jr.getDate()) }),
+          el("span", { class: "cj-mois", text: St.fmt(jr, { month: "long", year: "numeric" }) }),
+          el("p", { class: "cj-compte", text: compte }),
+          repJ.ferie ? el("span", { class: "ferie", text: repJ.ferie }) : null,
+          repJ.forts.length ? el("span", { class: "temps-fort", text: repJ.forts.join(" · ") }) : null,
+          repJ.bandes.length ? el("div", { class: "cal-bandes" }, repJ.bandes.map(function (b) { return el("span", { class: "bande b-" + b.type, style: b.c ? { "--c": b.c } : null, text: b.libelle, title: b.libelle }); })) : null,
+          St.estLili() ? el("div", { class: "cj-actions" }, [
+            el("button", { type: "button", class: "btn-plein petit", onclick: function () { St.nouvellePublication(eId || null, jr); } }, [St.icone("plus"), "Publication"]),
+            el("button", { type: "button", class: "btn-texte", onclick: function () { St.editerRdv({ espace_id: eId || null }, jr); } }, [St.icone("plus"), "Rendez-vous"])]) : null
+        ]),
+        el("div", { class: "cj-heures" }, rangees)
+      ]);
     } else {
       var d0 = St.debutJour(ref); titre = "À partir du " + St.fmt(d0, { day: "numeric", month: "long" });
       precedent = St.ajouterJours(ref, -14); suivant = St.ajouterJours(ref, 14);
@@ -169,7 +218,7 @@
         St.estLili() ? el("button", { type: "button", class: "btn-texte", onclick: function () { St.editerRdv({ espace_id: eId || null }, ref); } }, [St.icone("plus"), "Rendez-vous"]) : null,
         St.estLili() && !eForce ? el("select", { class: "choix-client", "aria-label": "Client", onchange: function (ev) { St.aller(lien({ client: ev.target.value })); } },
           [el("option", { value: "", text: "Tous les clients" })].concat(St.espacesActifs().map(function (e) { return el("option", { value: e.id, selected: e.id === eId, text: e.nom }); }))) : null,
-        el("nav", { class: "vues", "aria-label": "Affichage" }, [["mois", "Mois"], ["semaine", "Semaine"], ["liste", "Liste"]].map(function (x) {
+        el("nav", { class: "vues", "aria-label": "Affichage" }, [["mois", "Mois"], ["semaine", "Semaine"], ["jour", "Jour"], ["liste", "Liste"]].map(function (x) {
           return el("a", { href: "#" + lien({ vue: x[0] }), "aria-current": x[0] === vue ? "true" : null, text: x[1] });
         }))
       ])
@@ -195,11 +244,11 @@
     var rep = reperesJour(j, eId), aujour = St.memeJour(j, new Date()), k = St.iso(j), week = j.getDay() === 0 || j.getDay() === 6;
     var visibles = ps.slice(0, max), reste = ps.length - visibles.length;
     return el("div", { class: "cal-jour" + (horsMois ? " hors" : "") + (aujour ? " aujourdhui" : "") + (rep.ferie ? " ferie" : "") + (week ? " weekend" : ""), "data-jour": k }, [
-      el("header", {}, [el("span", { class: "cal-num", text: grand ? St.fmt(j, { weekday: "short", day: "numeric" }) : String(j.getDate()) }),
+      el("header", {}, [el("a", { class: "cal-num", href: "#" + (lienJour ? lienJour(k) : "calendrier?vue=jour&jour=" + k), title: "Voir la journée", draggable: "false", text: grand ? St.fmt(j, { weekday: "short", day: "numeric" }) : String(j.getDate()) }),
         rep.ferie ? el("span", { class: "ferie", text: rep.ferie, title: rep.ferie }) : rep.forts.length ? el("span", { class: "temps-fort", text: rep.forts[0], title: rep.forts.join(" · ") }) : null,
         St.estLili() ? el("button", { type: "button", class: "btn-ajout-jour", "aria-label": "Nouvelle publication le " + St.fmt(j, { day: "numeric", month: "long" }), onclick: function () { St.nouvellePublication(eId || null, j); } }, [St.icone("plus")]) : null]),
       rep.bandes.length ? el("div", { class: "cal-bandes" }, rep.bandes.slice(0, 2).map(function (b) { return el("span", { class: "bande b-" + b.type, style: b.c ? { "--c": b.c } : null, text: b.libelle, title: b.libelle }); })) : null,
-      el("div", { class: "cal-pubs" }, rdvJour(j, eId).concat(visibles.map(function (p) { return puceCal(p, !eId); })).concat(reste > 0 ? [el("a", { class: "cal-plus", href: "#calendrier?vue=liste&jour=" + k, text: "+ " + reste })] : []))
+      el("div", { class: "cal-pubs" }, rdvJour(j, eId).concat(visibles.map(function (p) { return puceCal(p, !eId); })).concat(reste > 0 ? [el("a", { class: "cal-plus", href: "#" + (lienJour ? lienJour(k) : "calendrier?vue=jour&jour=" + k), text: "+ " + reste })] : []))
     ]);
   }
   // ← → et T dans le calendrier

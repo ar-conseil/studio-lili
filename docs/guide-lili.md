@@ -83,7 +83,7 @@ Une publication supprimée part dans une corbeille de 30 jours.
 
 ## 4. Le calendrier
 
-Touche **C**. Trois vues : mois, semaine, liste. Les flèches **← →** changent de période, **T** revient à
+Touche **C**. Quatre vues : mois, semaine, jour (la journée heure par heure, avec les rendez-vous ; un clic sur le numéro d'un jour l'ouvre), liste. Les flèches **← →** changent de période, **T** revient à
 aujourd'hui. **Glisse** une publication sur un autre jour pour la déplacer. Les jours fériés et les temps forts
 (fête des mères, Black Friday, rentrée…) sont calculés tout seuls ; les opérations de tes clients et tes absences
 apparaissent en bandes. Le menu en haut filtre par client.

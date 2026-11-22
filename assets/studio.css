@@ -335,6 +335,43 @@ html.en-glisse, html.en-glisse * { cursor: grabbing !important; user-select: non
 .cal-semaine .puce-cal { grid-template-columns: 1fr; padding: 0 0 6px; overflow: hidden; }
 .cal-semaine .puce-cal-img { width: 100%; height: auto; aspect-ratio: 4 / 5; border-radius: 0; }
 .cal-semaine .puce-cal-texte { padding: 0 8px; } .cal-semaine .puce-cal-statut { position: absolute; display: none; }
+a.cal-num { text-decoration: none; } a.cal-num:hover { background: var(--survol); color: var(--encre); } .cal-jour.aujourdhui a.cal-num:hover { background: var(--encre); color: var(--papier); }
+/* Vue Jour : la date en grand à gauche, la journée heure par heure à droite */
+.cal-jour-vue { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 36px; align-items: start; }
+.cj-tete { position: sticky; top: calc(var(--h-barre) + 18px); display: grid; gap: 4px; justify-items: start; }
+.cj-semaine { font: italic 500 22px/1 var(--titres); } .cj-semaine::first-letter { text-transform: uppercase; }
+.cj-num { font: 500 132px/.84 var(--titres); letter-spacing: -.03em; font-variant-numeric: lining-nums; margin: 6px 0 8px -4px; }
+.cj-tete.aujourdhui .cj-num { color: var(--terre); }
+.cj-mois { font: 600 11.5px var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--encre-3); }
+.cj-compte { margin: 14px 0 6px; padding-top: 12px; border-top: 1px solid var(--encre); width: 100%; font: 13px var(--mono); color: var(--encre-2); }
+.cj-tete .cal-bandes { width: 100%; } .cj-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; }
+.cj-heures { border-top: 1px solid var(--filet); }
+.cj-heure { display: grid; grid-template-columns: 56px minmax(0, 1fr); border-bottom: 1px solid var(--filet); min-height: 44px; }
+.cj-h { font: 12px var(--mono); color: var(--encre-3); padding: 12px 0 0; }
+.cj-heure.plein .cj-h { color: var(--encre); font-weight: 600; }
+.cj-contenu { position: relative; display: grid; gap: 10px; align-content: start; padding: 0; border-left: 1px solid var(--filet); padding-left: 16px; }
+.cj-heure.plein .cj-contenu { padding-top: 10px; padding-bottom: 14px; }
+.cj-ligne { position: absolute; left: -5px; right: 0; height: 0; border-top: 1.5px solid var(--terre); z-index: 1; pointer-events: none; }
+.cj-ligne::before { content: ""; position: absolute; left: 0; top: -5px; width: 9px; height: 9px; border-radius: 50%; background: var(--terre); }
+.cj-pubs { display: grid; gap: 8px; }
+.cj-pub { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 8px 14px 8px 8px; background: var(--blanc); border: 1px solid var(--filet); border-radius: 12px; color: inherit; text-decoration: none; transition: border-color .15s, transform .15s, box-shadow .2s; }
+.cj-pub:hover { transform: translateX(2px); border-color: var(--filet-fort); box-shadow: 0 14px 28px -22px rgb(30 26 23 / .5); }
+.cj-pub-img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; background: var(--creme); display: grid; place-items: center; color: var(--encre-3); }
+.cj-pub-texte { display: grid; gap: 2px; min-width: 0; } .cj-pub-texte > b { font: 500 19px/1.2 var(--titres); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cj-pub-texte small { font-size: 12.5px; color: var(--encre-3); display: flex; align-items: center; gap: 4px; } .cj-pub-texte small b { font: 500 12.5px var(--mono); color: var(--encre-2); }
+@media (max-width: 640px) { .cj-pub { grid-template-columns: 52px minmax(0, 1fr); gap: 10px; } .cj-pub-img { width: 52px; height: 52px; } .cj-pub > .pl-statut { grid-column: 2; justify-self: start; } .cj-pub-texte > b { font-size: 17px; white-space: normal; } }
+.cj-rdvs { display: grid; gap: 6px; }
+.cj-rdv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; align-items: baseline; text-align: left; padding: 10px 14px; border: 1px solid var(--filet); border-left: 3px solid var(--c, var(--encre)); border-radius: 10px; background: var(--blanc); color: inherit; font: inherit; cursor: pointer; transition: border-color .15s, transform .15s; }
+.cj-rdv:hover { transform: translateX(2px); border-color: var(--filet-fort); border-left-color: var(--c, var(--encre)); }
+.cj-rdv b { font: 500 12.5px var(--mono); color: var(--encre-2); } .cj-rdv span { font: 500 18px/1.2 var(--titres); } .cj-rdv small { grid-column: 2; color: var(--encre-3); font-size: 12.5px; } .cj-rdv small:empty { display: none; }
+@media (max-width: 860px) {
+  .cal-jour-vue { grid-template-columns: 1fr; gap: 18px; }
+  .cj-tete { position: static; grid-template-columns: auto 1fr; column-gap: 14px; align-items: end; }
+  .cj-num { font-size: 84px; grid-row: 1 / 3; margin: 0; } .cj-semaine { align-self: end; } .cj-mois { align-self: start; }
+  .cj-compte, .cj-tete .cal-bandes, .cj-actions, .cj-tete .ferie, .cj-tete .temps-fort { grid-column: 1 / -1; }
+  .cj-heure { grid-template-columns: 46px minmax(0, 1fr); } .cj-contenu { padding-left: 10px; }
+  .vues a { padding: 6px 10px; }
+}
 .cal-liste { display: grid; gap: 22px; } .cal-liste-jour { border-radius: 14px; padding: 6px; transition: background .12s; }
 .cal-liste-jour > header b { font: 500 20px var(--titres); } .cal-liste-jour > header b::first-letter { text-transform: uppercase; }
 .cal-liste-jour.aujourdhui > header b { color: var(--terre); }
