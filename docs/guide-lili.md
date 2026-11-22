@@ -102,14 +102,20 @@ sien peut aussi cliquer « Mot de passe oublié » sur la page d'entrée : l'e-m
 reliée, voir 10), comme les liens de connexion. Joins-lui le guide « Comment valider vos publications » :
 https://ar-conseil.github.io/studio-lili/guide.html
 
+**Modifier un client** : page **Clients** (clique sur « Clients » dans la barre latérale, ou « Tous les clients » sur
+Aujourd'hui), puis « Fiche » ; ou le bouton « Fiche » en haut de son espace. Tout s'y change : nom, métier, état
+(actif, en pause, archivé), couleur, logo, photo de couverture, réseaux suivis et heure de publication par défaut de
+chacun, comptes affichés dans les aperçus (nom et @identifiant, plusieurs par réseau si besoin : la page et le profil
+du dirigeant), et la facturation interne (raison sociale, SIRET, adresse, e-mail, contrat, forfait, heures, note).
+Les flèches de la page Clients rangent l'ordre de la barre latérale ; l'onglet « Archivés » retrouve un ancien
+client (sa fiche permet de le remettre « Actif »).
+
 **Ajouter un nouveau client** : le **+** à côté de « Clients » dans la barre latérale, ou la carte « Nouveau client »
 en bas d'Aujourd'hui. Tu donnes son nom, sa couleur, son logo si tu l'as, ses réseaux et, si tu veux, sa facturation ;
 « Créer le client » ouvre directement son Équipe pour l'inviter. Son espace naît vide et privé : il ne voit rien tant
 que tu ne l'invites pas et ne partages rien. Le reste (adresse, SIRET, heures prévues) se complète dans sa **Fiche**.
 Pour un client venu d'un prospect : page **Prospects** › sa fiche › « Signé : créer son espace » (même formulaire,
-déjà rempli). Un client archivé disparaît du studio ; « Archivés » (au-dessus de tes clients, sur Aujourd'hui) permet
-de rouvrir sa fiche et de le remettre « Actif ».
-
+déjà rempli). 
 ## 7. Rapports
 
 Rubrique Rapports › **Saisir un mois** : pour chaque réseau, abonnés, portée, impressions, interactions, taux

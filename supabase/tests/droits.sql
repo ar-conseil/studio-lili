@@ -125,6 +125,10 @@ select essais.verifier(not exists (select 1 from public.notifications n join pub
 insert into public.espaces (id, slug, nom, couleur, reseaux) values ('10000000-0000-4000-a000-00000000000c', 'essai-c', 'Marque C (essai)', '#335544', array['instagram','linkedin']);
 insert into public.espaces_prive (espace_id, raison_sociale, email_facturation) values ('10000000-0000-4000-a000-00000000000c', 'C SARL', 'compta@essai.invalid');
 select essais.verifier(exists (select 1 from public.espaces where slug = 'essai-c') and exists (select 1 from public.espaces_prive where espace_id = '10000000-0000-4000-a000-00000000000c'), 'Lili crée un nouveau client depuis l''application');
+-- Fiche client : Lili modifie tout (métier, heures, comptes affichés dans les aperçus)
+update public.espaces set metier = 'Fleuriste', heures_defaut = '{"instagram": "11:15"}', ordre = 3 where id = '10000000-0000-4000-a000-00000000000a';
+insert into public.comptes (espace_id, reseau, nom_affiche, identifiant) values ('10000000-0000-4000-a000-00000000000a', 'instagram', 'Marque A', 'marque.a');
+select essais.verifier((select metier from public.espaces where id = '10000000-0000-4000-a000-00000000000a') = 'Fleuriste' and exists (select 1 from public.comptes where identifiant = 'marque.a'), 'Lili modifie la fiche et les comptes d''un client');
 reset role;
 -- La signature d'un devis n'est écrite que par la fonction serveur (rôle service)
 insert into public.devis_signatures (devis_id, personne_id, nom_signataire, signature, empreinte)
@@ -144,6 +148,9 @@ set local role authenticated;
 select essais.verifier((select count(*) from public.espaces) = 1, 'A ne voit que son espace');
 select essais.verifier(not exists (select 1 from public.espaces where slug = 'essai-b'), 'A ne voit pas l''espace B');
 select essais.verifier(not exists (select 1 from public.espaces where slug = 'essai-c'), 'A ne voit pas le nouveau client C');
+select essais.verifier(exists (select 1 from public.comptes where identifiant = 'marque.a'), 'A voit les comptes de sa marque (aperçus)');
+update public.espaces set metier = 'Pirate', nom = 'Pirate' where id = '10000000-0000-4000-a000-00000000000a';   -- sans effet : aucune ligne modifiable
+select essais.doit_echouer($q$insert into public.comptes (espace_id, reseau, nom_affiche) values ('10000000-0000-4000-a000-00000000000a', 'instagram', 'Faux compte')$q$, 'A ajoute un compte à sa fiche');
 select essais.verifier((select count(*) from public.personnes where email like 'a_@essai.invalid') = 2, 'A voit sa collègue de la même marque');
 select essais.doit_echouer($q$select public.devis_prendre_essai('10000000-0000-4000-a000-00000000000a', '00000000-0000-4000-a000-0000000000a1')$q$, 'A compte lui-même ses essais de code');
 select essais.doit_echouer($q$insert into public.espaces (slug, nom) values ('essai-pirate', 'Pirate')$q$, 'un client crée un espace');
@@ -221,6 +228,8 @@ select essais.verifier((select numero from public.commentaires where contenu = '
 select essais.verifier((select auteur_id from public.commentaires where contenu = 'Plus de lumière ici') = '00000000-0000-4000-a000-0000000000a1', 'le commentaire est au nom de A');
 select essais.verifier(exists (select 1 from public.notifications n join public.journal j on j.id = n.journal_id
   where n.personne_id = '00000000-0000-4000-a000-000000000001' and j.details ->> 'vers' = 'valide'), 'la validation de A prévient Lili');
+
+select essais.verifier((select nom from public.espaces where id = '10000000-0000-4000-a000-00000000000a') = 'Marque A (essai)' and (select metier from public.espaces where id = '10000000-0000-4000-a000-00000000000a') = 'Fleuriste', 'A ne modifie pas la fiche de sa marque');
 
 -- ---------- Client B : rien de A ----------
 select essais.devenir('00000000-0000-4000-a000-0000000000b1', 'aal1');

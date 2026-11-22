@@ -515,33 +515,105 @@
   };
 
   // ======================================================================
-  // Fiche d'un client : nom, couleur, logo, réseaux, état ; coordonnées de facturation et forfait (jamais visibles du client)
+  // Fiche d'un client : tout ce qui le décrit, modifiable par Lili (bouton « Fiche », page Clients)
+  //  · identité : nom, métier, état, couleur, logo, photo de couverture ;
+  //  · réseaux : réseaux suivis, heure de publication par défaut de chacun, comptes affichés dans les aperçus ;
+  //  · facturation (interne, jamais visible du client) : raison sociale, SIRET, adresse, e-mail, contrat, forfait.
   // ======================================================================
+  function televerserImage(e, f, prefixe) {
+    var chemin = e.id + "/" + prefixe + "-" + St.uuid().slice(0, 8) + "." + ((f.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 4));
+    if (St.X.demo) return Promise.resolve({ chemin: null, url: URL.createObjectURL(f) });
+    return St.X.db.storage.from("medias").upload(chemin, f, { contentType: f.type }).then(function (r) { if (r.error) throw r.error; return { chemin: chemin }; });
+  }
+  function apercuImage(url, classe) { return url ? el("img", { class: "fiche-image " + (classe || ""), src: url, alt: "" }) : el("span", { class: "fiche-image vide " + (classe || ""), text: "Aucune" }); }
   St.editerEspace = function (e) {
-    var pr = St.prive(e.id), nom = texte(e.nom), couleur = el("input", { type: "color", value: e.couleur || "#1E1A17", "aria-label": "Couleur" });
-    var statut = choix([["actif", "Actif"], ["pause", "En pause"], ["archive", "Archivé (masqué)"]], e.statut || "actif", { nom: "État" });
-    var res = el("div", { class: "cases" }, Object.keys(St.RESEAUX).map(function (k) { return el("label", { class: "case" }, [el("input", { type: "checkbox", value: k, checked: (e.reseaux || []).indexOf(k) >= 0 }), St.RESEAUX[k].nom]); }));
-    var logo = el("input", { type: "file", accept: "image/*", "aria-label": "Logo" });
+    var pr = St.prive(e.id);
+    var nom = texte(e.nom), metier = texte(e.metier || "", { aide: "Fleuriste, café, cabinet d'avocats…" });
+    var couleur = el("input", { type: "color", value: e.couleur || "#1E1A17", "aria-label": "Couleur" });
+    var statut = choix([["actif", "Actif"], ["pause", "En pause"], ["archive", "Archivé (masqué du studio)"]], e.statut || "actif", { nom: "État" });
+    var logo = el("input", { type: "file", accept: "image/png,image/jpeg,image/webp,image/svg+xml", "aria-label": "Logo" });
+    var couv = el("input", { type: "file", accept: "image/png,image/jpeg,image/webp", "aria-label": "Photo de couverture" });
+    var oterLogo = false, oterCouv = false;
+    var zoneLogo = el("div", { class: "fiche-media" }, [apercuImage(St.urlEspace(e, "logo_path"), "carre"), logo,
+      e.logo_path || e.logo_url ? el("button", { type: "button", class: "btn-texte petit", text: "Retirer", onclick: function (ev) { oterLogo = true; ev.target.closest(".fiche-media").querySelector(".fiche-image").replaceWith(apercuImage(null, "carre")); ev.target.remove(); } }) : null]);
+    var zoneCouv = el("div", { class: "fiche-media" }, [apercuImage(St.urlEspace(e, "couverture_path"), "large"), couv,
+      e.couverture_path || e.couverture_url ? el("button", { type: "button", class: "btn-texte petit", text: "Retirer", onclick: function (ev) { oterCouv = true; ev.target.closest(".fiche-media").querySelector(".fiche-image").replaceWith(apercuImage(null, "large")); ev.target.remove(); } }) : null]);
+
+    // Réseaux suivis et heure de publication par défaut de chacun
+    var heures = e.heures_defaut || {};
+    var lignesReseaux = Object.keys(St.RESEAUX).map(function (k) {
+      var coche = el("input", { type: "checkbox", value: k, checked: (e.reseaux || []).indexOf(k) >= 0 });
+      var heure = el("input", { type: "time", value: heures[k] || "", "aria-label": "Heure par défaut sur " + St.RESEAUX[k].nom, title: "Vide : heure habituelle du studio (" + (St.HEURES[k] || St.HEURES.post || "12:30") + ")" });
+      return { k: k, coche: coche, heure: heure, el: el("div", { class: "fiche-reseau" }, [el("label", { class: "case" }, [coche, St.RESEAUX[k].nom]), heure]) };
+    });
+
+    // Comptes affichés dans les aperçus (un réseau peut en avoir plusieurs : la page et le profil du dirigeant)
+    var comptes = St.comptesDe(e.id).map(function (c) { return Object.assign({}, c); }), supprimes = [];
+    var listeComptes = el("div", { class: "fiche-comptes" });
+    function peindreComptes() {
+      listeComptes.textContent = "";
+      if (!comptes.length) listeComptes.appendChild(el("p", { class: "aide", text: "Aucun compte : les aperçus utilisent le nom de la marque." }));
+      comptes.forEach(function (c, n) {
+        var res = choix(Object.keys(St.RESEAUX).map(function (k) { return [k, St.RESEAUX[k].nom]; }), c.reseau, { nom: "Réseau du compte" });
+        var nomC = texte(c.nom_affiche || "", { aide: "Nom affiché" }), ident = texte(c.identifiant || "", { aide: "@identifiant" });
+        res.addEventListener("change", function () { c.reseau = res.value; });
+        nomC.addEventListener("input", function () { c.nom_affiche = nomC.value; });
+        ident.addEventListener("input", function () { c.identifiant = ident.value; });
+        listeComptes.appendChild(el("div", { class: "fiche-compte" }, [res, nomC, ident,
+          el("button", { type: "button", class: "btn-icone", "aria-label": "Retirer ce compte", onclick: function () { if (c.id && !c.nouveau) supprimes.push(c.id); comptes.splice(n, 1); peindreComptes(); } }, [St.icone("corbeille")])]));
+      });
+    }
+    peindreComptes();
+    var ajouterCompte = el("button", { type: "button", class: "btn-texte petit", onclick: function () {
+      var r0 = lignesReseaux.filter(function (x) { return x.coche.checked; })[0];
+      comptes.push({ id: St.uuid(), nouveau: true, espace_id: e.id, reseau: r0 ? r0.k : "instagram", nom_affiche: e.nom, identifiant: "", rang: comptes.length }); peindreComptes();
+    } }, [St.icone("plus"), "Ajouter un compte"]);
+
     var p = { raison_sociale: texte(pr.raison_sociale), adresse: texte(pr.adresse, { lignes: 2 }), siret: texte(pr.siret), email_facturation: texte(pr.email_facturation, { type: "email" }),
-      forfait_mensuel_ht: texte(pr.forfait_mensuel_ht, { type: "number", attrs: { min: 0, step: "10" } }), heures_forfait: texte(pr.heures_forfait, { type: "number", attrs: { min: 0, step: "0.5" } }) };
-    St.fenetre({ titre: "Fiche de " + e.nom, classe: "large", sous: "La couleur et le logo habillent l'espace du client ; la facturation reste entre vous et le studio.", corps: [
-      el("div", { class: "deux-colonnes" }, [champ("Nom", nom), champ("État", statut)]), el("div", { class: "deux-colonnes" }, [champ("Couleur de la marque", couleur), champ("Logo", logo, "PNG ou JPG carré")]),
-      champ("Réseaux", res), el("h3", { class: "titre-fiche", text: "Facturation (interne)" }),
+      type_contrat: texte(pr.type_contrat, { aide: "Forfait mensuel, ponctuel, à la prestation…" }),
+      forfait_mensuel_ht: texte(pr.forfait_mensuel_ht, { type: "number", attrs: { min: 0, step: "10" } }), heures_forfait: texte(pr.heures_forfait, { type: "number", attrs: { min: 0, step: "0.5" } }),
+      note_interne: texte(pr.note_interne, { lignes: 3, aide: "Ce qu'il faut savoir sur ce client (jamais visible de lui)" }) };
+
+    St.fenetre({ titre: "Fiche de " + e.nom, classe: "large", sous: "Adresse de son espace : #" + e.slug + ". La couleur, le logo et la couverture habillent son espace ; la facturation reste entre vous et le studio.", corps: [
+      el("h3", { class: "titre-fiche", text: "Identité" }),
+      el("div", { class: "deux-colonnes" }, [champ("Nom", nom), champ("Métier", metier)]),
+      el("div", { class: "deux-colonnes" }, [champ("État", statut, "« Archivé » le retire du studio ; il reste dans la page Clients"), champ("Couleur de la marque", couleur)]),
+      el("div", { class: "deux-colonnes" }, [champ("Logo", zoneLogo, "PNG ou JPG carré"), champ("Photo de couverture", zoneCouv, "Paysage, sur les cartes et en tête de son espace")]),
+      el("h3", { class: "titre-fiche", text: "Réseaux et heures de publication" }),
+      el("p", { class: "aide", text: "Cochez les réseaux suivis. L'heure sert de proposition pour chaque nouvelle publication (vide : heure habituelle)." }),
+      el("div", { class: "fiche-reseaux" }, lignesReseaux.map(function (x) { return x.el; })),
+      el("h3", { class: "titre-fiche", text: "Comptes affichés dans les aperçus" }),
+      listeComptes, ajouterCompte,
+      el("h3", { class: "titre-fiche", text: "Facturation (interne)" }),
       el("div", { class: "deux-colonnes" }, [champ("Raison sociale", p.raison_sociale), champ("SIRET", p.siret)]), champ("Adresse", p.adresse),
-      el("div", { class: "deux-colonnes" }, [champ("E-mail de facturation", p.email_facturation), champ("Forfait mensuel HT (€)", p.forfait_mensuel_ht)]), champ("Heures prévues par mois", p.heures_forfait)],
+      el("div", { class: "deux-colonnes" }, [champ("E-mail de facturation", p.email_facturation), champ("Type de contrat", p.type_contrat)]),
+      el("div", { class: "deux-colonnes" }, [champ("Forfait mensuel HT (€)", p.forfait_mensuel_ht), champ("Heures prévues par mois", p.heures_forfait)]),
+      champ("Note interne", p.note_interne)],
       actions: [{ texte: "Annuler" }, { texte: "Enregistrer", principal: true, action: function (fermer) {
         if (!nom.value.trim()) { nom.focus(); return; }
-        var champs = { nom: nom.value.trim(), couleur: couleur.value, statut: statut.value, reseaux: Array.from(res.querySelectorAll("input:checked")).map(function (x) { return x.value; }), modifie_le: maintenant() };
-        var prive = { espace_id: e.id }; Object.keys(p).forEach(function (k) { var v = p[k].value.trim(); prive[k] = v === "" ? null : (/forfait|heures/.test(k) ? +v : v); });
-        var f = logo.files && logo.files[0], envoiLogo = Promise.resolve();
-        if (f) {
-          var chemin = e.id + "/logo-" + St.uuid().slice(0, 8) + "." + ((f.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 4));
-          envoiLogo = St.X.demo ? Promise.resolve().then(function () { e.logo_url = URL.createObjectURL(f); })
-            : St.X.db.storage.from("medias").upload(chemin, f, { contentType: f.type }).then(function (r) { if (r.error) throw r.error; champs.logo_path = chemin; });
-        }
-        envoiLogo.then(function () { return Promise.all([St.maj("espaces", e.id, champs), St.enregistrer("espaces_prive", prive)]); })
-          .then(function () { return St.X.demo ? null : St.charger(); })
-          .then(function () { fermer(); St.signaler("Fiche enregistrée"); St.dessiner(false); }, function (x) { St.signaler("Non enregistré : " + x.message, true); });
+        var cochés = lignesReseaux.filter(function (x) { return x.coche.checked; });
+        var h = {}; cochés.forEach(function (x) { if (x.heure.value) h[x.k] = x.heure.value; });
+        var champs = { nom: nom.value.trim(), metier: metier.value.trim() || null, couleur: couleur.value, statut: statut.value,
+          reseaux: cochés.map(function (x) { return x.k; }), heures_defaut: h, modifie_le: new Date().toISOString() };
+        if (oterLogo) { champs.logo_path = null; e.logo_url = null; }
+        if (oterCouv) { champs.couverture_path = null; e.couverture_url = null; }
+        var prive = { espace_id: e.id }; Object.keys(p).forEach(function (k) { var v = String(p[k].value).trim(); prive[k] = v === "" ? null : (/forfait|heures/.test(k) ? +v : v); });
+        var envois = [];
+        [[logo, "logo", "logo_path", "logo_url"], [couv, "couverture", "couverture_path", "couverture_url"]].forEach(function (x) {
+          var fichier = x[0].files && x[0].files[0]; if (!fichier) return;
+          envois.push(televerserImage(e, fichier, x[1]).then(function (r) { if (r.chemin) champs[x[2]] = r.chemin; else e[x[3]] = r.url; }));
+        });
+        var comptesValides = comptes.filter(function (c) { return String(c.nom_affiche || "").trim(); });
+        Promise.all(envois).then(function () {
+          return Promise.all([St.maj("espaces", e.id, champs), St.enregistrer("espaces_prive", prive)]);
+        }).then(function () {
+          // Comptes : retirés, ajoutés, modifiés (dans l'ordre affiché)
+          return Promise.all(supprimes.map(function (id) { return St.supprimer("comptes", { id: id }); }).concat(comptesValides.map(function (c, n) {
+            var ligne = { espace_id: e.id, reseau: c.reseau, nom_affiche: c.nom_affiche.trim(), identifiant: String(c.identifiant || "").trim().replace(/^@/, "") || null, rang: n };
+            return c.nouveau ? St.creer("comptes", Object.assign({ id: c.id }, ligne)) : St.maj("comptes", c.id, ligne);
+          })));
+        }).then(function () { return St.X.demo ? null : St.charger(); })
+          .then(function () { fermer(); St.signaler("Fiche de " + champs.nom + " enregistrée"); St.dessiner(false); }, function (x) { St.signaler("Non enregistré : " + (x && x.message || x), true); });
       } }] });
   };
 
@@ -599,14 +671,59 @@
     setTimeout(function () { nom.focus(); }, 50);
   };
 
-  // Clients archivés : masqués partout, mais on peut les rouvrir (fiche > État)
-  St.clientsArchives = function () {
-    var arch = S.espaces.filter(function (e) { return e.statut === "archive"; }).sort(function (a, b) { return a.nom.localeCompare(b.nom, "fr"); });
-    St.fenetre({ titre: "Clients archivés", sous: "Masqués du studio. Ouvrez la fiche d'un client et passez son état à « Actif » pour le faire revenir.", corps: [
-      arch.length ? el("ul", { class: "liste-archives" }, arch.map(function (e) {
-        return el("li", {}, [el("i", { class: "pastille-client", style: { "--c": e.couleur } }), el("span", { text: e.nom }),
-          el("button", { type: "button", class: "btn-texte", onclick: function () { document.querySelector("dialog[open]").close(); St.editerEspace(e); } }, [St.icone("reglages"), "Fiche"])]);
-      })) : St.vide("Aucun client archivé.")], actions: [{ texte: "Fermer" }] });
+  // ======================================================================
+  // Page Clients (#clients) : tous les clients, actifs, en pause ou archivés ; recherche, ordre de la barre latérale,
+  // accès direct à chaque fiche et à chaque espace. ?etat=actif|pause|archive|tous
+  // ======================================================================
+  var ETATS_CLIENT = [["en-cours", "En cours"], ["actif", "Actifs"], ["pause", "En pause"], ["archive", "Archivés"], ["tous", "Tous"]];
+  V.clients = function (r) {
+    var etat = (r.query && r.query.etat) || "en-cours";
+    var garder = function (e) { return etat === "tous" || (etat === "en-cours" ? e.statut !== "archive" : e.statut === etat); };
+    var tous = S.espaces.slice().sort(function (a, b) { return ((a.statut === "archive") - (b.statut === "archive")) || ((a.ordre || 0) - (b.ordre || 0)) || a.nom.localeCompare(b.nom, "fr"); });
+    var liste = tous.filter(garder), actifs = St.espacesActifs();
+    var compte = function (k) { return tous.filter(function (e) { return k === "tous" || (k === "en-cours" ? e.statut !== "archive" : e.statut === k); }).length; };
+    var recherche = el("input", { type: "search", class: "recherche-clients", placeholder: "Rechercher un client", "aria-label": "Rechercher un client" });
+    var deplacer = function (e, sens) {
+      var i = actifs.indexOf(e), autre = actifs[i + sens]; if (!autre) return;
+      // On renumérote tout l'ordre visible, pour un résultat stable même si des ordres étaient égaux
+      var ordre = actifs.slice(); ordre[i] = autre; ordre[i + sens] = e;
+      Promise.all(ordre.map(function (x, n) { return x.ordre === n + 1 ? null : St.maj("espaces", x.id, { ordre: n + 1 }); })).then(function () { St.dessiner(false); }, function () {});
+    };
+    var lignes = liste.map(function (e) {
+      var pr = St.prive(e.id), av = St.avance(e.id), i = actifs.indexOf(e);
+      var membres = S.membres.filter(function (m) { return m.espace_id === e.id && m.role === "client"; }).length;
+      var ligne = el("article", { class: "ligne-client" + (e.statut === "archive" ? " archive" : ""), style: { "--c": e.couleur, "--cf": St.foncee(e.couleur) }, "data-nom": (e.nom + " " + (e.metier || "") + " " + (pr.raison_sociale || "")).toLowerCase() }, [
+        St.logoEspace(e),
+        el("div", { class: "ligne-client-texte" }, [
+          el("a", { href: "#" + e.slug, class: "ligne-client-nom", text: e.nom }),
+          el("small", { text: [e.metier, (e.reseaux || []).map(function (x) { return (St.RESEAUX[x] || {}).nom; }).join(", ")].filter(Boolean).join(" · ") || "Réseaux à préciser" })]),
+        el("div", { class: "ligne-client-infos" }, [
+          e.statut === "actif" ? el("span", { class: "avance a-" + av.niveau, text: av.texte }) : el("span", { class: "etat-client e-" + e.statut, text: e.statut === "pause" ? "En pause" : "Archivé" }),
+          el("small", { text: (membres ? membres + " personne" + (membres > 1 ? "s" : "") + " invitée" + (membres > 1 ? "s" : "") : "Personne d'invité") + (pr.forfait_mensuel_ht ? " · " + euros(pr.forfait_mensuel_ht) + " HT / mois" : "") })]),
+        el("div", { class: "ligne-client-actions" }, [
+          i >= 0 ? el("button", { type: "button", class: "btn-icone", "aria-label": "Monter " + e.nom, title: "Monter dans la barre latérale", disabled: i === 0, onclick: function () { deplacer(e, -1); } }, [St.icone("haut")]) : null,
+          i >= 0 ? el("button", { type: "button", class: "btn-icone", "aria-label": "Descendre " + e.nom, title: "Descendre dans la barre latérale", disabled: i === actifs.length - 1, onclick: function () { deplacer(e, 1); } }, [St.icone("bas")]) : null,
+          el("button", { type: "button", class: "btn-texte", onclick: function () { St.editerEspace(e); } }, [St.icone("reglages"), "Fiche"]),
+          el("a", { class: "btn-texte", href: "#" + e.slug + "/equipe" }, [St.icone("personnes"), "Équipe"])])
+      ]);
+      return ligne;
+    });
+    var vide = St.vide(etat === "archive" ? "Aucun client archivé." : "Aucun client ici.");
+    recherche.addEventListener("input", function () {
+      var q = recherche.value.trim().toLowerCase(), n = 0;
+      lignes.forEach(function (l) { var ok = !q || l.dataset.nom.indexOf(q) >= 0; l.hidden = !ok; if (ok) n++; });
+      vide.hidden = n > 0;
+    });
+    vide.hidden = lignes.length > 0;
+    return el("div", { class: "vue-clients" }, [
+      St.entete(null, "Clients", compte("en-cours") + " en cours" + (compte("archive") ? ", " + compte("archive") + " archivé" + (compte("archive") > 1 ? "s" : "") : "") + ". Les flèches rangent la barre latérale.",
+        [el("button", { type: "button", class: "btn-plein", onclick: function () { St.nouveauClient(); } }, [St.icone("plus"), "Nouveau client"])]),
+      el("div", { class: "barre-filtres" }, [
+        el("nav", { class: "onglets-reglages onglets-clients", "aria-label": "État des clients" }, ETATS_CLIENT.map(function (x) {
+          return el("a", { href: "#clients" + (x[0] === "en-cours" ? "" : "?etat=" + x[0]), class: etat === x[0] ? "actif" : "", "aria-current": etat === x[0] ? "page" : null, text: x[1] + " (" + compte(x[0]) + ")" });
+        })), recherche]),
+      el("div", { class: "liste-clients" }, lignes.concat([vide]))
+    ]);
   };
 
   St.aides = { champ: champ, texte: texte, choix: choix, confirmer: confirmer, imprimer: imprimer, echapper: echapper, euros: euros, entreprise: entreprise, totaux: totaux, imprimerPiece: function (t, f) { imprimerPiece(t, f); } };

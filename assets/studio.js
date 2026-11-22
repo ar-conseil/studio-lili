@@ -78,7 +78,7 @@ window.Studio = (function () {
     publications: '<rect x="2.5" y="2.5" width="11" height="11" rx="2"/><path d="M5 10.5l2-2.5 1.7 2 1.8-2 1.5 2.5"/>',
     mediatheque: '<path d="M2 4.5h4l1.2 1.5H14v6.5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>',
     valider: '<path d="m3.5 8.5 3 3 6-7"/>',
-    plus: '<path d="M8 3v10M3 8h10"/>', fleche: '<path d="M6 3.5 10.5 8 6 12.5"/>', retour: '<path d="M10 3.5 5.5 8 10 12.5"/>',
+    plus: '<path d="M8 3v10M3 8h10"/>', haut: '<path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/>', bas: '<path d="M8 3v10M3.5 8.5 8 13l4.5-4.5"/>', fleche: '<path d="M6 3.5 10.5 8 6 12.5"/>', retour: '<path d="M10 3.5 5.5 8 10 12.5"/>',
     fermer: '<path d="M4 4l8 8M12 4l-8 8"/>', menu: '<path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/>',
     taches: '<rect x="2.5" y="2.5" width="11" height="11" rx="3"/><path d="m5.5 8 1.8 1.8L10.8 6"/>',
     commentaire: '<path d="M13.5 7.5a5.5 5.5 0 0 1-8 4.9L2.5 13.5l1-2.9a5.5 5.5 0 1 1 10-3.1z"/>',
@@ -450,7 +450,7 @@ window.Studio = (function () {
       lienCote("#messages", "Messages", "commentaire", r.nom === "messages"),
       devisDuClient().length ? lienCote("#devis", "Devis", "euro", r.nom === "devis", devisDuClient().filter(function (d) { return d.statut === "envoye"; }).length || null) : null
     ]);
-    var clients = lili ? [el("div", { class: "cote-titre-ligne" }, [el("p", { class: "cote-titre", text: "Clients" }),
+    var clients = lili ? [el("div", { class: "cote-titre-ligne" }, [el("a", { class: "cote-titre", href: "#clients", title: "Tous les clients", "aria-current": r.nom === "clients" ? "page" : null, text: "Clients" }),
       el("button", { type: "button", class: "btn-icone cote-ajout", "aria-label": "Nouveau client", title: "Nouveau client", onclick: function () { menu(false); if (window.Studio.nouveauClient) window.Studio.nouveauClient(); } }, [icone("plus")])]), el("nav", { class: "cote-clients", "aria-label": "Clients" }, espacesActifs().map(function (e, i) {
       var actif = r.nom === "client" && r.param === e.slug;
       var a = lienCote("#" + e.slug, e.nom, el("i", { class: "pastille-client", style: { "--c": e.couleur } }), actif, null, i < 9 ? String(i + 1) : null);
@@ -497,7 +497,7 @@ window.Studio = (function () {
   function filAriane() {
     var r = S.route, morceaux = [];
     var noms = { "": estLili() ? "Aujourd'hui" : "Accueil", calendrier: "Calendrier", publications: "Publications", mediatheque: "Médiathèque", valider: "À valider", mails: "Mails",
-      taches: "Tâches", prospects: "Prospects", reglages: "Réglages", devis: "Devis", compte: "Mon compte", brief: "Brief et ligne éditoriale", rapports: "Rapports", messages: "Messages" };
+      taches: "Tâches", prospects: "Prospects", reglages: "Réglages", clients: "Clients", devis: "Devis", compte: "Mon compte", brief: "Brief et ligne éditoriale", rapports: "Rapports", messages: "Messages" };
     if (r.nom === "client" && !estLili()) morceaux.push(el("span", { text: "Page introuvable" }));
     else if (r.nom === "client") {
       var e = espaceSlug(r.param);
@@ -557,7 +557,7 @@ window.Studio = (function () {
   // ======================================================================
   // Routeur et rendu
   // ======================================================================
-  var RESERVES = ["", "calendrier", "publications", "mediatheque", "valider", "p", "mails", "taches", "prospects", "reglages", "brief", "rapports", "messages", "devis", "compte"];
+  var RESERVES = ["", "calendrier", "publications", "mediatheque", "valider", "p", "mails", "taches", "prospects", "reglages", "clients", "brief", "rapports", "messages", "devis", "compte"];
   function lireRoute() {
     var h = decodeURIComponent(location.hash.replace(/^#/, "")), q = {}, i = h.indexOf("?");
     if (i >= 0) { new URLSearchParams(h.slice(i + 1)).forEach(function (v, k) { q[k] = v; }); h = h.slice(0, i); }
@@ -580,7 +580,7 @@ window.Studio = (function () {
     if (r.nom === "publications") return V.publications(r);
     if (r.nom === "mediatheque") return V.mediatheque(r);
     if (r.nom === "mails") return estLili() ? V.mails(r) : introuvable();
-    if (["taches", "prospects", "reglages"].indexOf(r.nom) >= 0) return estLili() ? V[r.nom](r) : introuvable();
+    if (["taches", "prospects", "reglages", "clients"].indexOf(r.nom) >= 0) return estLili() ? V[r.nom](r) : introuvable();
     if (r.nom === "compte") return !estLili() && V.compte ? V.compte(r) : introuvable();
     if (r.nom === "devis") { var ed = espacesClient()[0]; return !estLili() && ed && V.devisClient ? V.devisClient(r, ed) : introuvable(); }
     if (["brief", "rapports", "messages"].indexOf(r.nom) >= 0) { var ec = espacesClient()[0]; return !estLili() && ec ? V["rub_" + r.nom](r, ec) : introuvable(); }

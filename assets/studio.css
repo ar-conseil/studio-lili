@@ -852,3 +852,39 @@ kbd { font: 12px var(--mono); padding: 2px 7px; border-radius: 6px; border: 1px 
 
 /* Verrouillé (écran du code) : rien du studio ne reste par-dessus, le mail en cours est gardé mais masqué */
 html.verrouille .mx-redaction, html.verrouille .toast, html.verrouille .bulle-flottante { visibility: hidden !important; }
+
+/* Page Clients (#clients) et fiche client complète */
+a.cote-titre { text-decoration: none; display: block; }
+a.cote-titre:hover, a.cote-titre[aria-current="page"] { color: var(--encre); }
+.barre-filtres { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 16px; }
+.onglets-clients { border-bottom: 0; margin: 0; padding-bottom: 0; }
+.recherche-clients { min-width: 220px; flex: 0 1 280px; height: 38px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--filet); background: var(--blanc); color: var(--encre); font: inherit; }
+.liste-clients { display: grid; gap: 8px; }
+.ligne-client { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 14px; padding: 12px 14px; background: var(--blanc); border: 1px solid var(--filet); border-radius: var(--rayon); }
+.ligne-client.archive { opacity: .7; }
+.ligne-client-texte { display: grid; gap: 2px; min-width: 0; }
+.ligne-client-nom { font: 500 19px/1.2 var(--titres); color: var(--encre); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ligne-client-nom:hover { text-decoration: underline; }
+.ligne-client-texte small, .ligne-client-infos small { color: var(--encre-3); font-size: 12px; }
+.ligne-client-infos { display: grid; justify-items: end; gap: 4px; text-align: right; }
+.ligne-client-infos .avance { margin: 0; }
+.ligne-client-actions { display: flex; align-items: center; gap: 2px; }
+.ligne-client-actions .btn-icone[disabled] { opacity: .3; cursor: default; }
+.etat-client { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--creme); color: var(--encre-2); }
+.etat-client.e-pause { background: #F1ECD6; color: #6B5D27; }
+@media (max-width: 760px) {
+  .ligne-client { grid-template-columns: auto minmax(0, 1fr); }
+  .ligne-client-infos { grid-column: 1 / -1; justify-items: start; text-align: left; }
+  .ligne-client-actions { grid-column: 1 / -1; flex-wrap: wrap; }
+  .recherche-clients { flex: 1 1 100%; }
+}
+.fiche-media { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.fiche-image { display: inline-grid; place-items: center; object-fit: cover; border: 1px solid var(--filet); border-radius: 10px; background: var(--creme); color: var(--encre-3); font-size: 12px; }
+.fiche-image.carre { width: 56px; height: 56px; }
+.fiche-image.large { width: 112px; height: 56px; }
+.fiche-reseaux { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px 16px; }
+.fiche-reseau { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--filet); }
+.fiche-reseau input[type="time"] { width: 104px; height: 34px; border: 1px solid var(--filet); border-radius: 8px; background: var(--blanc); color: var(--encre); padding: 0 6px; font: inherit; }
+.fiche-comptes { display: grid; gap: 8px; margin-bottom: 6px; }
+.fiche-compte { display: grid; grid-template-columns: 150px minmax(0, 1fr) minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+@media (max-width: 640px) { .fiche-compte { grid-template-columns: 1fr 1fr auto; } .fiche-compte > :first-child { grid-column: 1 / -1; } }

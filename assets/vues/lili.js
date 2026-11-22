@@ -69,7 +69,7 @@
 
     var nbArch = S.espaces.filter(function (e) { return e.statut === "archive"; }).length;
     var cartes = el("section", { class: "clients-cartes" }, [el("div", { class: "titre-ligne" }, [el("h2", { text: "Mes clients" }),
-      nbArch ? el("button", { type: "button", class: "btn-texte", onclick: function () { St.clientsArchives(); } }, [St.icone("archiver"), "Archivés (" + nbArch + ")"]) : null]),
+      el("a", { class: "btn-texte", href: "#clients" }, [St.icone("personnes"), "Tous les clients" + (nbArch ? " (" + nbArch + " archivé" + (nbArch > 1 ? "s" : "") + ")" : "")])]),
       el("div", { class: "cartes" }, St.espacesActifs().map(function (e) {
       var av = St.avance(e.id), couv = St.urlEspace(e, "couverture_path"), aV = pubs.filter(function (p) { return p.espace_id === e.id && p.statut === "a-valider"; }).length;
       return el("a", { class: "carte-client", href: "#" + e.slug, style: { "--c": e.couleur } }, [

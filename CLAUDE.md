@@ -120,7 +120,11 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   barre latérale à côté de « Clients », carte « Nouveau client » d'Aujourd'hui, et « Signé : créer son espace » des
   Prospects avec `o` prérempli) : nom, couleur, logo, réseaux, facturation interne ; adresse `#slug` libre calculée
   (hors `St.RESERVES`) ; ouvre ensuite `#<slug>/equipe` pour inviter. `St.clientsArchives()` (lien « Archivés (n) »)
-  pour rouvrir la fiche d'un client archivé. Droit testé dans droits.sql (Lili oui ; client, invité, Lili sans code non).
+  remplacé par la page **Clients** (`#clients?etat=en-cours|actif|pause|archive|tous`, `V.clients` dans rubriques.js :
+  recherche, flèches = ordre de la barre latérale, Fiche, Équipe ; lien sur le titre « Clients » de la barre latérale).
+  Fiche complète (`St.editerEspace`) : nom, métier (colonne `espaces.metier`, migration `20261122160000_fiche_client.sql`),
+  état, couleur, logo et couverture (retirables), réseaux et `heures_defaut` par réseau, comptes des aperçus (table
+  `comptes` : ajout, modification, retrait, rang), facturation interne avec contrat et note. Droits testés.
 - Couleur de marque lisible : `Studio.foncee(couleur)` fonce une couleur trop claire jusqu'au contraste AA sous du texte
   blanc (variable CSS `--cf`, utilisée pour les boutons et pastilles ; `--c` reste la couleur d'origine pour les teintes).
 - `outils/notion-analyse.mjs` : lit l'export Notion (`~/.lili/notion-export/`) et décrit sa STRUCTURE (bases, colonnes,
