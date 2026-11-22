@@ -55,6 +55,7 @@
       ["#rapports", "Rapports", R.rapports ? R.rapports(e).replace("Aucun chiffre", "Bientôt disponibles") : ""],
       ["#messages", "Messages", R.messages ? R.messages(e) : ""],
       devis.length ? ["#devis", "Devis", aSigner ? aSigner + " à signer" : devis.length + " devis", aSigner] : null,
+      facturesClient(e).length ? ["#factures", "Factures", (function () { var n = facturesClient(e).filter(function (f) { return f.statut === "emise"; }).length; return n ? n + " à régler" : "Toutes réglées"; })()] : null,
       ["guide.html", "Comment ça marche", "Le guide en 2 minutes"]
     ].filter(Boolean);
     return el("nav", { class: "sommaire", "aria-label": "Votre espace" }, [
@@ -66,6 +67,40 @@
             el("small", { class: x[3] ? "a-faire" : "", text: x[2] }), St.icone("fleche", "som-fleche")])]);
         }))
       ])
+    ]);
+  }
+
+  // ---------- Ce mois-ci : le travail de Lili, les derniers chiffres, le prochain rendez-vous ----------
+  function bilanClient(e, pubs) {
+    var m = St.iso(new Date()).slice(0, 7), nomMois = St.fmt(new Date(), { month: "long" });
+    var duMois = pubs.filter(function (p) { return p.date_prevue && String(p.date_prevue).slice(0, 7) === m; });
+    var enLigne = duMois.filter(function (p) { return p.statut === "publie" || (p.statut === "programme" && new Date(p.date_prevue) < new Date()); }).length;
+    var prevues = duMois.length - enLigne;
+    // Derniers chiffres partagés : le mois le plus récent, tous réseaux confondus, comparé au mois d'avant
+    var rs = (S.rapports || []).filter(function (r) { return r.espace_id === e.id && r.visibilite === "partage"; });
+    var moisR = Array.from(new Set(rs.map(function (r) { return String(r.mois).slice(0, 7); }))).sort();
+    var dernier = moisR[moisR.length - 1], avant = moisR[moisR.length - 2];
+    // Comparaison honnête : seulement les réseaux présents les deux mois
+    var reseauxDe = function (mm) { return rs.filter(function (r) { return String(r.mois).slice(0, 7) === mm; }).map(function (r) { return r.reseau; }); };
+    var communs = avant ? reseauxDe(dernier).filter(function (x) { return reseauxDe(avant).indexOf(x) >= 0; }) : [];
+    var somme = function (mm, k, seuls) { return rs.filter(function (r) { return String(r.mois).slice(0, 7) === mm && (!seuls || seuls.indexOf(r.reseau) >= 0); }).reduce(function (t, r) { return t + (+r[k] || 0); }, 0); };
+    var chiffre = function (k, nom) {
+      var v = somme(dernier, k); if (!v) return null;
+      var a = communs.length ? somme(avant, k, communs) : 0, b = communs.length ? somme(dernier, k, communs) : 0, ev = a ? Math.round((b - a) / a * 100) : null;
+      return el("div", { class: "bilan-chiffre" }, [el("b", { text: v.toLocaleString("fr-FR") }), el("span", { text: nom }),
+        k === "abonnes" && a ? el("small", { class: b - a >= 0 ? "hausse" : "baisse", text: (b - a >= 0 ? "+" : "") + (b - a).toLocaleString("fr-FR") + " en un mois" })
+          : ev != null ? el("small", { class: ev >= 0 ? "hausse" : "baisse", text: (ev >= 0 ? "+" : "") + ev + " %" }) : null]);
+    };
+    var rdv = (S.rdv || []).filter(function (r) { return r.partage && r.espace_id === e.id && new Date(r.fin || r.debut) >= new Date(); }).sort(function (a, b) { return String(a.debut).localeCompare(String(b.debut)); })[0];
+    var cases = [
+      el("div", { class: "bilan-chiffre" }, [el("b", { text: String(enLigne) }), el("span", { text: "publication" + (enLigne > 1 ? "s" : "") + " en ligne en " + nomMois }), prevues > 0 ? el("small", { text: prevues + " encore prévue" + (prevues > 1 ? "s" : "") }) : null])
+    ];
+    if (dernier) [["abonnes", "abonnés"], ["portee", "personnes touchées"], ["interactions", "interactions"]].forEach(function (x) { var c = chiffre(x[0], x[1]); if (c) cases.push(c); });
+    return el("section", { class: "bilan-client" }, [
+      el("div", { class: "bilan-tete" }, [el("h2", { text: "Ce mois-ci" }), dernier ? el("a", { href: "#rapports", class: "btn-texte petit" }, ["Chiffres de " + St.fmt(dernier + "-15", { month: "long" }), St.icone("fleche")]) : null]),
+      el("div", { class: "bilan-chiffres" }, cases),
+      rdv ? el("div", { class: "bilan-rdv" }, [St.icone("calendrier"), el("div", {}, [el("small", { text: "Prochain rendez-vous avec " + (((window.MARQUE || {}).proprietaire || "Lili").split(" ")[0]) }),
+        el("b", { text: rdv.titre }), el("span", { text: St.fmt(rdv.debut, { weekday: "long", day: "numeric", month: "long" }) + " · " + St.hm(rdv.debut) + (rdv.lieu ? " · " + rdv.lieu : "") })])]) : null
     ]);
   }
 
@@ -87,9 +122,31 @@
           el("small", { text: "Quelques secondes chacune : valider, ou dire ce qu'il faut changer." })]),
         el("span", { class: "btn-plein" }, ["Commencer", St.icone("fleche")])
       ]) : el("div", { class: "appel-valider calme" }, [el("div", {}, [el("b", { text: "Tout est à jour" }), el("small", { text: "Rien n'attend votre réponse. Lili vous préviendra pour la suite." })])]),
+      bilanClient(e, pubs),
       aVenir.length ? el("section", { class: "a-venir" }, [el("h2", { text: "Bientôt en ligne" }), el("div", { class: "grille-cartes" }, aVenir.map(function (p) { return St.cartePublication(p, { sansClient: true }); }))]) : null,
       sommaireClient(e, pubs),
       recentes.length ? el("section", { class: "a-venir" }, [el("h2", { text: "Récemment publiées" }), el("div", { class: "grille-cartes" }, recentes.map(function (p) { return St.cartePublication(p, { sansClient: true }); }))]) : null
+    ]);
+  };
+
+  // ---------- Factures du client : émises par Lili, PDF, réglées ou à régler ----------
+  function facturesClient(e) { return (S.factures || []).filter(function (f) { return f.espace_id === e.id && (f.statut === "emise" || f.statut === "payee"); }); }
+  St.facturesClient = function () { var e = St.espacesClient()[0]; return e ? facturesClient(e) : []; };
+  V.facturesClient = function (r, e) {
+    var fs = facturesClient(e).sort(function (a, b) { return (b.numero || 0) - (a.numero || 0); }), A = St.aides;
+    var du = fs.filter(function (f) { return f.statut === "emise"; }).reduce(function (t, f) { return t + (+f.total_ttc || 0); }, 0);
+    var ent = A.entreprise ? A.entreprise() : {};
+    return el("div", { class: "pile rubrique-etroite" }, [
+      St.entete(null, "Factures", du ? "À régler : " + A.euros(du) + "." : "Tout est réglé, merci !"),
+      fs.length ? el("section", { class: "bloc" }, [el("ul", { class: "liste-compta" }, fs.map(function (f) {
+        var retard = f.statut === "emise" && f.echeance && f.echeance < St.iso(new Date());
+        return el("li", {}, [el("span", { class: "mono", text: "N° " + (f.numero || "") }),
+          el("span", { class: "banque-libelle" }, [el("b", { text: (f.objet || "Facture") + (f.periode ? " · " + f.periode : "") }), el("small", { text: f.date_facture ? "du " + St.fmt(f.date_facture + "T12:00:00", { day: "numeric", month: "long", year: "numeric" }) : "" })]),
+          el("b", { class: "mono", text: A.euros(f.total_ttc) }),
+          el("span", { class: "etat-piece " + (f.statut === "payee" ? "e-payee" : retard ? "e-retard" : "e-emise"), text: f.statut === "payee" ? "Réglée" : retard ? "Échue" : "À régler" + (f.echeance ? " avant le " + St.fmt(f.echeance + "T12:00:00", { day: "numeric", month: "short" }) : "") }),
+          el("button", { type: "button", class: "btn-texte", onclick: function () { St.ouvrirPdfPiece("factures", f); } }, [St.icone("imprimer"), "PDF"])]);
+      }))]) : St.vide("Aucune facture pour l'instant."),
+      fs.some(function (f) { return f.statut === "emise"; }) ? el("p", { class: "aide", text: "Règlement par virement" + (ent.iban_affiche ? " : l'IBAN figure sur chaque facture" : "") + ". Une question ? Rubrique Messages." }) : null
     ]);
   };
 
@@ -127,6 +184,12 @@
     page.appendChild(el("div", { class: "valider-info" }, [el("b", { text: p.titre || "Sans titre" }),
       el("small", { text: (p.date_prevue ? St.fmt(p.date_prevue, { weekday: "long", day: "numeric", month: "long" }) + " · " + St.hm(p.date_prevue) + " · " : "") + (p.reseaux || []).map(function (r) { return (St.RESEAUX[r] || {}).nom; }).join(", ") })]));
     page.appendChild(cadre);
+    // Sur ordinateur : la légende entière à côté de l'image (c'est souvent elle qu'on veut corriger)
+    var tags = (p.hashtags || []).map(function (x) { return "#" + x; }).join(" ");
+    page.appendChild(el("aside", { class: "valider-texte" }, [el("small", { class: "compta-etiquette", text: "La légende" }),
+      p.legende || tags ? el("p", { class: "valider-legende", text: (p.legende || "").trim() }) : el("p", { class: "aide", text: "Pas de légende pour cette publication." }),
+      tags ? el("p", { class: "valider-tags", text: tags }) : null,
+      el("p", { class: "aide", text: "Un mot à changer ? « Demander une modification » et dites-le simplement : Lili s'en occupe." })]));
     page.appendChild(el("a", { class: "valider-detail", href: "#p/" + p.id }, [St.icone("commentaire"), com ? com + " remarque" + (com > 1 ? "s" : "") + " · commenter" : "Commenter ou voir le détail"]));
     var suivante = function () { if (pos >= aValider().length) pos = 0; St.dessiner(false); };
     page.appendChild(el("footer", { class: "valider-boutons" }, [

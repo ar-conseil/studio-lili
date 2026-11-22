@@ -138,6 +138,12 @@ select essais.verifier((select categorie from public.banque_operations where id 
 select essais.verifier(public.preparer_factures_du_mois() = 1, 'Lili prépare la facture du mois du client au forfait');
 select essais.verifier(public.preparer_factures_du_mois() = 0, 'une seule facture automatique par client et par mois');
 select essais.verifier((select statut from public.factures where auto_mois = to_char(current_date, 'YYYY-MM')) = 'brouillon', 'la facture automatique reste un brouillon (rien n''est émis ni envoyé)');
+-- Espace client : factures émises et rendez-vous partagés
+insert into public.factures (id, espace_id, objet, statut) values ('40000000-0000-4000-a000-00000000000a', '10000000-0000-4000-a000-00000000000a', 'Facture A', 'emise'),
+  ('40000000-0000-4000-a000-0000000000aa', '10000000-0000-4000-a000-00000000000a', 'Brouillon A', 'brouillon'), ('40000000-0000-4000-a000-00000000000b', '10000000-0000-4000-a000-00000000000b', 'Facture B', 'emise');
+insert into public.rendez_vous (espace_id, titre, debut, partage) values ('10000000-0000-4000-a000-00000000000a', 'Point A', now() + interval '1 day', true),
+  ('10000000-0000-4000-a000-00000000000a', 'Interne A', now() + interval '1 day', false), ('10000000-0000-4000-a000-00000000000b', 'Point B', now() + interval '1 day', true);
+select essais.verifier(public.piece_pour_pdf('factures', '40000000-0000-4000-a000-00000000000b') ? 'entreprise', 'Lili obtient l''en-tête du PDF de n''importe quelle facture');
 -- Audit du 22/11 : Lili commente une idée interne sans cocher « Lili seule » : rien ne sort vers le client
 insert into public.commentaires (publication_id, contenu, visibilite) values ('20000000-0000-4000-a000-000000000002', 'Idée à creuser, budget serré', 'partage');
 select essais.verifier((select visibilite from public.publications where id = '20000000-0000-4000-a000-000000000002') = 'interne', 'l''idée du décor est interne');
@@ -189,7 +195,7 @@ select essais.verifier((select count(*) from public.notes_internes) = 0, 'A ne v
 select essais.verifier((select count(*) from public.espaces_prive) = 0, 'A ne voit pas forfait, raison sociale ni note interne de l''espace');
 select essais.verifier((select count(*) from public.taches) = 0, 'A ne voit pas les tâches de Lili');
 select essais.verifier((select count(*) from public.temps) = 0, 'A ne voit pas le temps passé');
-select essais.verifier((select count(*) from public.factures) = 0, 'A ne voit pas la facturation');
+select essais.verifier(not exists (select 1 from public.factures where statut not in ('emise', 'payee') or espace_id is distinct from '10000000-0000-4000-a000-00000000000a'), 'A ne voit que les factures émises de son espace (ni brouillon, ni celles des autres)');
 select essais.verifier((select count(*) from public.prospects) = 0, 'A ne voit pas les prospects');
 select essais.verifier((select count(*) from public.rapports) = 0, 'A ne voit pas un rapport non publié');
 select essais.verifier((select count(*) from public.briefs) = 1, 'A voit le brief partagé');
@@ -207,6 +213,15 @@ select essais.verifier((select count(*) from public.banque_operations) = 0 and (
 select essais.doit_echouer('select cle_api from public.banque_liaisons', 'A lit la clé API Revolut');
 select essais.doit_echouer($$insert into public.banque_operations (id, date, montant) values ('csv:pirate', now(), 1)$$, 'A ajoute une opération au compte de Lili');
 select essais.doit_echouer('select public.preparer_factures_du_mois()', 'A prépare des factures');
+select essais.verifier(exists (select 1 from public.factures where objet = 'Facture A'), 'A voit sa facture émise');
+select essais.verifier(not exists (select 1 from public.factures where objet in ('Brouillon A', 'Facture B')), 'A ne voit ni le brouillon de sa facture ni la facture de B');
+select essais.verifier(exists (select 1 from public.mes_rendez_vous() where titre = 'Point A') and not exists (select 1 from public.mes_rendez_vous() where titre in ('Interne A', 'Point B')), 'A voit seulement le rendez-vous partagé de son espace (sans les notes)');
+select essais.verifier((select count(*) from public.rendez_vous) = 0, 'A ne lit pas la table des rendez-vous (notes de Lili)');
+select essais.verifier((public.piece_pour_pdf('factures', '40000000-0000-4000-a000-00000000000a') -> 'destinataire' ->> 'nom') is not null, 'A obtient l''en-tête du PDF de sa facture');
+select essais.doit_echouer($$select public.piece_pour_pdf('factures', '40000000-0000-4000-a000-00000000000b')$$, 'A obtient l''en-tête de la facture de B');
+select essais.doit_echouer($$select public.piece_pour_pdf('factures', '40000000-0000-4000-a000-0000000000aa')$$, 'A obtient l''en-tête d''un brouillon');
+update public.factures set statut = 'payee' where objet = 'Facture A';   -- sans effet : lecture seule
+select essais.verifier((select statut from public.factures where objet = 'Facture A') = 'emise', 'A ne modifie pas sa facture');
 select essais.doit_echouer($q$insert into public.signature_images (type, contenu) values ('image/png', 'iVBORw0KGgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')$q$, 'A dépose une image de signature');
 select essais.verifier((select count(*) from public.briefs_jour) = 0, 'A ne voit pas le brief du jour de Lili');
 select essais.verifier((select count(*) from public.assistant_journal) = 0, 'A ne voit pas ce que Lili demande à son assistant');

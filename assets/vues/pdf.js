@@ -132,8 +132,14 @@
   // ======================================================================
   // La facture ou le devis
   // ======================================================================
+  // Côté client, l'en-tête (réglages de Lili) et le destinataire (fiche interne) viennent de la base, pour cette pièce
+  // seulement (fonction piece_pour_pdf) : le PDF vu par le client est celui que Lili envoie.
   St.pdfPiece = function (table, f) {
-    var A = St.aides, fact = table === "factures", ent = A.entreprise(), euros = A.euros, dest = destinataire(f);
+    if (St.estLili() || St.X.demo) return fabriquer(table, f, null);
+    return St.X.db.rpc("piece_pour_pdf", { p_table: table, p_id: f.id }).then(function (r) { if (r.error) throw r.error; return fabriquer(table, f, r.data); });
+  };
+  function fabriquer(table, f, ctx) {
+    var A = St.aides, fact = table === "factures", ent = ctx ? ctx.entreprise || {} : A.entreprise(), euros = A.euros, dest = ctx ? ctx.destinataire || {} : destinataire(f);
     var sg = !fact && (S.signaturesDevis || []).filter(function (x) { return x.devis_id === f.id; })[0];
     var brouillon = f.statut === "brouillon", genre = fact ? "Facture" : "Devis", titre = genre + (f.numero ? " n° " + f.numero : brouillon ? " (brouillon)" : "");
     var logo = new URL("assets/marque/signature-lr.png", location.href).href;
@@ -275,7 +281,7 @@
       });
       return doc.blob(titre + (dest.nom ? " · " + dest.nom : ""));
     });
-  };
+  }
   // Ouvrir le PDF dans un nouvel onglet (ou le télécharger si le navigateur bloque l'onglet)
   St.ouvrirPdfPiece = function (table, f) {
     var w = window.open("", "_blank"), nom = St.nomPdfPiece(table, f);

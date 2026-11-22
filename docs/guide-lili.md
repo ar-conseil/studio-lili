@@ -45,7 +45,7 @@ des rendez-vous, des notes internes et des brouillons de publication, lit ton ag
 ce qu'il crée s'affiche en liens cliquables. Il n'envoie jamais rien à un client et ne valide ni ne publie rien.
 
 **Rendez-vous** : bloc « Agenda » sur Aujourd'hui (les 7 prochains jours), dans le calendrier (bouton « Rendez-vous »,
-et chaque rendez-vous s'ouvre d'un clic pour le modifier ou le supprimer). Ils ne sont visibles que de toi.
+et chaque rendez-vous s'ouvre d'un clic pour le modifier ou le supprimer). Ils ne sont visibles que de toi. Case « Visible par le client » : le rendez-vous (titre, date, heure, lieu, jamais tes notes) s'affiche sur l'accueil de son espace.
 
 ## 2. Ta journée : la page Aujourd'hui
 

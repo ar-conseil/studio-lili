@@ -1333,3 +1333,29 @@ button.etat-modifiable { border: 0; font: inherit; font-size: 12.5px; font-weigh
 button.etat-modifiable:hover, button.etat-modifiable:focus-visible { box-shadow: 0 0 0 2px color-mix(in srgb, currentColor 30%, transparent); }
 button.etat-modifiable::after { content: "▾"; font-size: 10px; opacity: .6; }
 button.etat-modifiable small { font-weight: 500; opacity: .8; }
+
+/* Validation sur ordinateur : l'aperçu à gauche, la légende entière et les boutons à droite (22/11/2026) */
+.valider-texte { display: none; }
+@media (min-width: 1000px) {
+  .vue-valider { max-width: 1000px; grid-template-columns: minmax(0, 460px) minmax(0, 1fr); grid-template-rows: auto auto auto auto 1fr; column-gap: 44px; align-items: start; padding-bottom: 40px; }
+  .vue-valider > .valider-tete, .vue-valider > .valider-info { grid-column: 1 / -1; }
+  .vue-valider > .valider-cadre { grid-column: 1; grid-row: 3 / span 3; }
+  .valider-texte { display: grid; gap: 10px; grid-column: 2; grid-row: 3; align-content: start; padding: 22px 24px; border: 1px solid var(--filet); border-radius: var(--rayon); background: var(--blanc); }
+  .valider-legende { margin: 0; white-space: pre-line; font-size: 15.5px; line-height: 1.6; color: var(--encre); max-height: 52vh; overflow: auto; }
+  .valider-tags { margin: 0; color: var(--c, var(--terre)); font-size: 14px; }
+  .valider-texte .aide { margin: 4px 0 0; }
+  .vue-valider > .valider-detail { grid-column: 2; grid-row: 4; justify-self: start; }
+  .vue-valider > .valider-boutons { grid-column: 2; grid-row: 5; align-self: start; position: static; max-width: none; margin: 0; padding: 0; background: none; }
+}
+
+/* Accueil client : ce mois-ci (22/11/2026) */
+.bilan-client { display: grid; gap: 14px; padding: 20px 22px; border: 1px solid var(--filet); border-radius: var(--rayon); background: var(--blanc); margin-bottom: 30px; }
+.bilan-tete { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; } .bilan-tete h2 { margin: 0; }
+.bilan-chiffres { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.bilan-chiffre { display: grid; gap: 2px; padding: 12px 14px; border-radius: 12px; background: color-mix(in srgb, var(--c, var(--terre)) 7%, var(--blanc)); }
+.bilan-chiffre b { font: 500 30px/1.1 var(--titres); } .bilan-chiffre span { font-size: 13px; color: var(--encre-2); }
+.bilan-chiffre small { font-size: 12px; font-weight: 600; color: var(--encre-3); } .bilan-chiffre small.hausse { color: #2F7A4F; } .bilan-chiffre small.baisse { color: var(--terre); }
+.bilan-rdv { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 12px; border: 1px dashed color-mix(in srgb, var(--c, var(--terre)) 45%, var(--filet)); }
+.bilan-rdv > .ic { width: 22px; height: 22px; color: var(--cf, var(--c, var(--terre))); flex: none; }
+.bilan-rdv div { display: grid; } .bilan-rdv small { font-size: 12px; color: var(--encre-3); } .bilan-rdv b { font-weight: 600; } .bilan-rdv span { font-size: 13.5px; color: var(--encre-2); } .bilan-rdv span::first-letter { text-transform: uppercase; }
+@media (max-width: 700px) { .bilan-chiffres { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bilan-chiffre b { font-size: 24px; } }

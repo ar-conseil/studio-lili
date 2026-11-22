@@ -125,6 +125,12 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   **Lili a un compte Revolut PERSONNEL** (pas d'API Revolut pour ces comptes) : import du relevé CSV de l'application
   (`importer()` dans compta.js, en-têtes français ou anglais, opérations annulées ignorées, identifiant `csv:<sha1>`
   pour ne rien doubler ; migration `20261122220000_banque_import.sql` : Lili ajoute et retire ses opérations).
+- **Espace client enrichi** (22/11/2026, migration `20261122230000_espace_client.sql`, testée) : bloc « Ce mois-ci »
+  de l'accueil (`bilanClient` dans client.js : publications en ligne du mois, derniers chiffres partagés comparés sur
+  les mêmes réseaux, prochain rendez-vous partagé) ; rubrique `#factures` (`V.facturesClient` : factures émises de
+  son espace, politique `client_lit`) ; rendez-vous `partage` lus par la fonction `mes_rendez_vous()` (jamais les
+  notes) ; PDF côté client : en-tête et destinataire par `piece_pour_pdf(table, id)` ; validation sur ordinateur :
+  légende entière à côté de l'aperçu (`.valider-texte`). `publicationsVisibles()` filtre aussi par espace côté client.
 - Espace « Lili Rouzier » (`#lili-rouzier`, 22/11/2026) : sa propre marque ; ses portraits (dossier Portraits, internes). HTML des mails dans un iframe isolé,
   images distantes bloquées jusqu'au clic ; le HTML envoyé est nettoyé côté serveur (`nettoyerHtml`).
 - **Ma signature** (22/11/2026, comme Evoalys) : `assets/vues/signature.js`, en tête de Réglages › Signatures de mail.

@@ -145,7 +145,7 @@ window.DEMO_DONNEES = function () {
   ];
   // Rendez-vous de Lili (démonstration)
   var rendezVous = [
-    { id: "rdv-1", espace_id: E.ondine, titre: "Point mensuel avec Inès", debut: jour(0, 15), fin: jour(0, 16), lieu: "Visio", notes: "Bilan de novembre, idées pour les fêtes." },
+    { id: "rdv-1", espace_id: E.ondine, titre: "Point mensuel avec Inès", debut: jour(2, 15), fin: jour(2, 16), lieu: "Visio", notes: "Bilan de novembre, idées pour les fêtes.", partage: true },
     { id: "rdv-2", espace_id: E.lumiere, titre: "Shooting latte art", debut: jour(1, 9), fin: jour(1, 11), lieu: "Café Lumière, Lille", notes: "" },
     { id: "rdv-3", espace_id: null, titre: "Rendez-vous comptable", debut: jour(3, 14), fin: jour(3, 15), lieu: "Hem", notes: "" }
   ];

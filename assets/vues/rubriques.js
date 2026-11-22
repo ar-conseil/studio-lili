@@ -808,16 +808,19 @@
     var titre = texte(r.titre, { aide: "Point mensuel, shooting, appel…" }), lieu = texte(r.lieu, { aide: "Adresse, visio, téléphone" }), notes = texte(r.notes, { lignes: 3 });
     var date = el("input", { type: "date", value: St.iso(d0), "aria-label": "Date" }), debut = el("input", { type: "time", value: heureDe(d0), "aria-label": "Début" }), fin = el("input", { type: "time", value: heureDe(f0), "aria-label": "Fin" });
     var cl = choix([["", "Aucun client"]].concat(St.espacesActifs().map(function (e) { return [e.id, e.nom]; })), r.espace_id || "", { nom: "Client" });
-    St.fenetre({ titre: r.id ? "Rendez-vous" : "Nouveau rendez-vous", sous: "Dans votre agenda seulement : jamais visible d'un client.", corps: [champ("Titre", titre),
+    var partage = el("input", { type: "checkbox", checked: !!r.partage });
+    St.fenetre({ titre: r.id ? "Rendez-vous" : "Nouveau rendez-vous", sous: "Dans votre agenda. Le client ne le voit que si vous cochez la case.", corps: [champ("Titre", titre),
       el("div", { class: "deux-colonnes" }, [champ("Date", date), champ("Client", cl)]),
-      el("div", { class: "deux-colonnes" }, [champ("Début", debut), champ("Fin", fin)]), champ("Lieu", lieu), champ("Notes", notes)],
+      el("div", { class: "deux-colonnes" }, [champ("Début", debut), champ("Fin", fin)]), champ("Lieu", lieu),
+      el("label", { class: "case-option" }, [partage, el("span", {}, [el("b", { text: "Visible par le client" }), el("small", { text: "Titre, date, heure et lieu sur l'accueil de son espace. Les notes restent pour vous." })])]),
+      champ("Notes (pour vous seule)", notes)],
       actions: [r.id ? { texte: "Supprimer", danger: true, action: function (fermer) { fermer(); confirmer("Supprimer « " + r.titre + " » ?", "Le rendez-vous sera définitivement effacé de l'agenda.", "Supprimer", function () { St.supprimer("rendez_vous", { id: r.id }).then(function () { St.dessiner(false); }); }); } } : null,
         { texte: "Annuler" }, { texte: "Enregistrer", principal: true, action: function (fermer) {
           if (!titre.value.trim()) { titre.focus(); return; }
           if (!date.value || !debut.value) { date.focus(); return; }
           var dd = new Date(date.value + "T" + debut.value), ff = fin.value ? new Date(date.value + "T" + fin.value) : null;
           if (ff && ff < dd) ff = new Date(dd.getTime() + 3600000);
-          var champs = { titre: titre.value.trim(), debut: dd.toISOString(), fin: ff ? ff.toISOString() : null, lieu: lieu.value.trim() || null, notes: notes.value.trim() || null, espace_id: cl.value || null };
+          var champs = { titre: titre.value.trim(), debut: dd.toISOString(), fin: ff ? ff.toISOString() : null, lieu: lieu.value.trim() || null, notes: notes.value.trim() || null, espace_id: cl.value || null, partage: partage.checked && !!cl.value };
           (r.id ? St.maj("rendez_vous", r.id, champs) : St.creer("rendez_vous", champs)).then(function () { fermer(); St.signaler("Rendez-vous enregistré"); St.dessiner(false); }, function () {});
         } }].filter(Boolean) });
     setTimeout(function () { titre.focus(); }, 50);

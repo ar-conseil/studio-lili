@@ -150,7 +150,11 @@ window.Studio = (function () {
   function commentairesDe(pubId) { return S.commentaires.filter(function (c) { return c.publication_id === pubId; }).sort(function (a, b) { return String(a.cree_le).localeCompare(String(b.cree_le)); }); }
   function comptesDe(espaceId) { return S.comptes.filter(function (c) { return c.espace_id === espaceId; }).sort(function (a, b) { return a.rang - b.rang; }); }
   function estLili() { return S.role === "proprietaire"; }
-  function publicationsVisibles() { return S.publications.filter(function (p) { return !p.corbeille_le; }); }
+  // Côté client, la base ne renvoie déjà que ses publications ; le filtre sert aussi à la démonstration (« Voir comme »)
+  function publicationsVisibles() {
+    var ids = estLili() ? null : espacesClient().map(function (e) { return e.id; });
+    return S.publications.filter(function (p) { return !p.corbeille_le && (!ids || ids.indexOf(p.espace_id) >= 0); });
+  }
   function espacesActifs() { return S.espaces.filter(function (e) { return e.statut !== "archive"; }).sort(function (a, b) { return (a.ordre - b.ordre) || a.nom.localeCompare(b.nom); }); }
   // « Programmé jusqu'au » : dernière publication programmée ou validée datée de l'espace ; seuils validés le 21/11/2026
   function avance(espaceId) {
@@ -167,10 +171,10 @@ window.Studio = (function () {
     ["publications", "publications"], ["publication_medias", "pubMedias"], ["commentaires", "commentaires"], ["versions", "versions"],
     ["operations", "operations"], ["temps_forts", "tempsForts"], ["journal", "journal"], ["notifications", "notifications"],
     ["briefs", "briefs"], ["messages", "messages"], ["rapports", "rapports"], ["veille", "veille"], ["partenaires", "partenaires"],
-    ["devis", "devis"], ["devis_signatures", "signaturesDevis"]];
+    ["devis", "devis"], ["devis_signatures", "signaturesDevis"], ["factures", "factures"]];
   var TABLES_LILI = [["espaces_prive", "prives"], ["taches", "taches"], ["notes_internes", "notes"],
     ["comptes_mail", "boitesMail", "id, email, droits, derniere_erreur, cree_le"],
-    ["securite_alertes", "alertesSecurite"], ["rendez_vous", "rdv"], ["temps", "temps"], ["factures", "factures"], ["prospects", "prospects"], ["reglages", "reglages"], ["briefs_jour", "briefsJour"],
+    ["securite_alertes", "alertesSecurite"], ["rendez_vous", "rdv"], ["temps", "temps"], ["prospects", "prospects"], ["reglages", "reglages"], ["briefs_jour", "briefsJour"],
     ["banque_liaisons", "banqueLiaisons", "id, fournisseur, nom, derniere_synchro, derniere_erreur, cree_le"], ["banque_operations", "banqueOps"]];
   function charger(seules) {
     if (X.demo) {
@@ -205,7 +209,7 @@ window.Studio = (function () {
       if (t[0] === "banque_operations") q = q.order("date", { ascending: false }).limit(1500);
       if (t[0] === "securite_alertes") q = q.order("cree_le", { ascending: false }).limit(50);
       return q.then(function (r) { if (r.error) throw r.error; if (n === generations[t[0]]) S[t[1]] = r.data || []; });
-    })).then(signerMedias);
+    }).concat(!estLili() && (!seules || seules.indexOf("rendez_vous") >= 0) ? [X.db.rpc("mes_rendez_vous").then(function (r) { S.rdv = r.data || []; })] : [])).then(signerMedias);
   }
   var generations = {};
   // Fichiers privés : adresses signées (1 h), par lots. Celles qui expirent dans moins de 15 min sont renouvelées
@@ -533,7 +537,8 @@ window.Studio = (function () {
       lienCote("#brief", "Brief", "brief", r.nom === "brief"),
       lienCote("#rapports", "Rapports", "rapports", r.nom === "rapports"),
       lienCote("#messages", "Messages", "commentaire", r.nom === "messages"),
-      devisDuClient().length ? lienCote("#devis", "Devis", "euro", r.nom === "devis", devisDuClient().filter(function (d) { return d.statut === "envoye"; }).length || null) : null
+      devisDuClient().length ? lienCote("#devis", "Devis", "euro", r.nom === "devis", devisDuClient().filter(function (d) { return d.statut === "envoye"; }).length || null) : null,
+      window.Studio.facturesClient && window.Studio.facturesClient().length ? lienCote("#factures", "Factures", "brief", r.nom === "factures", window.Studio.facturesClient().filter(function (f) { return f.statut === "emise" && f.echeance && f.echeance < iso(new Date()); }).length || null) : null
     ]);
     var clients = lili ? [el("div", { class: "cote-titre-ligne" }, [el("a", { class: "cote-titre", href: "#clients", title: "Tous les clients", "aria-current": r.nom === "clients" ? "page" : null, text: "Clients" }),
       el("button", { type: "button", class: "btn-icone cote-ajout", "aria-label": "Nouveau client", title: "Nouveau client", onclick: function () { menu(false); if (window.Studio.nouveauClient) window.Studio.nouveauClient(); } }, [icone("plus")])]), el("nav", { class: "cote-clients", "aria-label": "Clients" }, espacesActifs().map(function (e, i) {
@@ -596,7 +601,7 @@ window.Studio = (function () {
   function filAriane() {
     var r = S.route, morceaux = [];
     var noms = { "": estLili() ? "Aujourd'hui" : "Accueil", calendrier: "Calendrier", publications: "Publications", mediatheque: "Médiathèque", valider: "À valider", mails: "Mails",
-      taches: "Tâches", prospects: "Prospects", reglages: "Réglages", clients: "Clients", planning: "Planning", devis: "Devis", compte: "Mon compte", brief: "Brief et ligne éditoriale", rapports: "Rapports", messages: "Messages", compta: "Comptabilité" };
+      taches: "Tâches", prospects: "Prospects", reglages: "Réglages", clients: "Clients", planning: "Planning", devis: "Devis", compte: "Mon compte", brief: "Brief et ligne éditoriale", rapports: "Rapports", messages: "Messages", compta: "Comptabilité", factures: "Factures" };
     if (r.nom === "client" && !estLili()) morceaux.push(el("span", { text: "Page introuvable" }));
     else if (r.nom === "client") {
       var e = espaceSlug(r.param);
@@ -656,7 +661,7 @@ window.Studio = (function () {
   // ======================================================================
   // Routeur et rendu
   // ======================================================================
-  var RESERVES = ["", "calendrier", "publications", "mediatheque", "valider", "p", "mails", "taches", "prospects", "reglages", "clients", "planning", "brief", "rapports", "messages", "devis", "compte", "documents", "compta"];
+  var RESERVES = ["", "calendrier", "publications", "mediatheque", "valider", "p", "mails", "taches", "prospects", "reglages", "clients", "planning", "brief", "rapports", "messages", "devis", "compte", "documents", "compta", "factures"];
   function lireRoute() {
     var h = decodeURIComponent(location.hash.replace(/^#/, "")), q = {}, i = h.indexOf("?");
     if (i >= 0) { new URLSearchParams(h.slice(i + 1)).forEach(function (v, k) { q[k] = v; }); h = h.slice(0, i); }
@@ -683,6 +688,7 @@ window.Studio = (function () {
     if (["taches", "prospects", "reglages", "clients", "compta"].indexOf(r.nom) >= 0) return estLili() ? V[r.nom](r) : introuvable();
     if (r.nom === "compte") return !estLili() && V.compte ? V.compte(r) : introuvable();
     if (r.nom === "devis") { var ed = espacesClient()[0]; return !estLili() && ed && V.devisClient ? V.devisClient(r, ed) : introuvable(); }
+    if (r.nom === "factures") { var ef = espacesClient()[0]; return !estLili() && ef && V.facturesClient ? V.facturesClient(r, ef) : introuvable(); }
     if (["brief", "rapports", "messages"].indexOf(r.nom) >= 0) { var ec = espacesClient()[0]; return !estLili() && ec ? V["rub_" + r.nom](r, ec) : introuvable(); }
     if (r.nom === "p") return publication(r.param) && visible(publication(r.param)) ? V.publication(r) : introuvable();
     if (r.nom === "client") { var e = espaceSlug(r.param); return e && estLili() ? V.client(r, e) : introuvable(); }
