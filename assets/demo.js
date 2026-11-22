@@ -217,6 +217,14 @@ window.DEMO_DONNEES = function () {
     temps_forts: tempsForts, taches: taches, rendez_vous: rendezVous, journal: journal, notes_internes: [{ id: "n1", espace_id: E.ondine, publication_id: pubs[0].id, contenu: "Inès préfère les visuels sans texte." }],
     briefs: briefs, messages: messages, rapports: rapports, veille: veille, partenaires: partenaires, temps: temps, factures: factures, devis: devis, prospects: prospects, reglages: reglages,
     // Compte pro de démonstration (opérations fictives)
+    // Comptes Instagram et Facebook de démonstration (fictifs), déjà associés aux marques
+    meta_liaison: [{ id: "m0", nom: "Lili (démonstration)", expire_le: jour(50) }],
+    meta_comptes: [
+      { id: "mc1", reseau: "instagram", meta_id: "1", nom: "Maison Ondine", identifiant: "maisonondine", espace_id: E.ondine },
+      { id: "mc2", reseau: "facebook", meta_id: "2", nom: "Maison Ondine", espace_id: E.ondine },
+      { id: "mc3", reseau: "instagram", meta_id: "3", nom: "Café Lumière", identifiant: "cafelumiere", espace_id: E.lumiere },
+      { id: "mc4", reseau: "instagram", meta_id: "4", nom: "Compte à associer", identifiant: "nouvelle_cliente", espace_id: null }],
+    diffusions: [],
     banque_liaisons: [{ id: "b1", fournisseur: "revolut", nom: "Compte pro (démonstration)", derniere_synchro: jour(0) }],
     banque_operations: [
       { id: "o1", date: jour(-2), montant: 600, contrepartie: "Lumière & Co", reference: "Facture", libelle: "Virement reçu" },

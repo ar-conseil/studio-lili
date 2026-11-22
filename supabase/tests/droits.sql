@@ -90,6 +90,8 @@ select essais.verifier((select count(*) from public.publications) = 0, 'Lili san
 select essais.verifier((select count(*) from public.factures) = 0, 'Lili sans code ne voit aucune facture');
 select essais.doit_echouer($q$insert into public.espaces (slug, nom) values ('essai-sans-code', 'Sans code')$q$, 'Lili sans code crée un client');
 select essais.verifier((select count(*) from public.banque_operations) = 0, 'Lili sans code ne voit pas son compte pro');
+select essais.verifier((select count(*) from public.meta_comptes) = 0 and (select count(*) from public.diffusions) = 0, 'Lili sans code ne voit ni ses comptes Instagram ni ses diffusions');
+select essais.doit_echouer($$insert into public.diffusions (publication_id, reseau) values ('20000000-0000-4000-a000-000000000001', 'instagram')$$, 'Lili sans code programme une publication');
 select essais.doit_echouer('select public.preparer_factures_du_mois()', 'Lili sans code prépare les factures du mois');
 select essais.doit_echouer($q$insert into public.signature_images (type, contenu) values ('image/png', 'iVBORw0KGgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')$q$, 'Lili sans code dépose une image de signature');
 reset role;
@@ -144,6 +146,19 @@ insert into public.factures (id, espace_id, objet, statut) values ('40000000-000
 insert into public.rendez_vous (espace_id, titre, debut, partage) values ('10000000-0000-4000-a000-00000000000a', 'Point A', now() + interval '1 day', true),
   ('10000000-0000-4000-a000-00000000000a', 'Interne A', now() + interval '1 day', false), ('10000000-0000-4000-a000-00000000000b', 'Point B', now() + interval '1 day', true);
 select essais.verifier(public.piece_pour_pdf('factures', '40000000-0000-4000-a000-00000000000b') ? 'entreprise', 'Lili obtient l''en-tête du PDF de n''importe quelle facture');
+-- Publication directe : comptes Meta (jetons illisibles), diffusions créées par Lili
+reset role;
+insert into public.meta_liaison (id, jeton, nom) values ('50000000-0000-4000-a000-000000000001', 'jeton-meta-secret', 'Lili');
+insert into public.meta_comptes (id, liaison_id, reseau, meta_id, nom, jeton_page) values ('50000000-0000-4000-a000-0000000000a1', '50000000-0000-4000-a000-000000000001', 'instagram', '1789', 'compte_a', 'jeton-page-secret');
+set local role authenticated;
+select essais.verifier((select nom from public.meta_comptes where meta_id = '1789') = 'compte_a', 'Lili voit ses comptes Instagram');
+select essais.doit_echouer('select jeton_page from public.meta_comptes', 'le navigateur de Lili lit un jeton de Page');
+select essais.doit_echouer('select jeton from public.meta_liaison', 'le navigateur de Lili lit son jeton Meta');
+update public.meta_comptes set espace_id = '10000000-0000-4000-a000-00000000000a' where meta_id = '1789';
+select essais.verifier((select espace_id from public.meta_comptes where meta_id = '1789') = '10000000-0000-4000-a000-00000000000a', 'Lili associe un compte Instagram à un client');
+insert into public.diffusions (publication_id, reseau, compte_id) values ('20000000-0000-4000-a000-000000000001', 'instagram', '50000000-0000-4000-a000-0000000000a1');
+select essais.verifier(exists (select 1 from public.diffusions where etat = 'programmee'), 'Lili programme une publication');
+select essais.doit_echouer($$update public.diffusions set lien = 'https://pirate' $$, 'le navigateur écrit le lien d''une publication en ligne (réservé au serveur)');
 -- Audit du 22/11 : Lili commente une idée interne sans cocher « Lili seule » : rien ne sort vers le client
 insert into public.commentaires (publication_id, contenu, visibilite) values ('20000000-0000-4000-a000-000000000002', 'Idée à creuser, budget serré', 'partage');
 select essais.verifier((select visibilite from public.publications where id = '20000000-0000-4000-a000-000000000002') = 'interne', 'l''idée du décor est interne');
@@ -213,6 +228,8 @@ select essais.verifier((select count(*) from public.banque_operations) = 0 and (
 select essais.doit_echouer('select cle_api from public.banque_liaisons', 'A lit la clé API Revolut');
 select essais.doit_echouer($$insert into public.banque_operations (id, date, montant) values ('csv:pirate', now(), 1)$$, 'A ajoute une opération au compte de Lili');
 select essais.doit_echouer('select public.preparer_factures_du_mois()', 'A prépare des factures');
+select essais.verifier((select count(*) from public.meta_comptes) = 0 and (select count(*) from public.diffusions) = 0, 'A ne voit ni les comptes Meta ni les diffusions');
+select essais.doit_echouer($$insert into public.diffusions (publication_id, reseau) values ('20000000-0000-4000-a000-000000000001', 'instagram')$$, 'A programme une publication');
 select essais.verifier(exists (select 1 from public.factures where objet = 'Facture A'), 'A voit sa facture émise');
 select essais.verifier(not exists (select 1 from public.factures where objet in ('Brouillon A', 'Facture B')), 'A ne voit ni le brouillon de sa facture ni la facture de B');
 select essais.verifier(exists (select 1 from public.mes_rendez_vous() where titre = 'Point A') and not exists (select 1 from public.mes_rendez_vous() where titre in ('Interne A', 'Point B')), 'A voit seulement le rendez-vous partagé de son espace (sans les notes)');

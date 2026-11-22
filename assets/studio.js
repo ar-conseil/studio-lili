@@ -8,7 +8,7 @@ window.Studio = (function () {
   var S = {
     moi: null, role: "proprietaire", espaces: [], prives: [], comptes: [], membres: [], personnes: [], medias: [], publications: [],
     pubMedias: [], commentaires: [], versions: [], operations: [], tempsForts: [], taches: [], journal: [], notes: [], notifications: [], boitesMail: [],
-    briefs: [], messages: [], rapports: [], signaturesDevis: [], mailsNonLus: 0, alertesSecurite: [], veille: [], partenaires: [], temps: [], devis: [], factures: [], prospects: [], reglages: [], briefsJour: [], rdv: [], banqueOps: [], banqueLiaisons: [],
+    briefs: [], messages: [], rapports: [], signaturesDevis: [], mailsNonLus: 0, alertesSecurite: [], veille: [], partenaires: [], temps: [], devis: [], factures: [], prospects: [], reglages: [], briefsJour: [], rdv: [], banqueOps: [], banqueLiaisons: [], metaLiaison: [], metaComptes: [], diffusions: [],
     urls: {}, route: { nom: "", param: "", rubrique: "", query: {} }, voirCommeEspace: null
   };
   var X = { db: null, demo: false, quitter: null, verrouiller: null, coquille: null, page: null, demarre: false };
@@ -175,7 +175,9 @@ window.Studio = (function () {
   var TABLES_LILI = [["espaces_prive", "prives"], ["taches", "taches"], ["notes_internes", "notes"],
     ["comptes_mail", "boitesMail", "id, email, droits, derniere_erreur, cree_le"],
     ["securite_alertes", "alertesSecurite"], ["rendez_vous", "rdv"], ["temps", "temps"], ["prospects", "prospects"], ["reglages", "reglages"], ["briefs_jour", "briefsJour"],
-    ["banque_liaisons", "banqueLiaisons", "id, fournisseur, nom, derniere_synchro, derniere_erreur, cree_le"], ["banque_operations", "banqueOps"]];
+    ["banque_liaisons", "banqueLiaisons", "id, fournisseur, nom, derniere_synchro, derniere_erreur, cree_le"], ["banque_operations", "banqueOps"],
+    ["meta_liaison", "metaLiaison", "id, personne_id, meta_user_id, nom, expire_le, derniere_erreur, cree_le, modifie_le"],
+    ["meta_comptes", "metaComptes", "id, liaison_id, reseau, meta_id, page_id, nom, identifiant, photo_url, espace_id, cree_le, modifie_le"], ["diffusions", "diffusions"]];
   function charger(seules) {
     if (X.demo) {
       if (!X.donneesDemo) {
@@ -187,6 +189,7 @@ window.Studio = (function () {
         ["briefs", "messages", "rapports", "veille", "partenaires", "temps", "devis", "factures", "prospects", "reglages"].forEach(function (k) { S[k] = d[k] || []; });
         S.rdv = d.rendez_vous || [];
         S.banqueOps = d.banque_operations || []; S.banqueLiaisons = d.banque_liaisons || [];
+        S.metaLiaison = d.meta_liaison || []; S.metaComptes = d.meta_comptes || []; S.diffusions = d.diffusions || [];
         S.signaturesDevis = d.devis_signatures || [];
         S.notifications = d.journal.map(function (j, i) { return { id: i + 1, personne_id: d.lili, journal_id: j.id, lue_le: null, cree_le: j.cree_le }; });
         S.medias.forEach(function (m) { S.urls[m.chemin] = m.url; if (m.apercu_url) S.urls[m.chemin + "#apercu"] = m.apercu_url; });
@@ -262,7 +265,7 @@ window.Studio = (function () {
   var LOCALE = { publications: "publications", medias: "medias", commentaires: "commentaires", taches: "taches", espaces: "espaces", espaces_prive: "prives",
     notes_internes: "notes", operations: "operations", temps_forts: "tempsForts", comptes: "comptes", publication_medias: "pubMedias", versions: "versions",
     briefs: "briefs", messages: "messages", rapports: "rapports", veille: "veille", partenaires: "partenaires", temps: "temps", devis: "devis", factures: "factures",
-    prospects: "prospects", reglages: "reglages", briefs_jour: "briefsJour", banque_operations: "banqueOps", devis_signatures: "signaturesDevis", securite_alertes: "alertesSecurite", rendez_vous: "rdv", membres: "membres", personnes: "personnes" };
+    prospects: "prospects", reglages: "reglages", briefs_jour: "briefsJour", banque_operations: "banqueOps", meta_comptes: "metaComptes", diffusions: "diffusions", devis_signatures: "signaturesDevis", securite_alertes: "alertesSecurite", rendez_vous: "rdv", membres: "membres", personnes: "personnes" };
   // Tables sans colonne « cree_le » (la base refuserait une colonne inconnue)
   var SANS_DATE = ["espaces_prive", "comptes", "operations", "temps_forts", "publication_medias", "briefs", "rapports", "temps", "reglages"];
   function maj(table, id, champs) {

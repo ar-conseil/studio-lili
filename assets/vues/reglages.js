@@ -11,12 +11,13 @@
   function sauver(cle, valeur, message) {
     return St.enregistrer("reglages", { cle: cle, valeur: valeur, modifie_le: maintenant() }).then(function () { if (message !== false) St.signaler(message || "Réglages enregistrés"); });
   }
-  var ONGLETS = [["entreprise", "Entreprise"], ["signatures", "Signatures de mail"], ["modeles", "Réponses types"], ["mails", "Mails et vacances"],
+  var ONGLETS = [["entreprise", "Entreprise"], ["signatures", "Signatures de mail"], ["modeles", "Réponses types"], ["mails", "Mails et vacances"], ["reseaux", "Réseaux sociaux"],
     ["devis", "Devis et signature"], ["ia", "Assistant IA"], ["securite", "Sécurité"], ["apparence", "Apparence"]];
 
   V.reglages = function (r) {
     var o = (r.query && r.query.onglet) || "entreprise"; if (!ONGLETS.some(function (x) { return x[0] === o; })) o = "entreprise";
-    var corps = { entreprise: ongletEntreprise, signatures: ongletSignatures, modeles: ongletModeles, mails: ongletMails, devis: ongletDevis, ia: ongletIa, securite: ongletSecurite, apparence: ongletApparence }[o]();
+    var corps = { entreprise: ongletEntreprise, signatures: ongletSignatures, modeles: ongletModeles, mails: ongletMails, devis: ongletDevis, ia: ongletIa, securite: ongletSecurite, apparence: ongletApparence,
+      reseaux: function () { return St.ongletReseaux ? St.ongletReseaux(r.query) : el("p", { text: "Chargement…" }); } }[o]();
     return el("div", { class: "vue-reglages" }, [
       St.entete("Réglages", reglage("entreprise").nom || MARQUE.proprietaire || "Mon studio"),
       el("nav", { class: "onglets-reglages", "aria-label": "Rubriques des réglages" }, ONGLETS.map(function (x) {

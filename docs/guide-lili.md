@@ -84,6 +84,14 @@ C'est la page d'ouverture (touche **0**). De haut en bas :
 
 Une publication supprimée part dans une corbeille de 30 jours.
 
+### Publier directement sur Instagram et Facebook
+
+Une fois ton compte Facebook relié (Réglages › Réseaux sociaux, puis associe chaque compte à son client), la fiche
+d'une publication a un bloc **Publication en ligne** : « Programmer le … à … » (elle part toute seule à l'heure prévue,
+tu peux annuler jusque-là) ou « Publier maintenant ». Les visuels sont mis au format d'Instagram tout seuls. Si le
+client n'a pas validé, le studio te prévient avant. Une fois en ligne : le lien s'affiche, la publication passe
+« publiée ».
+
 ## 4. Le calendrier
 
 Touche **C**. Quatre vues : mois, semaine, jour (la journée heure par heure, avec les rendez-vous ; un clic sur le numéro d'un jour l'ouvre ; on y glisse une publication ou un rendez-vous d'une heure à l'autre), liste. Les rendez-vous se glissent aussi d'un jour à l'autre, leur durée ne change pas. Les flèches **← →** changent de période, **T** revient à

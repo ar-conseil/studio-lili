@@ -138,6 +138,7 @@
         actionsStatut(),
         groupe("Quand", el("div", { class: "rangee" }, [date, heure, p.date_prevue ? el("span", { class: "aside", text: St.quand(p.date_prevue) }) : null])),
         groupe("Réseaux", reseaux), groupe("Format", formats),
+        St.blocDiffusion ? groupe("Publication en ligne", St.blocDiffusion(p)) : null,
         groupe("Visuels", editeurVisuels()),
         groupe("Légende", el("div", {}, [legende, el("div", { class: "sous-champ" }, [compteur])])),
         groupe("Hashtags et mentions", el("div", { class: "pile-serree" }, [tags, mentions])),

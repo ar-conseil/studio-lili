@@ -131,6 +131,16 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   son espace, politique `client_lit`) ; rendez-vous `partage` lus par la fonction `mes_rendez_vous()` (jamais les
   notes) ; PDF côté client : en-tête et destinataire par `piece_pour_pdf(table, id)` ; validation sur ordinateur :
   légende entière à côté de l'aperçu (`.valider-texte`). `publicationsVisibles()` filtre aussi par espace côté client.
+- **Publication directe Instagram et Facebook** (22/11/2026) : fonction `meta` (Graph API v27.0, Facebook Login for
+  Business avec jeton utilisateur ; appli Meta de type Entreprise utilisée par Lili seule = accès standard, sans
+  validation par Meta ; Lili doit avoir un rôle sur l'appli). Secrets META_APP_ID, META_APP_SECRET, META_CONFIG_ID
+  (`~/.lili/meta.env`, posés par le déploiement). Tables `meta_liaison` (jeton 60 jours), `meta_comptes` (Pages et
+  comptes Instagram, jeton de Page jamais lisible du navigateur, `espace_id` associé par Lili), `diffusions` (une par
+  publication et réseau, créée seulement par le clic de Lili ; pg_cron « meta » toutes les 5 min publie ce qui est
+  arrivé à l'heure ; 3 essais puis erreur). Interface : `assets/vues/diffusion.js` (Réglages › Réseaux sociaux ;
+  bloc « Publication en ligne » de la fiche : visuels convertis en JPEG au format Instagram, carrousel au format du
+  premier visuel, déposés dans `<espace>/diffusion/`). Toutes publiées : statut « publiée » et `lien_en_ligne`.
+  Migration `20261122240000_meta.sql`, testée.
 - Espace « Lili Rouzier » (`#lili-rouzier`, 22/11/2026) : sa propre marque ; ses portraits (dossier Portraits, internes). HTML des mails dans un iframe isolé,
   images distantes bloquées jusqu'au clic ; le HTML envoyé est nettoyé côté serveur (`nettoyerHtml`).
 - **Ma signature** (22/11/2026, comme Evoalys) : `assets/vues/signature.js`, en tête de Réglages › Signatures de mail.
