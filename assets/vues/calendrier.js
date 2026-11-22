@@ -81,8 +81,11 @@
         var nouveau = new Date(cible.dataset.jour + "T12:00:00"), ancien = p.date_prevue ? new Date(p.date_prevue) : null;
         if (ancien) nouveau.setHours(ancien.getHours(), ancien.getMinutes(), 0, 0);
         else { var h = St.HEURES[(p.reseaux || [])[0]] || "12:30"; nouveau.setHours(+h.slice(0, 2), +h.slice(3), 0, 0); }
-        if (ancien && St.memeJour(ancien, nouveau)) return;
-        St.maj("publications", p.id, { date_prevue: nouveau.toISOString() }).then(function () { St.signaler("« " + (p.titre || "Sans titre") + " » déplacée au " + St.fmt(nouveau, { weekday: "long", day: "numeric", month: "long" })); St.dessiner(false); });
+        // Vue Jour : lâchée sur une heure, la publication prend cette heure (les minutes sont gardées)
+        var surHeure = cible.dataset.heure != null && cible.dataset.heure !== "";
+        if (surHeure) nouveau.setHours(+cible.dataset.heure);
+        if (ancien && nouveau.getTime() === ancien.getTime()) return;
+        St.maj("publications", p.id, { date_prevue: nouveau.toISOString() }).then(function () { St.signaler("« " + (p.titre || "Sans titre") + " » déplacée " + (surHeure ? "à " + St.hm(nouveau) : "au " + St.fmt(nouveau, { weekday: "long", day: "numeric", month: "long" }))); St.dessiner(false); });
         St.dessiner(false);
       }
       function fin() {
@@ -148,12 +151,12 @@
       precedent = St.ajouterJours(jr, -1); suivant = St.ajouterJours(jr, 1);
       var psJ = parJour[kj] || [], rdvs = St.estLili() ? St.rdvDu(jr).filter(function (x) { return !eId || x.espace_id === eId; }) : [];
       var heures = psJ.map(function (p) { return new Date(p.date_prevue).getHours(); }).concat(rdvs.map(function (x) { return new Date(x.debut).getHours(); }));
-      var hMin = Math.min.apply(null, [8].concat(heures)), hMax = Math.max.apply(null, [19].concat(heures)), mnt = new Date();
+      var hMin = Math.min.apply(null, [St.estLili() ? 7 : 8].concat(heures)), hMax = Math.max.apply(null, [St.estLili() ? 21 : 19].concat(heures)), mnt = new Date();
       var rangees = [];
       for (var hh = hMin; hh <= hMax; hh++) (function (h) {
         var pubsH = psJ.filter(function (p) { return new Date(p.date_prevue).getHours() === h; }), rdvH = rdvs.filter(function (x) { return new Date(x.debut).getHours() === h; });
         var plein = pubsH.length || rdvH.length, ici = estAuj && mnt.getHours() === h;
-        rangees.push(el("div", { class: "cj-heure" + (plein ? " plein" : "") + (ici ? " maintenant" : "") }, [
+        rangees.push(el("div", { class: "cj-heure" + (plein ? " plein" : "") + (ici ? " maintenant" : ""), "data-jour": kj, "data-heure": String(h) }, [
           el("span", { class: "cj-h", text: (h < 10 ? "0" : "") + h + ":00" }),
           el("div", { class: "cj-contenu" }, [
             ici ? el("i", { class: "cj-ligne", style: { top: Math.round(mnt.getMinutes() / 60 * 100) + "%" }, "aria-label": "Maintenant, " + St.hm(mnt) }) : null,
@@ -164,11 +167,13 @@
             })) : null,
             pubsH.length ? el("div", { class: "cj-pubs" }, pubsH.map(function (p) {
               var ep = St.espace(p.espace_id) || {}, m = St.mediasDe(p.id)[0];
-              return el("a", { class: "cj-pub", href: "#p/" + p.id, style: { "--c": ep.couleur } }, [
+              var carteP = el("a", { class: "cj-pub", href: "#p/" + p.id, style: { "--c": ep.couleur }, draggable: "false" }, [
                 m ? St.image(m, { classe: "cj-pub-img" }) : el("span", { class: "cj-pub-img vide" }, [St.icone("publications")]),
                 el("span", { class: "cj-pub-texte" }, [el("small", {}, [el("b", { text: St.hm(p.date_prevue) }), !eId && ep.nom ? " · " + ep.nom : ""]),
                   el("b", { text: p.titre || "Sans titre" }), el("small", {}, [St.pastillesReseaux(p.reseaux), " " + (St.FORMATS[p.format] || "")])]),
                 el("span", { class: "pl-tag pl-statut s-" + p.statut }, [el("i"), St.STATUTS[p.statut] || p.statut])]);
+              activerGlisser(carteP, p);
+              return carteP;
             })) : null
           ])
         ]));
@@ -225,7 +230,7 @@
     ]);
     var legende = el("p", { class: "cal-legende" }, St.ORDRE_STATUTS.map(function (s) { return el("span", { class: "s-" + s }, [el("i"), St.STATUTS[s]]); }));
     return el("div", { class: "vue-calendrier" }, [
-      eForce ? null : St.entete(null, "Calendrier", St.estLili() ? "Glissez une publication pour la changer de jour." : null),
+      eForce ? null : St.entete(null, "Calendrier", St.estLili() ? vue === "jour" ? "Glissez une publication pour la changer d'heure." : "Glissez une publication pour la changer de jour." : null),
       outils, legende, corps,
       sansDate.length && St.estLili() ? el("section", { class: "sans-date" }, [el("h2", { text: "Sans date" }), el("p", { class: "aside", text: "Glissez-les sur un jour pour les programmer." }),
         el("div", { class: "sans-date-liste" }, sansDate.map(function (p) { return puceCal(p, !eId); }))]) : null

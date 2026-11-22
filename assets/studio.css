@@ -360,6 +360,9 @@ a.cal-num { text-decoration: none; } a.cal-num:hover { background: var(--survol)
 .cj-pub-texte { display: grid; gap: 2px; min-width: 0; } .cj-pub-texte > b { font: 500 19px/1.2 var(--titres); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cj-pub-texte small { font-size: 12.5px; color: var(--encre-3); display: flex; align-items: center; gap: 4px; } .cj-pub-texte small b { font: 500 12.5px var(--mono); color: var(--encre-2); }
 @media (max-width: 640px) { .cj-pub { grid-template-columns: 52px minmax(0, 1fr); gap: 10px; } .cj-pub-img { width: 52px; height: 52px; } .cj-pub > .pl-statut { grid-column: 2; justify-self: start; } .cj-pub-texte > b { font-size: 17px; white-space: normal; } }
+.cj-heure { transition: background .12s; } .cj-heure.survol { background: color-mix(in srgb, var(--terre) 10%, transparent); box-shadow: inset 3px 0 0 var(--terre); }
+.cj-heure.survol .cj-h { color: var(--terre); font-weight: 600; }
+.cj-pub { touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; } .cj-pub.glissee { opacity: .35; }
 .cj-rdvs { display: grid; gap: 6px; }
 .cj-rdv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; align-items: baseline; text-align: left; padding: 10px 14px; border: 1px solid var(--filet); border-left: 3px solid var(--c, var(--encre)); border-radius: 10px; background: var(--blanc); color: inherit; font: inherit; cursor: pointer; transition: border-color .15s, transform .15s; }
 .cj-rdv:hover { transform: translateX(2px); border-color: var(--filet-fort); border-left-color: var(--c, var(--encre)); }

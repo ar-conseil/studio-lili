@@ -45,7 +45,7 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   adresses signées des fichiers, coquille, routeur, raccourcis, temps réel). Pages dans `assets/vues/` :
   `communs.js` (cartes, aperçus fidèles Instagram / Facebook / LinkedIn / TikTok / Pinterest / Google dessinés en
   HTML, bulles épinglées), `lili.js` (Aujourd'hui, page client et rubriques, publications), `calendrier.js` (mois,
-  semaine, jour heure par heure, liste, glisser, fériés et temps forts calculés, opérations et absences en bandes), `publication.js` (fiche,
+  semaine, jour heure par heure (glisser = changer d'heure, minutes gardées), liste, glisser, fériés et temps forts calculés, opérations et absences en bandes), `publication.js` (fiche,
   visuels du carrousel, commentaires épinglés, fil, versions comparées), `client.js` (accueil client, validation en
   deux gestes, médiathèque). Styles : `assets/studio.css` (piste Papier, téléphone compris).
 - Adresses : `#`, `#calendrier?vue=mois|semaine|jour|liste&jour=…&client=…`, `#publications?statut=…`, `#mediatheque`,
