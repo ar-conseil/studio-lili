@@ -72,21 +72,52 @@
     // ---------- Les vues ----------
     var ouvrir = function (p) { return function (ev) { if (ev && (ev.metaKey || ev.ctrlKey)) return; if (ev) ev.preventDefault(); St.ouvrirCote(p); }; };
     var corps;
+    // Affiche les n premiers éléments, puis un bouton « Afficher n de plus » (213 publications ne s'empilent pas d'un coup).
+    var parPaquets = function (liste, n, rendu, classe) {
+      var boite = el("div", { class: classe });
+      var montrer = function (debut) {
+        var bouton = boite.querySelector(".pl-plus"); if (bouton) bouton.remove();
+        liste.slice(debut, debut + n).forEach(function (x) { boite.appendChild(rendu(x)); });
+        var reste = liste.length - debut - n;
+        if (reste > 0) boite.appendChild(el("button", { type: "button", class: "pl-plus", text: "Afficher " + Math.min(reste, n) + " de plus (" + reste + " restantes)", onclick: function () { montrer(debut + n); } }));
+      };
+      montrer(0); return boite;
+    };
+    var maintenant = Date.now();
+    var aVenir = function (p) { return !p.date_prevue || new Date(p.date_prevue).getTime() >= maintenant - 864e5; };
     if (vue === "kanban") {
-      var colonnes = (lili ? St.ORDRE_STATUTS : ["idee", "a-valider", "modifs-demandees", "valide", "programme", "publie"]).filter(function (s) { return !q.statut || s === q.statut; });
-      corps = el("div", { class: "pl-kanban" }, colonnes.map(function (s) {
+      // Seules les colonnes qui ont quelque chose, plus « À valider » (là où le client agit) ; chez le client,
+      // jamais « En création ». Les colonnes terminées montrent le plus récent d'abord.
+      var colonnes = (lili ? St.ORDRE_STATUTS : ["idee", "a-valider", "modifs-demandees", "valide", "programme", "publie"]).filter(function (s) {
+        if (q.statut) return s === q.statut;
+        return s === "a-valider" || pubs.some(function (p) { return p.statut === s; });
+      });
+      var carte = function (p) {
+        return el("a", { href: "#p/" + p.id, class: "pl-carte", onclick: ouvrir(p) }, [St.mediasDe(p.id)[0] ? vignette(p, "pl-carte-img") : null, el("b", { text: p.titre || "Sans titre" }),
+          el("small", { text: dateCourte(p) }), el("span", { class: "pl-tags" }, tagsReseaux(p))].filter(Boolean));
+      };
+      corps = el("div", { class: "pl-kanban", style: "--n:" + colonnes.length }, colonnes.map(function (s) {
         var ps = pubs.filter(function (p) { return p.statut === s; });
-        return el("section", { class: "pl-colonne" }, [el("header", {}, [tagStatut(s), el("small", { text: String(ps.length) })]),
-          el("div", { class: "pl-cartes" }, ps.map(function (p) {
-            return el("a", { href: "#p/" + p.id, class: "pl-carte", onclick: ouvrir(p) }, [vignette(p, "pl-carte-img"), el("b", { text: p.titre || "Sans titre" }),
-              el("small", { text: dateCourte(p) }), el("span", { class: "pl-tags" }, tagsReseaux(p))]);
-          }).concat(ps.length ? [] : [el("p", { class: "pl-vide", text: "Rien ici" })]))]);
+        if (s === "publie" || s === "valide" || s === "programme") ps = ps.slice().sort(function (a, b) { return String(b.date_prevue || "").localeCompare(String(a.date_prevue || "")); });
+        if (s === "valide" || s === "programme") ps = ps.filter(aVenir).reverse().concat(ps.filter(function (p) { return !aVenir(p); }));
+        var cartes = ps.length ? parPaquets(ps, 20, carte, "pl-cartes") : el("div", { class: "pl-cartes" }, [el("p", { class: "pl-vide", text: s === "a-valider" ? "Rien à valider pour l'instant" : "Rien ici" })]);
+        return el("section", { class: "pl-colonne" }, [el("header", {}, [tagStatut(s), el("small", { text: String(ps.length) })]), cartes]);
       }));
     } else if (vue === "galerie") {
-      corps = el("div", { class: "pl-galerie" }, pubs.map(function (p) {
-        return el("a", { href: "#p/" + p.id, class: "pl-fiche", onclick: ouvrir(p) }, [vignette(p, "pl-fiche-img"),
+      // Les publications à venir d'abord (dans l'ordre), puis les publiées de la plus récente à la plus ancienne.
+      // Sans visuel : une carte de texte (début de la légende) au lieu d'une case vide.
+      var fiche = function (p) {
+        var m = St.mediasDe(p.id)[0];
+        var haut = m ? St.image(m, { classe: "pl-fiche-img" }) : el("div", { class: "pl-fiche-img pl-fiche-txt" }, [el("p", { text: String(p.legende || p.titre || "").slice(0, 220) || "Visuel à venir" })]);
+        return el("a", { href: "#p/" + p.id, class: "pl-fiche", onclick: ouvrir(p) }, [haut,
           el("div", { class: "pl-fiche-texte" }, [el("b", { text: p.titre || "Sans titre" }), el("small", { text: dateCourte(p) }), el("span", { class: "pl-tags" }, [tagStatut(p.statut)].concat(tagsReseaux(p)))])]);
-      }));
+      };
+      var futures = pubs.filter(aVenir), passees = pubs.filter(function (p) { return !aVenir(p); }).reverse();
+      corps = el("div", {}, [
+        futures.length ? el("h3", { class: "pl-galerie-titre", text: "À venir (" + futures.length + ")" }) : null,
+        futures.length ? parPaquets(futures, 24, fiche, "pl-galerie") : null,
+        passees.length ? el("h3", { class: "pl-galerie-titre", text: "Déjà passées (" + passees.length + ")" }) : null,
+        passees.length ? parPaquets(passees, 12, fiche, "pl-galerie") : null].filter(Boolean));
       if (!pubs.length) corps = St.vide("Aucune publication ne correspond.");
     } else if (vue === "calendrier") {
       var ref = q.mois ? new Date(q.mois + "-01T12:00:00") : new Date(); ref.setDate(1);
