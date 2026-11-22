@@ -535,6 +535,7 @@ window.Studio = (function () {
       var actif = r.nom === "client" && r.param === e.slug;
       var a = lienCote("#" + e.slug, e.nom, el("i", { class: "pastille-client", style: { "--c": e.couleur } }), actif, null, i < 9 ? String(i + 1) : null);
       a.dataset.espace = e.id;
+      a.style.setProperty("--c", e.couleur || "");
       // Un second clic sur le client ouvert replie ses rubriques ; un clic de plus les rouvre.
       var ouvert = actif && !sousFermes[e.slug];
       if (actif) a.setAttribute("aria-expanded", ouvert ? "true" : "false");

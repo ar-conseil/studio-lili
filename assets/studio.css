@@ -45,9 +45,26 @@ select:focus, textarea:focus, input[type="date"]:focus, input[type="time"]:focus
   display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 10px; min-height: 38px; border: 0; background: none; border-radius: 9px;
   color: var(--encre-2); font: 500 14px/1.3 var(--sans); text-decoration: none; cursor: pointer; text-align: left; flex-wrap: wrap;
 }
-.cote-lien:hover { background: var(--survol); color: var(--encre); }
+/* Surbrillance au survol : un halo teinté qui monte en fondu (terre cuite, ou couleur du client) et s'efface
+   plus lentement quand on part ; l'icône prend la couleur, le texte glisse à peine. */
+.cote-lien { --teinte: var(--terre); position: relative; isolation: isolate;
+  transition: color .45s ease, background-color .6s ease, box-shadow .6s ease; }
+.cote-lien::before { content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: -1; pointer-events: none; opacity: 0;
+  background: linear-gradient(100deg, color-mix(in srgb, var(--teinte) 24%, transparent) 0%, color-mix(in srgb, var(--teinte) 12%, transparent) 55%, color-mix(in srgb, var(--teinte) 5%, transparent) 100%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--teinte) 14%, transparent);
+  transition: opacity .7s cubic-bezier(.2, .7, .2, 1); }
+.cote-lien > svg, .cote-lien > .pastille-client { transition: color .45s ease, transform .5s cubic-bezier(.2, .7, .2, 1), box-shadow .5s ease; }
+.cote-lien > .cote-texte { transition: transform .5s cubic-bezier(.2, .7, .2, 1); }
+.cote-lien:hover, .cote-lien:focus-visible { color: var(--encre); }
+.cote-lien:hover::before, .cote-lien:focus-visible::before { opacity: 1; transition-duration: .28s; }
+.cote-lien:hover > svg, .cote-lien:focus-visible > svg { color: var(--teinte); transition-duration: .25s; }
+.cote-lien:hover > .cote-texte { transform: translateX(2px); transition-duration: .3s; }
+.cote-lien:hover > .pastille-client { transform: scale(1.25); box-shadow: 0 0 0 3px color-mix(in srgb, var(--teinte) 22%, transparent); transition-duration: .3s; }
+.cote-clients > .cote-lien { --teinte: var(--c, var(--terre)); }
+.cote-sous a { transition: background-color .55s ease, color .4s ease; } .cote-sous a:hover { transition-duration: .25s; }
+@media (prefers-reduced-motion: reduce) { .cote-lien, .cote-lien::before, .cote-lien > *, .cote-sous a { transition: none !important; } }
 .cote-clients > .cote-lien { touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-.cote-clients.en-glisse { cursor: grabbing; } .cote-clients.en-glisse .cote-lien:hover { background: none; }
+.cote-clients.en-glisse { cursor: grabbing; } .cote-clients.en-glisse .cote-lien:hover { background: none; } .cote-clients.en-glisse .cote-lien::before { opacity: 0; }
 .cote-clients > .cote-lien { position: relative; }
 .cote-clients > .cote-lien.glisse { background: var(--blanc) !important; box-shadow: 0 12px 28px -12px rgb(0 0 0 / .45), 0 0 0 1px var(--filet); z-index: 3; cursor: grabbing; will-change: transform; }
 .cote-lien[aria-current="page"] { background: color-mix(in srgb, var(--encre) 7%, transparent); color: var(--encre); font-weight: 600; view-transition-name: lien-actif; }
@@ -57,7 +74,7 @@ select:focus, textarea:focus, input[type="date"]:focus, input[type="time"]:focus
 .pastille-client { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--c); flex: none; margin: 0 3px; }
 .cote-sous { display: grid; width: 100%; padding: 4px 0 2px 26px; }
 .cote-sous a { padding: 5px 8px; border-radius: 7px; font-size: 13px; color: var(--encre-2); text-decoration: none; font-weight: 500; }
-.cote-sous a:hover { background: var(--survol); } .cote-sous a[aria-current="page"] { color: var(--encre); font-weight: 600; }
+.cote-sous a:hover { background: color-mix(in srgb, var(--c, var(--terre)) 10%, transparent); color: var(--encre); } .cote-sous a[aria-current="page"] { color: var(--encre); font-weight: 600; }
 .cote-bas { margin-top: auto; display: grid; gap: 1px; padding-top: 14px; }
 .cote-bas .installer { justify-self: start; margin-bottom: 8px; }
 .voir-comme-zone { display: grid; gap: 4px; margin: 0 4px 10px; padding: 10px; border: 1px dashed color-mix(in srgb, var(--terre) 55%, transparent); border-radius: 12px; }
