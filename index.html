@@ -19,8 +19,8 @@
   <link rel="preload" href="assets/polices/geist-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/polices/bodoni-moda-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="assets/polices/polices.css">
-  <link rel="stylesheet" href="assets/style.css?v=20261123k">
-  <link rel="stylesheet" href="assets/studio.css?v=20261123k">
+  <link rel="stylesheet" href="assets/style.css?v=20261123l">
+  <link rel="stylesheet" href="assets/studio.css?v=20261123l">
 </head>
 <body>
   <!-- Entrée : connexion, puis code à 6 chiffres (comme Evoalys : mot de passe et code) -->
@@ -75,6 +75,7 @@
             <input id="code-champ" class="code-champ" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" aria-label="Code à 6 chiffres" aria-describedby="code-sous">
             <span></span><span></span><span></span><span class="code-milieu"></span><span></span><span></span>
           </div>
+          <label class="confiance"><input type="checkbox" id="code-confiance" checked> <span>Faire confiance à cet appareil 30 jours<small>Décochez sur un ordinateur partagé.</small></span></label>
           <button type="submit" class="btn-plein" id="code-ok">Entrer</button>
           <div class="entree-liens">
             <button type="button" class="btn-texte" id="btn-autre-compte">Changer de compte</button>
@@ -91,6 +92,7 @@
             <input id="code-enrolement-champ" class="code-champ" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" aria-label="Code à 6 chiffres">
             <span></span><span></span><span></span><span class="code-milieu"></span><span></span><span></span>
           </div>
+          <label class="confiance"><input type="checkbox" id="enrolement-confiance" checked> <span>Faire confiance à cet appareil 30 jours<small>Décochez sur un ordinateur partagé.</small></span></label>
           <button type="submit" class="btn-plein">Activer le code</button>
         </form>
 
@@ -122,21 +124,21 @@
 
   <script src="assets/vendeur/supabase-2.45.4.js"></script>
   <script src="assets/config.js"></script>
-  <script src="assets/marque.js?v=20261123k"></script>
-  <script src="assets/demo.js?v=20261123k"></script>
-  <script src="assets/studio.js?v=20261123k"></script>
-  <script src="assets/vues/communs.js?v=20261123k"></script>
-  <script src="assets/vues/lili.js?v=20261123k"></script>
-  <script src="assets/vues/calendrier.js?v=20261123k"></script>
-  <script src="assets/vues/publication.js?v=20261123k"></script>
-  <script src="assets/vues/client.js?v=20261123k"></script>
-  <script src="assets/vues/direct.js?v=20261123k"></script>
-  <script src="assets/vues/mails.js?v=20261123k"></script>
-  <script src="assets/vues/rubriques.js?v=20261123k"></script>
-  <script src="assets/vues/recherche.js?v=20261123k"></script>
-  <script src="assets/vues/planning.js?v=20261123k"></script>
-  <script src="assets/vues/reglages.js?v=20261123k"></script>
-  <script src="assets/vues/devis.js?v=20261123k"></script>
-  <script src="assets/app.js?v=20261123k"></script>
+  <script src="assets/marque.js?v=20261123l"></script>
+  <script src="assets/demo.js?v=20261123l"></script>
+  <script src="assets/studio.js?v=20261123l"></script>
+  <script src="assets/vues/communs.js?v=20261123l"></script>
+  <script src="assets/vues/lili.js?v=20261123l"></script>
+  <script src="assets/vues/calendrier.js?v=20261123l"></script>
+  <script src="assets/vues/publication.js?v=20261123l"></script>
+  <script src="assets/vues/client.js?v=20261123l"></script>
+  <script src="assets/vues/direct.js?v=20261123l"></script>
+  <script src="assets/vues/mails.js?v=20261123l"></script>
+  <script src="assets/vues/rubriques.js?v=20261123l"></script>
+  <script src="assets/vues/recherche.js?v=20261123l"></script>
+  <script src="assets/vues/planning.js?v=20261123l"></script>
+  <script src="assets/vues/reglages.js?v=20261123l"></script>
+  <script src="assets/vues/devis.js?v=20261123l"></script>
+  <script src="assets/app.js?v=20261123l"></script>
 </body>
 </html>

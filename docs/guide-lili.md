@@ -14,8 +14,11 @@ Ce guide suit une semaine de travail. Les touches du clavier sont rappelées en 
 1. Va sur l'adresse du studio, entre ton e-mail et ton mot de passe (ou « Continuer avec Google »).
 2. Tape le code à 6 chiffres affiché par ton application d'authentification (celle de l'iPhone, dans
    Réglages › Mots de passe, ou Google Authenticator). La première fois, le studio te montre un QR code à scanner.
-3. Le code est redemandé après 30 minutes sans rien faire. Le bouton **Verrouiller** (en bas à gauche) le redemande
-   tout de suite : pratique si tu quittes ton bureau. Au bout de 5 codes faux, le studio te déconnecte. Mot de passe oublié, ou téléphone du code perdu : écris à Antonin,
+3. Laisse cochée « Faire confiance à cet appareil 30 jours » sur ton ordinateur et ton téléphone : le code n'y est
+   plus redemandé pendant 30 jours (décoche-la sur un ordinateur qui n'est pas à toi : le code revient alors après
+   30 minutes sans rien faire). Un appareil resté 30 jours sans servir doit retaper mot de passe et code. Le bouton
+   **Verrouiller** (en bas à gauche) redemande le code tout de suite ; « Oublier cet appareil » et « Déconnecter tous
+   mes autres appareils » sont dans Réglages › Sécurité (téléphone perdu, par exemple). Au bout de 5 codes faux, le studio te déconnecte. Mot de passe oublié, ou téléphone du code perdu : écris à Antonin,
    qui te renvoie un lien.
 
 **Installer l'application** : sur l'ordinateur, avec Chrome ou Edge, le bouton « Installer l'application » en bas à

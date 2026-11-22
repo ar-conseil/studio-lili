@@ -115,8 +115,11 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   (écrans visibles sans base ; `?ecran=code|enrolement|nouveau|app` pour en voir un).
 - Entrée comme Evoalys : e-mail + mot de passe (ou lien par e-mail), puis **code à 6 chiffres** (Supabase MFA TOTP,
   QR code à scanner à la première connexion). Code obligatoire pour Lili et les invités, facultatif pour les clients
-  (`app_metadata.role = "client"`, posé côté serveur). Code redemandé après 30 min d'absence ou d'inactivité, et par
-  « Verrouiller » ; 5 codes faux = déconnexion. Les politiques RLS de Lili exigeront `aal2` (étape 3).
+  (`app_metadata.role = "client"`, posé côté serveur). **Appareil de confiance** (22/11/2026, case
+  cochée par défaut sous le code, pour tous les rôles) : plus de code sur cet appareil et ce compte pendant 30 jours
+  (`studio.confiance` dans localStorage) ; sinon code redemandé après 30 min d'absence. « Verrouiller », « Changer de
+  compte » et « Oublier cet appareil » (Réglages > Sécurité, `#compte`) retirent la confiance. Côté serveur,
+  `sessions_inactivity_timeout` = 720 h : une session inutilisée 30 jours expire. 5 codes faux = déconnexion. Les politiques RLS de Lili exigeront `aal2` (étape 3).
 - Application installable (`manifest.webmanifest`, `sw.js` sans cache) : bouton « Installer l'application » (Chrome,
   Edge : bureau du Mac ou du PC), astuce affichée sur iPhone (Partager › Sur l'écran d'accueil) et Safari Mac
   (Fichier › Ajouter au Dock).

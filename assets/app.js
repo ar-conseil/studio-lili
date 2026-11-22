@@ -1,7 +1,9 @@
 /* Studio Lili — entrée de l'application et coquille.
    Entrée comme Evoalys : e-mail et mot de passe (ou lien par e-mail), puis code à 6 chiffres d'une application
-   d'authentification (Supabase MFA, TOTP). Le code est redemandé à chaque ouverture de l'app après 30 minutes
-   d'absence, et après 30 minutes sans activité ; « Verrouiller » le redemande tout de suite.
+   d'authentification (Supabase MFA, TOTP). Appareil de confiance (coché par défaut) : le code n'est plus redemandé
+   pendant 30 jours sur cet appareil, pour ce compte ; sinon il l'est après 30 minutes d'absence ou d'inactivité.
+   « Verrouiller », « Changer de compte » et « Oublier cet appareil » (Réglages > Sécurité) retirent la confiance.
+   Côté serveur, une session inutilisée 30 jours expire (sessions_inactivity_timeout) : mot de passe et code à nouveau.
    Code obligatoire pour Lili et les invités ; facultatif pour les clients (app_metadata.role = "client").
    Sans assets/config.js rempli (projet Supabase pas encore créé) : aperçu, les écrans s'enchaînent sans rien enregistrer.
    Pour voir un écran en aperçu : ?ecran=code, ?ecran=enrolement, ?ecran=nouveau, ?ecran=app. */
@@ -16,11 +18,13 @@
   var VERROU_MS = 30 * 60000;              // absence ou inactivité au-delà de laquelle le code est redemandé
   var ESSAIS_MAX = 5;                      // codes faux avant déconnexion complète
   var CLE_ACTIVITE = "studio.activite";    // dernière activité, en millisecondes (cet appareil seulement)
+  var CLE_CONFIANCE = "studio.confiance";  // appareil de confiance : {u: compte, jusqua: ms}
+  var CONFIANCE_MS = 30 * 86400000;        // durée de la confiance après un code juste
 
   var db = APERCU ? null : window.supabase.createClient(CFG.url, CFG.cle, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
   var $ = function (id) { return document.getElementById(id); };
   var entree = $("entree"), coquille = $("coquille"), message = $("message");
-  var etat = { facteur: null, essais: 0, ouvert: false };
+  var etat = { facteur: null, essais: 0, ouvert: false, compte: null };
   // Arrivée par le lien d'une invitation : lu avant que supabase-js n'efface l'adresse, pour faire choisir un mot de passe
   var INVITATION = /(^|[#&?])type=invite(&|$)/.test(location.hash + "&" + location.search.slice(1));
 
@@ -40,6 +44,18 @@
   function occupe(form, oui) { var b = form.querySelector("button[type=submit]"); if (b) b.disabled = oui; }
   function noterActivite() { ecrire(CLE_ACTIVITE, String(Date.now())); }
   function absentDepuis() { var t = +lire(CLE_ACTIVITE) || 0; return Date.now() - t; }
+  // Appareil de confiance : valable pour un seul compte, jusqu'à une date ; sans stockage, pas de confiance
+  function confianceJusqua() {
+    var c; try { c = JSON.parse(lire(CLE_CONFIANCE) || "null"); } catch (e) { c = null; }
+    return c && c.u && c.u === etat.compte && +c.jusqua > Date.now() ? +c.jusqua : 0;
+  }
+  function accorderConfiance(caseId) {
+    var c = $(caseId);
+    if (c && c.checked && etat.compte) ecrire(CLE_CONFIANCE, JSON.stringify({ u: etat.compte, jusqua: Date.now() + CONFIANCE_MS }));
+    else oublierConfiance();
+  }
+  function oublierConfiance() { try { localStorage.removeItem(CLE_CONFIANCE); } catch (e) { /* rien à oublier */ } }
+  function verrouDu() { return etat.ouvert && !confianceJusqua() && absentDepuis() > VERROU_MS; }
   document.querySelectorAll("[data-marque]").forEach(function (n) { if (MARQUE[n.dataset.marque]) n.textContent = MARQUE[n.dataset.marque]; });
 
   // ---------- Saisie du code : un champ, six cases ----------
@@ -84,12 +100,14 @@
     return db.auth.getSession().then(function (r) {
       var session = r.data.session;
       if (!session) return vue("vue-connexion");
+      etat.compte = session.user.id;
       return Promise.all([db.auth.mfa.getAuthenticatorAssuranceLevel(), db.auth.mfa.listFactors()]).then(function (x) {
         var niveau = x[0].data || {}, facteurs = ((x[1].data || {}).totp || []).filter(function (f) { return f.status === "verified"; });
         etat.facteur = facteurs[0] || null;
         if (!etat.facteur) return codeExige(session.user) ? preparerEnrolement() : ouvrir();
         // Code demandé : pas encore saisi pour cette session, ou absence trop longue sur cet appareil
-        if (niveau.currentLevel !== "aal2" || absentDepuis() > VERROU_MS) return demanderCode();
+        // ou appareil de confiance expiré et absence trop longue
+        if (niveau.currentLevel !== "aal2" || (!confianceJusqua() && absentDepuis() > VERROU_MS)) return demanderCode();
         ouvrir();
       });
     }).catch(function (e) { vue("vue-connexion"); dire("Connexion impossible : " + e.message, true); });
@@ -104,7 +122,7 @@
     var fin = function () { enCours = false; };
     if (APERCU) {
       // Aperçu : tout code à 6 chiffres est accepté, sauf 000000 pour montrer une erreur
-      setTimeout(function () { fin(); if (v === "000000") { code.erreur(); dire("Code incorrect. Réessayez.", true); code.vider(); } else { code.ok(); ouvrir(); } }, 250);
+      setTimeout(function () { fin(); if (v === "000000") { code.erreur(); dire("Code incorrect. Réessayez.", true); code.vider(); } else { code.ok(); accorderConfiance("code-confiance"); ouvrir(); } }, 250);
       return;
     }
     db.auth.mfa.challengeAndVerify({ factorId: etat.facteur.id, code: v }).then(function (r) {
@@ -117,7 +135,7 @@
         dire("Code incorrect. Il change toutes les 30 secondes : prenez le plus récent.", true);
         return;
       }
-      etat.essais = 0; code.ok(); ouvrir();
+      etat.essais = 0; code.ok(); accorderConfiance("code-confiance"); ouvrir();
     }).catch(function (e) { fin(); dire(e.message, true); });
   }
 
@@ -142,11 +160,11 @@
   }
   function activerCode(v) {
     if (enCours) return; enCours = true;
-    if (APERCU) { setTimeout(function () { enCours = false; codeEnrolement.ok(); ouvrir(); }, 250); return; }
+    if (APERCU) { setTimeout(function () { enCours = false; codeEnrolement.ok(); accorderConfiance("enrolement-confiance"); ouvrir(); }, 250); return; }
     db.auth.mfa.challengeAndVerify({ factorId: etat.facteur.id, code: v }).then(function (r) {
       enCours = false;
       if (r.error) { codeEnrolement.erreur(); codeEnrolement.vider(); dire("Code incorrect. Vérifiez l'heure de votre téléphone et prenez le plus récent.", true); return; }
-      codeEnrolement.ok(); ouvrir();
+      codeEnrolement.ok(); accorderConfiance("enrolement-confiance"); ouvrir();
     }).catch(function (e) { enCours = false; dire(e.message, true); });
   }
 
@@ -157,17 +175,18 @@
     var dejaOuvert = etat.studio; etat.ouvert = true; etat.studio = true;
     document.documentElement.classList.remove("verrouille");
     if (dejaOuvert) return;   // simple déverrouillage : le studio est resté chargé
-    window.Studio.ouvrir({ db: db, demo: APERCU, coquille: coquille, verrouiller: verrouiller, quitter: quitter, peutVerrouiller: function () { return APERCU || !!etat.facteur; } });
+    window.Studio.ouvrir({ db: db, demo: APERCU, coquille: coquille, verrouiller: verrouiller, quitter: quitter, peutVerrouiller: function () { return APERCU || !!etat.facteur; },
+      confiance: { jusqua: confianceJusqua, oublier: function () { oublierConfiance(); noterActivite(); } } });
   }
   function quitter() {
-    ecrire(CLE_ACTIVITE, "0"); etat.studio = false; window.Studio.fermer();
+    ecrire(CLE_ACTIVITE, "0"); oublierConfiance(); etat.studio = false; window.Studio.fermer();
     if (APERCU) return vue("vue-connexion");
     // Déconnexion : la page repart de zéro, rien de la session précédente ne reste en mémoire
     db.auth.signOut().catch(function () {}).then(function () { location.replace(location.pathname); });
   }
   function verrouiller() {
     if (!etat.ouvert) return;
-    ecrire(CLE_ACTIVITE, "0");
+    ecrire(CLE_ACTIVITE, "0"); oublierConfiance();   // verrouiller retire la confiance ; le code juste la redonne
     if (APERCU || etat.facteur) {
       // Rien ne reste par-dessus l'écran du code : fenêtres fermées, mail en cours de rédaction masqué (gardé)
       document.querySelectorAll("dialog[open]").forEach(function (d) { d.close(); });
@@ -179,8 +198,8 @@
     var dernier = 0;
     document.addEventListener(t, function () { var n = Date.now(); if (etat.ouvert && n - dernier > 20000) { dernier = n; noterActivite(); } }, { passive: true });
   });
-  setInterval(function () { if (etat.ouvert && absentDepuis() > VERROU_MS) verrouiller(); }, 30000);
-  document.addEventListener("visibilitychange", function () { if (!document.hidden && etat.ouvert && absentDepuis() > VERROU_MS) verrouiller(); });
+  setInterval(function () { if (verrouDu()) verrouiller(); }, 30000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && verrouDu()) verrouiller(); });
   $("btn-autre-compte").addEventListener("click", quitter);
 
   // ---------- La garde : anti-robot et anti-IA maison ----------

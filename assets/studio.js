@@ -799,7 +799,7 @@ window.Studio = (function () {
   // Thème choisi dans Réglages > Apparence (sinon celui de l'appareil)
   try { var theme = localStorage.getItem("studio-theme"); if (theme === "light" || theme === "dark") document.documentElement.setAttribute("data-theme", theme); } catch (x) { /* stockage indisponible */ }
   function ouvrir(o) {
-    X.db = o.db; X.demo = !!o.demo; X.quitter = o.quitter; X.verrouiller = o.verrouiller; X.peutVerrouiller = o.peutVerrouiller; X.coquille = o.coquille;
+    X.db = o.db; X.demo = !!o.demo; X.quitter = o.quitter; X.verrouiller = o.verrouiller; X.peutVerrouiller = o.peutVerrouiller; X.confiance = o.confiance || null; X.coquille = o.coquille;
     X.coquille.innerHTML = '<div class="squelette" role="status" aria-label="Chargement"><i class="s-titre"></i><div class="s-grille"><i></i><i></i><i></i></div></div>';
     var pret;
     if (X.demo) pret = charger();

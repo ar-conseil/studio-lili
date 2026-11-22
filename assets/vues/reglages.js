@@ -184,6 +184,24 @@
       el("p", { class: "aide", text: "Le brief du jour est préparé chaque matin à 6 h. Le plafond de dépenses se règle dans la console Anthropic (espace de travail « Studio Lili »)." })])]);
   }
 
+  // ---------- Appareil de confiance (cet appareil seulement) ----------
+  // Après un code juste, la case « Faire confiance à cet appareil 30 jours » évite de le retaper ici ; « Oublier »
+  // le redemande dès maintenant. Une session inutilisée 30 jours expire de toute façon côté serveur.
+  function ligneConfiance() {
+    var zone = el("div", { class: "pile-serree" });
+    function peindre() {
+      zone.textContent = "";
+      var c = St.X.confiance, jusqua = c && c.jusqua();
+      if (!jusqua) { zone.appendChild(el("p", { class: "aide", text: "Cet appareil n'est pas de confiance : le code est redemandé après 30 minutes d'absence. Cochez « Faire confiance à cet appareil 30 jours » à votre prochain code pour ne plus le retaper ici." })); return; }
+      zone.appendChild(el("p", { class: "phrase" }, [St.icone("valider"), " Cet appareil est de confiance jusqu'au " + St.fmt(new Date(jusqua).toISOString(), { day: "numeric", month: "long" }) + " : le code n'y est pas redemandé d'ici là."]));
+      zone.appendChild(el("div", {}, [el("button", { type: "button", class: "btn-texte", text: "Oublier cet appareil", onclick: function () {
+        c.oublier(); St.signaler("Appareil oublié : le code sera redemandé après 30 minutes d'absence"); peindre();
+      } })]));
+    }
+    peindre();
+    return zone;
+  }
+
   // ---------- Sécurité ----------
   function ongletSecurite() {
     var mdp = el("input", { type: "password", autocomplete: "new-password", minlength: 10, placeholder: "10 caractères au moins", "aria-label": "Nouveau mot de passe" });
@@ -191,7 +209,7 @@
     if (!St.X.demo) {
       St.X.db.auth.mfa.listFactors().then(function (r) {
         var f = ((r.data && r.data.totp) || []).filter(function (x) { return x.status === "verified"; });
-        code.textContent = f.length ? "Activé : application d'authentification reliée le " + St.fmt(f[0].created_at, { day: "numeric", month: "long", year: "numeric" }) + ". Le code est redemandé après 30 minutes d'absence." : "Pas encore activé.";
+        code.textContent = f.length ? "Activé : application d'authentification reliée le " + St.fmt(f[0].created_at, { day: "numeric", month: "long", year: "numeric" }) + "." : "Pas encore activé.";
       });
       St.X.db.auth.getUser().then(function (r) { var u = r.data && r.data.user; if (u && u.last_sign_in_at) derniere.textContent = "Dernière connexion : " + St.fmt(u.last_sign_in_at, { weekday: "long", day: "numeric", month: "long" }) + " à " + St.hm(u.last_sign_in_at) + "."; });
       St.X.db.from("push_abonnements").select("endpoint, appareil, cree_le").then(function (r) {
@@ -204,8 +222,8 @@
       });
     } else code.textContent = "Démonstration : le code à 6 chiffres est demandé à l'entrée.";
     return el("div", { class: "pile" }, [carteVigie(),
-      carte("cadenas", "Code à 6 chiffres", null, [code, el("div", { class: "actions-ligne", style: { "justify-content": "flex-start" } }, [el("button", { type: "button", class: "btn-texte", text: "Verrouiller maintenant", onclick: function () { if (St.X.verrouiller) St.X.verrouiller(); } })])]),
-      carte("cadenas", "Mot de passe", "Changez-le quand vous voulez ; les autres appareils restent connectés jusqu'à leur prochain code.", [el("div", { class: "champ-mdp" }, [mdp]),
+      carte("cadenas", "Code à 6 chiffres", null, [code, ligneConfiance(), el("div", { class: "actions-ligne", style: { "justify-content": "flex-start" } }, [el("button", { type: "button", class: "btn-texte", text: "Verrouiller maintenant", onclick: function () { if (St.X.verrouiller) St.X.verrouiller(); } })])]),
+      carte("cadenas", "Mot de passe", "Changez-le quand vous voulez. Les autres appareils restent connectés : pour les fermer, « Déconnecter tous mes autres appareils » ci-dessous.", [el("div", { class: "champ-mdp" }, [mdp]),
         el("div", {}, [el("button", { type: "button", class: "btn-plein", onclick: function () {
           if (mdp.value.length < 10) { mdp.focus(); return St.signaler("10 caractères au moins", true); }
           if (St.X.demo) { mdp.value = ""; return St.signaler("Démonstration : rien n'est changé"); }
@@ -270,6 +288,7 @@
         var tous = (r.data && r.data.totp) || [], actif = tous.filter(function (f) { return f.status === "verified"; })[0];
         if (actif) {
           zone2fa.appendChild(el("p", { class: "phrase" }, [St.icone("valider"), " Activée depuis le " + St.fmt(actif.created_at, { day: "numeric", month: "long", year: "numeric" }) + " : votre code vous est demandé à chaque connexion. Sans lui, personne n'entre dans votre espace, même avec votre mot de passe."]));
+          zone2fa.appendChild(ligneConfiance());
           zone2fa.appendChild(el("div", {}, [el("button", { type: "button", class: "btn-texte danger", text: "Désactiver la double authentification", onclick: function () {
             A.confirmer("Désactiver la double authentification ?", "Votre mot de passe suffira de nouveau pour entrer.", "Désactiver", function () {
               St.X.db.auth.mfa.unenroll({ factorId: actif.id }).then(function (x) { St.signaler(x.error ? x.error.message : "Double authentification désactivée", !!x.error); dessiner2fa(); });

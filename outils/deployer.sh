@@ -49,6 +49,7 @@ c = {
   "mailer_otp_exp": 86400,                     # liens valables 24 h (invitation, connexion)
   "password_hibp_enabled": True,               # mots de passe déjà fuités sur internet refusés (Have I Been Pwned)
   "rate_limit_verify": 15, "rate_limit_otp": 10,   # tentatives de vérification et de code resserrées (par 5 min / heure)
+  "sessions_inactivity_timeout": 720,          # heures : une session inutilisée 30 jours expire (mot de passe et code à nouveau)
   # Modèles de Supabase (inutilisés tant que le crochet envoi-auth est actif : c'est lui qui rédige et envoie)
   "mailer_subjects_invite": "Votre espace avec Lili Rouzier",
   "mailer_templates_invite_content": "<p>Bonjour,</p><p>Lili Rouzier vous ouvre votre espace : calendrier, publications à valider, médiathèque et messages.</p><p><a href=\"{{ .ConfirmationURL }}\">Entrer dans mon espace</a></p><p>Vous choisirez votre mot de passe en arrivant.</p>",
