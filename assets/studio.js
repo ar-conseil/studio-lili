@@ -419,6 +419,53 @@ window.Studio = (function () {
   // ======================================================================
   // Coquille : barre latérale façon Notion, barre du haut, barre d'onglets sur téléphone
   // ======================================================================
+  // Glisser un client dans la barre latérale pour changer l'ordre (souris : dès qu'on bouge de 6 px ; doigt : appui
+  // de 0,35 s). L'ordre est renuméroté pour tous les clients non archivés, comme les flèches de la page Clients.
+  function glisserClients(nav) {
+    var etat = null;
+    var liens = function () { return Array.prototype.slice.call(nav.children); };
+    var finir = function (ev) {
+      if (!etat) return;
+      var e = etat; etat = null; clearTimeout(e.minuteur);
+      document.removeEventListener("pointermove", bouger, true); document.removeEventListener("pointerup", finir, true); document.removeEventListener("pointercancel", finir, true);
+      if (!e.actif) return;
+      e.lien.classList.remove("glisse"); nav.classList.remove("en-glisse"); e.lien.style.transform = "";
+      // Le clic qui suit le lâcher ne doit pas ouvrir le client
+      var bloque = function (c) { c.preventDefault(); c.stopPropagation(); nav.removeEventListener("click", bloque, true); };
+      nav.addEventListener("click", bloque, true);
+      setTimeout(function () { nav.removeEventListener("click", bloque, true); }, 400);
+      var ordre = liens().map(function (a) { return a.dataset.espace; });
+      var depart = espacesActifs().map(function (x) { return x.id; });
+      if (ordre.join() === depart.join()) return;
+      Promise.all(ordre.map(function (id, n) { var x = espace(id); return !x || x.ordre === n + 1 ? null : maj("espaces", id, { ordre: n + 1 }); }))
+        .then(function () { dessinerCoquille(); signaler("Ordre des clients enregistré"); }, function () { dessinerCoquille(); });
+    };
+    var demarrer = function () { etat.actif = true; etat.lien.classList.add("glisse"); nav.classList.add("en-glisse"); if (navigator.vibrate) try { navigator.vibrate(10); } catch (x) {} };
+    var bouger = function (ev) {
+      if (!etat) return;
+      var dy = ev.clientY - etat.y;
+      if (!etat.actif) {
+        if (etat.tactile) { if (Math.abs(dy) > 8 || Math.abs(ev.clientX - etat.x) > 8) { clearTimeout(etat.minuteur); etat = null; } return; }
+        if (Math.abs(dy) < 6) return;
+        demarrer();
+      }
+      ev.preventDefault();
+      var l = etat.lien, autres = liens().filter(function (a) { return a !== l; });
+      var cible = autres.filter(function (a) { var r = a.getBoundingClientRect(); return ev.clientY > r.top + r.height / 2; }).length;
+      var avant = autres[cible] || null;
+      if (l.nextElementSibling !== avant || (avant === null && nav.lastElementChild !== l)) { nav.insertBefore(l, avant); }
+    };
+    nav.addEventListener("pointerdown", function (ev) {
+      var a = ev.target.closest(".cote-clients > a.cote-lien");
+      if (!a || ev.button > 0 || ev.target.closest(".cote-sous")) return;
+      etat = { lien: a, y: ev.clientY, x: ev.clientX, actif: false, tactile: ev.pointerType !== "mouse" };
+      if (etat.tactile) etat.minuteur = setTimeout(function () { if (etat) demarrer(); }, 350);
+      document.addEventListener("pointermove", bouger, true); document.addEventListener("pointerup", finir, true); document.addEventListener("pointercancel", finir, true);
+    });
+    // Pas de glisser natif du lien (image fantôme du navigateur)
+    nav.addEventListener("dragstart", function (ev) { ev.preventDefault(); });
+    nav.addEventListener("touchmove", function (ev) { if (etat && etat.actif) ev.preventDefault(); }, { passive: false });
+  }
   var sousFermes = {};   // clients dont Lili a replié les rubriques dans la barre latérale
   function lienCote(href, nom, ic, actif, compte, touche) {
     var a = el("a", { href: href, class: "cote-lien", "aria-current": actif ? "page" : null, title: touche ? nom + " (touche " + touche + ")" : null }, [
@@ -457,6 +504,7 @@ window.Studio = (function () {
       el("button", { type: "button", class: "btn-icone cote-ajout", "aria-label": "Nouveau client", title: "Nouveau client", onclick: function () { menu(false); if (window.Studio.nouveauClient) window.Studio.nouveauClient(); } }, [icone("plus")])]), el("nav", { class: "cote-clients", "aria-label": "Clients" }, espacesActifs().map(function (e, i) {
       var actif = r.nom === "client" && r.param === e.slug;
       var a = lienCote("#" + e.slug, e.nom, el("i", { class: "pastille-client", style: { "--c": e.couleur } }), actif, null, i < 9 ? String(i + 1) : null);
+      a.dataset.espace = e.id;
       // Un second clic sur le client ouvert replie ses rubriques ; un clic de plus les rouvre.
       var ouvert = actif && !sousFermes[e.slug];
       if (actif) a.setAttribute("aria-expanded", ouvert ? "true" : "false");
@@ -471,6 +519,7 @@ window.Studio = (function () {
       });
       return a;
     }))] : [];
+    if (lili && clients[1]) glisserClients(clients[1]);
     var nonLues = S.notifications.filter(function (n) { return !n.lue_le && (!S.moi || n.personne_id === S.moi.id); }).length;
     var bas = el("div", { class: "cote-bas" }, [
       X.demo ? voirComme() : null,

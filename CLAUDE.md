@@ -145,7 +145,8 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   du client est le planning. Aushopping Noyelles réglé sur `planning` le 22/11/2026.
   Kanban : seules les colonnes non vides (plus « À valider ») ; galerie : à venir d'abord, puis passées, sans visuel =
   carte de la légende ; listes longues par paquets (« Afficher n de plus »). Téléphone : date sous le nom, galerie à 2 colonnes.
-- Barre latérale : un second clic sur le client ouvert replie ses rubriques (`sousFermes` dans studio.js).
+- Barre latérale : un second clic sur le client ouvert replie ses rubriques (`sousFermes` dans studio.js) ; on glisse un
+  client pour changer l'ordre (`glisserClients` : souris dès 6 px, doigt après un appui de 0,35 s ; renumérote `espaces.ordre`).
 - Couleur de marque lisible : `Studio.foncee(couleur)` fonce une couleur trop claire jusqu'au contraste AA sous du texte
   blanc (variable CSS `--cf`, utilisée pour les boutons et pastilles ; `--c` reste la couleur d'origine pour les teintes).
 - `outils/notion-analyse.mjs` : lit l'export Notion (`~/.lili/notion-export/`) et décrit sa STRUCTURE (bases, colonnes,
