@@ -121,7 +121,7 @@
       });
       M.suite = null; return Promise.resolve();
     }
-    M.charge = true; M.erreur = "";
+    M.charge = true; M.erreur = ""; M.chargeLe = Date.now(); M.hashCharge = location.hash;
     var p = M.boites ? Promise.resolve() : appel({ action: "etat" }).then(function (r) { M.boites = r.boites || []; });
     return p.then(function () {
       if (!M.boites.length) return;
@@ -146,7 +146,8 @@
     var q = (r && r.query) || {};
     if (q.message) { St.signaler(q.message, /impossible|refusée|expiré/i.test(q.message)); history.replaceState(null, "", "#mails"); M.boites = null; M.dossiers = []; }
     var page = el("div", { class: "vue-mails", id: "vue-mails" });
-    if (!sansCharger && !M.charge) { charger().then(redessiner); }
+    // Gmail n'est interrogé qu'en arrivant sur la page (ou après une minute), pas à chaque rafraîchissement du studio
+    if (!sansCharger && !M.charge && (M.hashCharge !== location.hash || Date.now() - (M.chargeLe || 0) > 60000)) { charger().then(redessiner); }
     var vac = St.vacancesActives();
     page.appendChild(St.entete(null, "Mails", M.boites && M.boites[0] ? M.boites[0].email + (St.X.demo ? " (démonstration)" : "") : null,
       M.boites && M.boites.length ? [

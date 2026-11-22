@@ -74,6 +74,7 @@
       var c = el(o.multi ? "textarea" : "input", { type: o.multi ? null : "text", class: o.classe || "", rows: o.rows || null, placeholder: o.placeholder || "", value: o.multi ? null : (p[cle] || ""), "aria-label": o.label, maxlength: o.max || null });
       if (o.multi) c.value = p[cle] || "";
       var minut = null;
+      c.dataset.auto = "1";   // enregistré tout seul : ne retient pas le temps réel
       c.addEventListener("input", function () { p[cle] = c.value; if (o.compteur) o.compteur(); clearTimeout(minut); minut = setTimeout(function () { enregistrer(o.vers ? o.vers(c.value) : (function () { var x = {}; x[cle] = c.value; return x; })(), false); }, 600); dessinerApercuLeger(); });
       return c;
     }
@@ -125,6 +126,7 @@
       var note = (S.notes || []).filter(function (n) { return n.publication_id === p.id; })[0];
       var noteChamp = el("textarea", { rows: 3, placeholder: "Note pour vous seule (jamais visible du client)", "aria-label": "Note interne" }); noteChamp.value = note ? note.contenu : "";
       var mn = null;
+      noteChamp.dataset.auto = "1";
       noteChamp.addEventListener("input", function () { clearTimeout(mn); mn = setTimeout(function () {
         var t = noteChamp.value.trim();
         if (note) { if (t) St.maj("notes_internes", note.id, { contenu: t }); else St.supprimer("notes_internes", { id: note.id }).then(function () { note = null; }); }
@@ -257,9 +259,10 @@
           el("div", { class: "com-reponses" }, reponses.map(function (x) { return message(x, false); })),
           el("div", { class: "com-actions" }, [
             el("button", { type: "button", class: "btn-texte", text: "Répondre", onclick: function (ev) { repondre(c, ev.target.closest(".com")); } }),
-            el("button", { type: "button", class: "btn-texte", text: c.resolu ? "Rouvrir" : "Résolu", onclick: function () {
-              St.maj("commentaires", c.id, { resolu: !c.resolu }).then(function () { dessinerFil(); dessinerApercu(); });
-            } })
+            // « Résolu » : Lili sur tout le fil, un client sur ses propres commentaires (la base refuse le reste)
+            lili || (S.moi && c.auteur_id === S.moi.id) ? el("button", { type: "button", class: "btn-texte", text: c.resolu ? "Rouvrir" : "Résolu", onclick: function () {
+              St.maj("commentaires", c.id, { resolu: !c.resolu }).then(function () { dessinerFil(); dessinerApercu(); }, function () { /* message déjà affiché */ });
+            } }) : null
           ])
         ]));
       });
@@ -309,7 +312,7 @@
 
     var e2 = St.espace(p.espace_id) || {};
     page.appendChild(el("header", { class: "pub-tete" }, [
-      el("a", { class: "retour-client", href: lili ? "#" + e2.slug : "#", onclick: function (ev) { if (history.length > 1) { ev.preventDefault(); history.back(); } } }, [St.icone("retour"), St.logoEspace(e2, "petit"), el("span", { text: e2.nom })]),
+      el("a", { class: "retour-client", href: lili ? "#" + e2.slug : "#", onclick: function (ev) { ev.preventDefault(); St.revenir(lili ? "#" + e2.slug : "#"); } }, [St.icone("retour"), St.logoEspace(e2, "petit"), el("span", { text: e2.nom })]),
       el("div", { class: "presence", id: "presence-pub", "aria-live": "polite" }),
       St.pastilleStatut(p.statut)
     ]));

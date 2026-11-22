@@ -152,18 +152,25 @@
     noterActivite();
     entree.hidden = true; coquille.hidden = false;
     var dejaOuvert = etat.studio; etat.ouvert = true; etat.studio = true;
+    document.documentElement.classList.remove("verrouille");
     if (dejaOuvert) return;   // simple déverrouillage : le studio est resté chargé
-    window.Studio.ouvrir({ db: db, demo: APERCU, coquille: coquille, verrouiller: verrouiller, quitter: quitter });
+    window.Studio.ouvrir({ db: db, demo: APERCU, coquille: coquille, verrouiller: verrouiller, quitter: quitter, peutVerrouiller: function () { return APERCU || !!etat.facteur; } });
   }
   function quitter() {
     ecrire(CLE_ACTIVITE, "0"); etat.studio = false; window.Studio.fermer();
     if (APERCU) return vue("vue-connexion");
-    db.auth.signOut();
+    // Déconnexion : la page repart de zéro, rien de la session précédente ne reste en mémoire
+    db.auth.signOut().catch(function () {}).then(function () { location.replace(location.pathname); });
   }
   function verrouiller() {
     if (!etat.ouvert) return;
     ecrire(CLE_ACTIVITE, "0");
-    if (APERCU || etat.facteur) demanderCode("Code, s'il vous plaît");
+    if (APERCU || etat.facteur) {
+      // Rien ne reste par-dessus l'écran du code : fenêtres fermées, mail en cours de rédaction masqué (gardé)
+      document.querySelectorAll("dialog[open]").forEach(function (d) { d.close(); });
+      document.documentElement.classList.add("verrouille");
+      demanderCode("Code, s'il vous plaît");
+    }
   }
   ["pointerdown", "keydown", "scroll", "touchstart"].forEach(function (t) {
     var dernier = 0;

@@ -25,13 +25,22 @@ Deno.serve(async (req) => {
   if (m?.role !== "client") return json({ erreur: "ce devis n'est pas dans votre espace" }, 403);
   if (d.statut !== "envoye") return json({ erreur: d.statut === "accepte" ? "ce devis est déjà signé" : "ce devis n'est pas à signer" }, 409);
   if (d.valable_jusque && d.valable_jusque < auj()) return json({ erreur: "ce devis a expiré : demandez-en un nouveau à Lili" }, 409);
+  // Un client qui a activé son code à 6 chiffres doit l'avoir saisi pour signer (comme pour lire son espace)
+  if (a.aal !== "aal2") {
+    const { data: f } = await db.auth.admin.mfa.listFactors({ userId: a.id }).catch(() => ({ data: null }));
+    if ((f?.factors ?? []).some((x: any) => x.status === "verified")) return json({ erreur: "saisissez d'abord votre code à 6 chiffres" }, 403);
+  }
   const email = String(a.personne?.email ?? "").trim().toLowerCase();
   if (!email) return json({ erreur: "votre compte n'a pas d'adresse e-mail" }, 400);
 
   // 1. Le code : 6 chiffres, envoyé par e-mail, gardé seulement sous forme d'empreinte
   if (b.action === "code") {
-    const { data: deja } = await db.from("devis_codes").select("cree_le").eq("devis_id", d.id).eq("personne_id", a.id).maybeSingle();
+    const { data: deja } = await db.from("devis_codes").select("cree_le, envois, envois_depuis").eq("devis_id", d.id).eq("personne_id", a.id).maybeSingle();
     if (deja && Date.now() - Date.parse(deja.cree_le) < 45000) return json({ erreur: "un code vient de partir : attendez une minute avant d'en demander un autre" }, 429);
+    // Au plus 5 codes par heure pour un même devis
+    const dansLHeure = deja && Date.now() - Date.parse(deja.envois_depuis) < 3600000;
+    if (dansLHeure && deja.envois >= 5) return json({ erreur: "trop de codes demandés : réessayez dans une heure" }, 429);
+    const envois = dansLHeure ? deja.envois + 1 : 1, envoisDepuis = dansLHeure ? deja.envois_depuis : new Date().toISOString();
     const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1000000).padStart(6, "0");
     const { data: e } = await db.from("espaces").select("nom, couleur").eq("id", d.espace_id).maybeSingle();
     const envoye = await envoyerDepuisLili(db, email, `Votre code de signature : ${code}`,
@@ -41,7 +50,7 @@ Deno.serve(async (req) => {
         bouton: "Revenir à mon espace", lien: undefined, pied: "Si vous n'avez rien demandé, ignorez ce message : rien n'est signé sans ce code." }))
       .catch((x) => { console.error("signer-devis : e-mail", (x as Error).message); return false; });
     if (!envoye) return json({ erreur: "le code n'a pas pu partir par e-mail : prévenez Lili (rubrique Messages)" }, 503);
-    await db.from("devis_codes").upsert({ devis_id: d.id, personne_id: a.id, code_hash: await sha(d.id + ":" + code), email, expire_le: new Date(Date.now() + 10 * 60000).toISOString(), essais: 0, cree_le: new Date().toISOString() },
+    await db.from("devis_codes").upsert({ devis_id: d.id, personne_id: a.id, code_hash: await sha(d.id + ":" + code), email, expire_le: new Date(Date.now() + 10 * 60000).toISOString(), essais: 0, cree_le: new Date().toISOString(), envois, envois_depuis: envoisDepuis },
       { onConflict: "devis_id,personne_id" });
     return json({ ok: true, email: masque(email) });
   }
@@ -50,10 +59,12 @@ Deno.serve(async (req) => {
   const { data: c } = await db.from("devis_codes").select("*").eq("devis_id", d.id).eq("personne_id", a.id).maybeSingle();
   if (!c) return json({ erreur: "demandez d'abord votre code par e-mail" }, 400);
   if (Date.parse(c.expire_le) < Date.now()) return json({ erreur: "ce code a expiré : demandez-en un nouveau" }, 400);
-  if (c.essais >= 5) return json({ erreur: "trop d'essais : demandez un nouveau code" }, 429);
+  // L'essai est compté avant la comparaison, en une seule opération dans la base : des requêtes simultanées ne passent pas
+  const { data: essai } = await db.rpc("devis_prendre_essai", { p_devis: d.id, p_personne: a.id });
+  if (essai == null) return json({ erreur: "trop d'essais : demandez un nouveau code" }, 429);
   if (await sha(d.id + ":" + String(b.code ?? "").replace(/\D/g, "")) !== c.code_hash) {
-    await db.from("devis_codes").update({ essais: c.essais + 1 }).eq("devis_id", d.id).eq("personne_id", a.id);
-    return json({ erreur: `code incorrect (${4 - c.essais} essai${4 - c.essais > 1 ? "s" : ""} restant${4 - c.essais > 1 ? "s" : ""})` }, 400);
+    const reste = 5 - Number(essai);
+    return json({ erreur: reste > 0 ? `code incorrect (${reste} essai${reste > 1 ? "s" : ""} restant${reste > 1 ? "s" : ""})` : "code incorrect : demandez un nouveau code" }, 400);
   }
   const verifieLe = new Date().toISOString();
   const nom = String(b.nom ?? "").trim().slice(0, 120), signature = String(b.signature ?? "");

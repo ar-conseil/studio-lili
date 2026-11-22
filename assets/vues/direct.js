@@ -30,7 +30,8 @@
     if (St.X.demo || !St.X.db || !S.moi) return;
     if (P.id === pubId && P.canal) { P.canal.track({ id: S.moi.id, nom: S.moi.nom || "", role: S.role, image: image || 1 }); setTimeout(peindre, 0); return; }
     quitter(); P.id = pubId;
-    P.canal = St.X.db.channel("publication:" + pubId, { config: { presence: { key: S.moi.id } } });
+    // Canal privé : la base ne l'ouvre qu'à qui peut lire la publication (politiques sur realtime.messages)
+    P.canal = St.X.db.channel("publication:" + pubId, { config: { private: true, presence: { key: S.moi.id } } });
     P.canal.on("presence", { event: "sync" }, function () { P.etat = P.canal.presenceState(); peindre(); });
     P.canal.on("broadcast", { event: "frappe" }, function (m) {
       var x = m.payload || {}; if (!x.id) return;

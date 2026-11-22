@@ -7,8 +7,11 @@
   function aValider() { return St.publicationsVisibles().filter(function (p) { return p.statut === "a-valider"; }).sort(function (a, b) { return String(a.date_prevue || "9").localeCompare(String(b.date_prevue || "9")); }); }
 
   // Valider : petite animation nette, puis la suivante
+  var enCours = {};   // un double appui n'envoie qu'une validation
   St.valider = function (p, apres) {
-    return St.repondre(p.id, "valide").then(function () {
+    if (enCours[p.id]) return Promise.resolve();
+    enCours[p.id] = true;
+    return St.repondre(p.id, "valide").finally(function () { delete enCours[p.id]; }).then(function () {
       var ok = el("div", { class: "validation-ok", "aria-hidden": "true" }, [el("span", {}, [St.icone("valider")])]);
       document.body.appendChild(ok); if (navigator.vibrate) navigator.vibrate(12);
       setTimeout(function () { ok.remove(); }, 900);

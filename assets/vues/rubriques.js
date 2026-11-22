@@ -127,11 +127,12 @@
     }
     var sauver = function (champs) { return St.enregistrer("briefs", Object.assign({ espace_id: e.id, modifie_le: maintenant() }, champs)).then(function () { St.signaler("Brief enregistré"); }); };
     var zones = CHAMPS_BRIEF.map(function (c) {
-      var t = texte(b && b[c[0]], { lignes: 3, aide: c[2] }); t.addEventListener("change", function () { var o = {}; o[c[0]] = t.value.trim() || null; sauver(o); });
+      var t = texte(b && b[c[0]], { lignes: 3, aide: c[2] }); t.dataset.auto = "1"; t.addEventListener("change", function () { var o = {}; o[c[0]] = t.value.trim() || null; sauver(o); });
       return champ(c[1], t);
     });
     var enListe = function (nom, libelle, aide, json) {
       var v = b ? (json ? liste(b[nom]) : b[nom] || []) : [], t = texte(v.join("\n"), { lignes: 3, aide: aide });
+      t.dataset.auto = "1";
       t.addEventListener("change", function () { var o = {}; o[nom] = t.value.split(/\n|;/).map(function (x) { return x.trim(); }).filter(Boolean); sauver(o); });
       return champ(libelle, t, "Un par ligne");
     };

@@ -127,6 +127,17 @@ for (const f of ["inviter", "assistant", "messagerie", "brief-du-jour"]) {
   const r = await fetch(`${URL_BASE}/functions/v1/${f}`, { method: "POST", headers: { Authorization: `Bearer ${jeton}`, apikey: ANON, "Content-Type": "application/json" }, body: "{}" });
   verifier(r.status === 401 || r.status === 403, `la fonction « ${f} » lui est fermée`);
 }
+// Présence en direct : canaux privés, ouverts seulement sur les publications qu'il peut lire
+client.realtime.setAuth(jeton);
+const canal = (id) => new Promise((ok) => {
+  const c = client.channel("publication:" + id, { config: { private: true } });
+  const fin = (s) => { client.removeChannel(c); ok(s); };
+  const t = setTimeout(() => fin("TIMED_OUT"), 10000);
+  c.subscribe((s) => { if (s === "SUBSCRIBED" || s === "CHANNEL_ERROR" || s === "TIMED_OUT") { clearTimeout(t); fin(s); } });
+});
+verifier(await canal(PUBS.aValider) === "SUBSCRIBED", "il rejoint la présence en direct de sa publication");
+verifier(await canal(autrePub ? autrePub.id : PUBS.idee) !== "SUBSCRIBED", "il ne peut pas écouter la présence chez un autre client");
+verifier(await canal(PUBS.idee) !== "SUBSCRIBED", "il ne peut pas écouter la présence sur une idée interne");
 
 // ---------------------------------------------------------------------------
 // 3. Retour à l'état de départ (et pas de notification de recette pour Lili)

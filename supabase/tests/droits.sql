@@ -144,6 +144,8 @@ set local role authenticated;
 select essais.verifier((select count(*) from public.espaces) = 1, 'A ne voit que son espace');
 select essais.verifier(not exists (select 1 from public.espaces where slug = 'essai-b'), 'A ne voit pas l''espace B');
 select essais.verifier(not exists (select 1 from public.espaces where slug = 'essai-c'), 'A ne voit pas le nouveau client C');
+select essais.verifier((select count(*) from public.personnes where email like 'a_@essai.invalid') = 2, 'A voit sa collègue de la même marque');
+select essais.doit_echouer($q$select public.devis_prendre_essai('10000000-0000-4000-a000-00000000000a', '00000000-0000-4000-a000-0000000000a1')$q$, 'A compte lui-même ses essais de code');
 select essais.doit_echouer($q$insert into public.espaces (slug, nom) values ('essai-pirate', 'Pirate')$q$, 'un client crée un espace');
 select essais.verifier((select count(*) from public.publications where espace_id = '10000000-0000-4000-a000-00000000000b') = 0, 'A ne voit aucun post de B');
 select essais.verifier(not exists (select 1 from public.publications where id = '20000000-0000-4000-a000-000000000002'), 'A ne voit pas l''idée en création de son espace');
@@ -258,7 +260,15 @@ select essais.verifier((select count(*) from public.messages) = 0, 'l''invité n
 select essais.verifier((select count(*) from public.briefs) = 0, 'l''invité ne lit pas le brief');
 select essais.verifier((select count(*) from public.medias) = 0, 'l''invité ne voit pas la médiathèque');
 select essais.doit_echouer($q$insert into public.espaces (slug, nom) values ('essai-invite', 'Invité')$q$, 'un invité crée un espace');
+select essais.verifier((select count(*) from public.personnes where email like 'a_@essai.invalid') = 0, 'l''invité ne voit ni le nom ni l''adresse des clients');
+select essais.verifier(exists (select 1 from public.personnes where role = 'proprietaire'), 'l''invité voit Lili');
 reset role;
+
+-- ---------- Code de signature d'un devis : 5 essais au plus, comptés d'un seul geste ----------
+insert into public.devis_codes (devis_id, personne_id, code_hash, email, expire_le)
+  select id, '00000000-0000-4000-a000-0000000000a1', 'empreinte', 'a1@essai.invalid', now() + interval '10 minutes' from public.devis where objet = 'Devis B';
+select essais.verifier((select array_agg(public.devis_prendre_essai((select id from public.devis where objet = 'Devis B'), '00000000-0000-4000-a000-0000000000a1')) from generate_series(1, 7))
+  = array[1, 2, 3, 4, 5, null, null]::smallint[], 'le code accepte 5 essais, pas un de plus');
 
 select 'Droits vérifiés : tous les tests passent' as resultat;
 rollback;

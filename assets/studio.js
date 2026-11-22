@@ -66,6 +66,10 @@ window.Studio = (function () {
   }
   function uuid() { return crypto.randomUUID ? crypto.randomUUID() : "x".repeat(32).replace(/x/g, function () { return (Math.random() * 16 | 0).toString(16); }).replace(/^(.{8})(.{4})(.{4})(.{4})/, "$1-$2-4$3-$4-").slice(0, 36); }
   function initiales(nom) { return String(nom || "?").replace(/[^A-Za-zÀ-ÿ ]/g, "").split(/\s+/).filter(Boolean).slice(0, 2).map(function (m) { return m[0]; }).join("").toUpperCase(); }
+  // Retour arrière sans jamais quitter le site (arrivée directe par le lien d'un e-mail : on va à l'accueil)
+  var pagesVues = 0;
+  window.addEventListener("hashchange", function () { pagesVues++; });
+  function revenir(defaut) { if (pagesVues > 0) history.back(); else location.hash = defaut || "#"; }
   function enSaisie() { var a = document.activeElement; return !!(a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT" || a.isContentEditable)); }
 
   var ICONES = {
@@ -166,7 +170,7 @@ window.Studio = (function () {
   var TABLES_LILI = [["espaces_prive", "prives"], ["taches", "taches"], ["notes_internes", "notes"],
     ["comptes_mail", "boitesMail", "id, email, droits, derniere_erreur, cree_le"],
     ["securite_alertes", "alertesSecurite"], ["temps", "temps"], ["factures", "factures"], ["prospects", "prospects"], ["reglages", "reglages"], ["briefs_jour", "briefsJour"]];
-  function charger() {
+  function charger(seules) {
     if (X.demo) {
       if (!X.donneesDemo) {
         var d = window.DEMO_DONNEES();
@@ -186,16 +190,19 @@ window.Studio = (function () {
       return Promise.resolve();
     }
     var liste = TABLES.concat(estLili() ? TABLES_LILI : []);
+    if (seules) liste = liste.filter(function (t) { return seules.indexOf(t[0]) >= 0; });
     return Promise.all(liste.map(function (t) {
+      var n = generations[t[0]] = (generations[t[0]] || 0) + 1;   // seule la réponse la plus récente compte
       var q = X.db.from(t[0]).select(t[2] || "*");
       if (t[0] === "journal") q = q.order("cree_le", { ascending: false }).limit(300);
       if (t[0] === "notifications") q = q.order("cree_le", { ascending: false }).limit(100);
       if (t[0] === "messages") q = q.order("cree_le", { ascending: false }).limit(500);
       if (t[0] === "briefs_jour") q = q.order("jour", { ascending: false }).limit(7);
       if (t[0] === "securite_alertes") q = q.order("cree_le", { ascending: false }).limit(50);
-      return q.then(function (r) { if (r.error) throw r.error; S[t[1]] = r.data || []; });
+      return q.then(function (r) { if (r.error) throw r.error; if (n === generations[t[0]]) S[t[1]] = r.data || []; });
     })).then(signerMedias);
   }
+  var generations = {};
   // Fichiers privés : adresses signées (1 h), par lots. Celles qui expirent dans moins de 15 min sont renouvelées
   // (au rechargement et toutes les 5 min) ; les images déjà affichées reçoivent la nouvelle adresse sans redessiner.
   var DUREE_URL = 3600, MARGE_URL = 15 * 60 * 1000, expirations = {};
@@ -258,11 +265,16 @@ window.Studio = (function () {
       return Promise.resolve(ligne);
     }
     return X.db.from(table).update(champs).eq(cle, id).select().then(function (r) {
-      if (r.error) { if (ligne && avant) Object.assign(ligne, avant); signaler("Non enregistré : " + r.error.message, true); throw r.error; }
+      // La base ne renvoie pas d'erreur quand une règle refuse la modification : seulement aucune ligne
+      var err = r.error || (!(r.data || []).length ? { message: REFUS } : null);
+      if (err) { if (ligne && avant) { Object.assign(ligne, avant); repeindreApresEchec(); } signaler("Non enregistré : " + err.message, true); throw err; }
       if (ligne && r.data && r.data[0]) Object.assign(ligne, r.data[0]);
       return ligne;
     });
   }
+  var REFUS = "vous n'avez pas le droit de modifier cet élément";
+  // Après un échec, l'écran reprend l'état de la base ; jamais pendant une saisie (le texte tapé reste sous les yeux)
+  function repeindreApresEchec() { setTimeout(function () { if (X.demarre && !enSaisie()) dessiner(false); }, 0); }
   function creer(table, ligne) {
     if (!ligne.id && (CLES[table] || "id") === "id" && table !== "publication_medias") ligne.id = uuid();
     if (SANS_DATE.indexOf(table) < 0) ligne.cree_le = ligne.cree_le || new Date().toISOString();
@@ -285,10 +297,15 @@ window.Studio = (function () {
   // Enregistrer une ligne dont la clé n'est pas « id » (brief d'un espace, réglage) : créée ou remplacée
   function enregistrer(table, ligne) {
     var cle = CLES[table], liste = S[LOCALE[table]] || [], deja = liste.filter(function (x) { return x[cle] === ligne[cle]; })[0];
+    var avant = deja ? Object.assign({}, deja) : null;
     if (deja) Object.assign(deja, ligne); else liste.push(ligne);
     if (X.demo) return Promise.resolve(deja || ligne);
     return X.db.from(table).upsert(ligne, { onConflict: cle }).select().then(function (r) {
-      if (r.error) { signaler("Non enregistré : " + r.error.message, true); throw r.error; }
+      var err = r.error || (!(r.data || []).length ? { message: REFUS } : null);
+      if (err) {
+        if (deja) { Object.keys(deja).forEach(function (k) { delete deja[k]; }); Object.assign(deja, avant); } else liste.splice(liste.indexOf(ligne), 1);
+        repeindreApresEchec(); signaler("Non enregistré : " + err.message, true); throw err;
+      }
       if (r.data && r.data[0]) Object.assign(deja || ligne, r.data[0]);
       return deja || ligne;
     });
@@ -303,11 +320,14 @@ window.Studio = (function () {
     });
   }
   function supprimer(table, filtre) {
-    var liste = S[LOCALE[table]] || [];
-    for (var i = liste.length - 1; i >= 0; i--) if (Object.keys(filtre).every(function (k) { return liste[i][k] === filtre[k]; })) liste.splice(i, 1);
+    var liste = S[LOCALE[table]] || [], retires = [];
+    for (var i = liste.length - 1; i >= 0; i--) if (Object.keys(filtre).every(function (k) { return liste[i][k] === filtre[k]; })) retires.push(liste.splice(i, 1)[0]);
     if (X.demo) return Promise.resolve();
     var q = X.db.from(table).delete(); Object.keys(filtre).forEach(function (k) { q = q.eq(k, filtre[k]); });
-    return q.then(function (r) { if (r.error) { signaler("Non supprimé : " + r.error.message, true); throw r.error; } });
+    return q.select().then(function (r) {
+      var err = r.error || (retires.length && !(r.data || []).length ? { message: "vous n'avez pas le droit de supprimer cet élément" } : null);
+      if (err) { retires.reverse().forEach(function (x) { liste.push(x); }); repeindreApresEchec(); signaler("Non supprimé : " + err.message, true); throw err; }
+    });
   }
   // Réponse d'un client : la seule écriture de statut qui lui soit permise (fonction de la base)
   function repondre(pubId, decision, message) {
@@ -448,7 +468,7 @@ window.Studio = (function () {
       lili ? lienCote("#reglages", "Réglages", "reglages", r.nom === "reglages", S.alertesSecurite.filter(function (a) { return !a.vu_le && a.niveau !== "info"; }).length || null) : null,
       !lili ? lienCote("#compte", "Mon compte", "cadenas", r.nom === "compte") : null,
       !lili ? el("a", { href: "guide.html", target: "_blank", rel: "noopener", class: "cote-lien" }, [icone("brief"), el("span", { class: "cote-texte", text: "Comment ça marche" })]) : null,
-      el("button", { type: "button", class: "cote-lien", onclick: function () { if (X.verrouiller) X.verrouiller(); } }, [icone("cadenas"), el("span", { class: "cote-texte", text: "Verrouiller" })]),
+      !X.peutVerrouiller || X.peutVerrouiller() ? el("button", { type: "button", class: "cote-lien", onclick: function () { if (X.verrouiller) X.verrouiller(); } }, [icone("cadenas"), el("span", { class: "cote-texte", text: "Verrouiller" })]) : null,
       el("button", { type: "button", class: "cote-lien", onclick: function () { if (X.quitter) X.quitter(); } }, [icone("sortir"), el("span", { class: "cote-texte", text: "Se déconnecter" })])
     ]);
     var cote = el("aside", { class: "cote", id: "cote", "aria-label": "Menu" }, [
@@ -632,7 +652,7 @@ window.Studio = (function () {
     else if (estLili() && k === "/") { ev.preventDefault(); if (V.assistant) V.assistant(); }
     else if (estLili() && /^[1-9]$/.test(k)) { var e = espacesActifs()[+k - 1]; if (e) aller(e.slug); }
     else if (k === "Escape" && r.nom === "client" && r.rubrique) aller(r.param);
-    else if (k === "Escape" && r.nom === "p") history.back();
+    else if (k === "Escape" && r.nom === "p") revenir();
     else if (r.nom === "client" && r.rubrique && (k === "ArrowLeft" || k === "ArrowRight") && !(r.rubrique === "calendrier")) {
       var rs = rubriquesClient(), i = rs.findIndex(function (x) { return x.id === r.rubrique; }) + (k === "ArrowRight" ? 1 : -1);
       if (rs[i]) aller(r.param + "/" + rs[i].id);
@@ -643,22 +663,35 @@ window.Studio = (function () {
 
   // Temps réel : toute modification d'une table suivie recharge les données (regroupées), sauf pendant une saisie
   var attente = null, enAttente = false;
+  // Temps réel : on ne recharge que les tables qui ont bougé (regroupées sur 400 ms), et on ne redessine pas pendant
+  // une saisie, une fenêtre ouverte, un glisser, ou tant qu'une réponse tapée n'est pas envoyée.
+  var aRecharger = {};
+  function saisieNonEnvoyee() {
+    return Array.prototype.some.call(document.querySelectorAll("#page textarea, #page input[type=text], #page [contenteditable=true]"), function (n) {
+      return n.dataset.tape && !n.dataset.auto && String(n.isContentEditable ? n.textContent : n.value).trim() !== "";
+    });
+  }
+  document.addEventListener("input", function (ev) { if (ev.target && ev.target.dataset) ev.target.dataset.tape = "1"; }, true);
+  function rafraichir() {
+    if (!X.demarre || X.demo) return;
+    if (enSaisie() || saisieNonEnvoyee() || document.querySelector("dialog[open]") || X.glisse) { enAttente = true; return; }
+    var tables = Object.keys(aRecharger); aRecharger = {}; enAttente = false;
+    charger(tables.length ? tables : null).then(function () { if (X.demarre) dessiner(false); }, function () { /* nouvel essai au prochain événement */ });
+  }
   function abonner() {
     if (X.demo || X.canal) return;
     X.canal = X.db.channel("studio");
     ["publications", "publication_medias", "commentaires", "medias", "versions", "espaces", "taches", "journal", "operations", "notifications", "comptes_mail",
       "briefs", "messages", "rapports", "veille", "partenaires", "temps", "devis", "factures", "prospects", "membres", "briefs_jour", "devis_signatures", "temps_forts", "reglages", "securite_alertes"].forEach(function (t) {
       X.canal.on("postgres_changes", { event: "*", schema: "public", table: t }, function () {
-        clearTimeout(attente); attente = setTimeout(function () {
-          if (enSaisie() || document.querySelector("dialog[open]") || X.glisse) { enAttente = true; return; }
-          charger().then(function () { dessiner(false); });
-        }, 400);
+        aRecharger[t] = true;
+        clearTimeout(attente); attente = setTimeout(rafraichir, 400);
       });
     });
     X.canal.subscribe();
   }
-  document.addEventListener("focusout", function () { setTimeout(function () { if (enAttente && !enSaisie()) { enAttente = false; charger().then(function () { dessiner(false); }); } }, 300); });
-  document.addEventListener("visibilitychange", function () { if (!document.hidden && X.demarre && !X.demo && !enSaisie()) charger().then(function () { dessiner(false); }); });
+  document.addEventListener("focusout", function () { setTimeout(function () { if (enAttente && X.demarre && !enSaisie()) rafraichir(); }, 300); });
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && X.demarre && !X.demo && !enSaisie() && !saisieNonEnvoyee()) { aRecharger = {}; charger().then(function () { dessiner(false); }, function () {}); } });
 
   // ======================================================================
   // Démarrage (appelé par l'entrée une fois le code saisi)
@@ -666,7 +699,7 @@ window.Studio = (function () {
   // Thème choisi dans Réglages > Apparence (sinon celui de l'appareil)
   try { var theme = localStorage.getItem("studio-theme"); if (theme === "light" || theme === "dark") document.documentElement.setAttribute("data-theme", theme); } catch (x) { /* stockage indisponible */ }
   function ouvrir(o) {
-    X.db = o.db; X.demo = !!o.demo; X.quitter = o.quitter; X.verrouiller = o.verrouiller; X.coquille = o.coquille;
+    X.db = o.db; X.demo = !!o.demo; X.quitter = o.quitter; X.verrouiller = o.verrouiller; X.peutVerrouiller = o.peutVerrouiller; X.coquille = o.coquille;
     X.coquille.innerHTML = '<div class="squelette" role="status" aria-label="Chargement"><i class="s-titre"></i><div class="s-grille"><i></i><i></i><i></i></div></div>';
     var pret;
     if (X.demo) pret = charger();
@@ -682,7 +715,7 @@ window.Studio = (function () {
   function fermer() { X.demarre = false; if (X.canal && X.db) { X.db.removeChannel(X.canal); X.canal = null; } if (V.quitterPresence) V.quitterPresence(); }
 
   return {
-    S: S, X: X, V: V, el: el, signerMedias: signerMedias, foncee: foncee, icone: icone, fmt: fmt, iso: iso, hm: hm, quand: quand, ilya: ilya, memeJour: memeJour, joursEntre: joursEntre,
+    S: S, X: X, V: V, el: el, signerMedias: signerMedias, revenir: revenir, foncee: foncee, icone: icone, fmt: fmt, iso: iso, hm: hm, quand: quand, ilya: ilya, memeJour: memeJour, joursEntre: joursEntre,
     debutJour: debutJour, ajouterJours: ajouterJours, lundi: lundi, pad: pad, uuid: uuid, initiales: initiales, enSaisie: enSaisie,
     RESERVES: RESERVES, STATUTS: STATUTS, ORDRE_STATUTS: ORDRE_STATUTS, RESEAUX: RESEAUX, FORMATS: FORMATS, ETAPES: ETAPES, HEURES: HEURES,
     pastilleStatut: pastilleStatut, pastillesReseaux: pastillesReseaux, logoEspace: logoEspace, urlEspace: urlEspace,

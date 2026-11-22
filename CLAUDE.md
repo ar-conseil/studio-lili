@@ -161,9 +161,15 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   `<espace>/<id>.<ext>` (vignette `<espace>/<id>-apercu.jpg`) ; déclencheur `garder_place` : hors Lili, ni commentaire
   ni média ne change de publication, d'espace, d'auteur, de visibilité ou de fichier. Adresses signées des fichiers
   renouvelées 15 min avant leur expiration (toutes les 5 min, images affichées mises à jour sans redessiner).
-  Restent à traiter (audit) : écritures refusées par RLS vues comme réussies (0 ligne), temps réel qui recharge tout
-  et peut effacer une saisie, verrouillage qui laisse visibles la rédaction de mail et les fenêtres ouvertes, essais
-  de `signer-devis` non atomiques, canaux de présence publics, adresses e-mail des clients visibles d'un invité.
+  Suite (migration `20261122140000_audit2.sql`) : `maj` / `enregistrer` / `supprimer` traitent « 0 ligne » comme un
+  refus (état remis, message ; jamais pendant une saisie) ; temps réel : seules les tables qui ont bougé sont
+  rechargées (`charger(tables)`, réponses les plus récentes seulement), pas de rendu tant qu'un champ tapé n'est pas
+  envoyé (champs enregistrés tout seuls marqués `data-auto`) ; page Mails : Gmail relu à l'arrivée ou après 1 min ;
+  verrouillage : fenêtres fermées, rédaction de mail masquée (`html.verrouille`) ; déconnexion = page rechargée ;
+  « Verrouiller » masqué sans code ; `signer-devis` : essai pris d'un seul geste (`devis_prendre_essai`), 5 codes par
+  heure, code à 6 chiffres exigé du client qui l'a activé ; présence en direct sur canaux privés (politiques
+  `studio_presence_*` sur `realtime.messages`, vérifiées par `npm run recette`, 37 vérifications) ; Échap et
+  « retour » ne quittent plus le site (`St.revenir`). Vérifié faux : un invité ne voit déjà pas les clients.
 - Supabase : mots de passe fuités refusés (HIBP), `rate_limit_verify` 15, `rate_limit_otp` 10 (dans le déploiement).
 - Anti-IA : balises robots (noindex, noarchive, noai, noimageai) sur toutes les pages, `robots.txt` refusant les robots
   d'IA connus ; la vraie barrière reste la connexion avec code (rien de privé n'est lisible sans compte).

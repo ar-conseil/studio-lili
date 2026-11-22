@@ -103,7 +103,10 @@
     c.addEventListener("pointerdown", function (ev) { ev.preventDefault(); c.setPointerCapture(ev.pointerId); trace = true; dernier = point(ev); ctx.beginPath(); ctx.arc(dernier[0], dernier[1], 1, 0, 7); ctx.fillStyle = "#1E1A17"; ctx.fill(); vide = false; });
     c.addEventListener("pointermove", function (ev) { if (!trace) return; var p = point(ev); ctx.beginPath(); ctx.moveTo(dernier[0], dernier[1]); ctx.quadraticCurveTo(dernier[0], dernier[1], (dernier[0] + p[0]) / 2, (dernier[1] + p[1]) / 2); ctx.lineTo(p[0], p[1]); ctx.stroke(); dernier = p; });
     ["pointerup", "pointercancel", "pointerleave"].forEach(function (t) { c.addEventListener(t, function () { trace = false; }); });
-    requestAnimationFrame(mise); window.addEventListener("resize", function () { if (vide) mise(); });
+    requestAnimationFrame(mise);
+    // Redimensionner tant que rien n'est tracé ; l'écouteur se retire quand le pavé a quitté la page
+    var auRedim = function () { if (!c.isConnected) return window.removeEventListener("resize", auRedim); if (vide) mise(); };
+    window.addEventListener("resize", auRedim);
     var effacer = el("button", { type: "button", class: "btn-texte petit", text: "Effacer", onclick: function () { ctx.clearRect(0, 0, c.width, c.height); vide = true; } });
     return { el: el("div", { class: "pave-cadre" }, [c, effacer]), vide: function () { return vide; },
       image: function () {   // fond blanc, pour une signature lisible partout (PDF, mode sombre)
