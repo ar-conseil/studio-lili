@@ -237,6 +237,12 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
 Après chaque étape : commit clair, mise à jour de ce fichier, note à Antonin (ce qui est fait, ce qu'il doit faire).
 
 ## Décisions
+- 22/11/2026 : **Antonin a un compte propriétaire** (arouzier@gmail.com, entrée avec Google, code à 6 chiffres à la
+  première connexion), à sa demande, accès complet comme Lili. Les fonctions qui désignent « Lili » prennent le
+  propriétaire le plus ancien (Lili) : envois depuis sa boîte, vigie, notifier. Un propriétaire ne reçoit jamais
+  d'e-mail de notification (cloche et notifications de l'appareil seulement) ; la page Mails montre la boîte reliée
+  par la personne connectée. Même jour : adresse de connexion de Lili alignée sur son compte Google
+  (lili.vergote@gmail.com, au lieu de lilivergote@gmail.com : Gmail ignore le point, Supabase non).
 - 21/11/2026 : **ce qui reste hors du compte de Lili, validé par Antonin** : la base Supabase (organisation « Lili Rouzier »
   du compte Supabase du club) et l'assistant (espace « Studio Lili » du compte Anthropic « Palomano Lille »). Seul le
   projet Google Cloud est à son nom.
