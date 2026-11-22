@@ -13,7 +13,8 @@
 
   // ---------- Aujourd'hui ----------
   V.aujourdhui = function () {
-    var pubs = St.publicationsVisibles(), maintenant = new Date(), h = maintenant.getHours();
+    var archives = S.espaces.filter(function (e) { return e.statut === "archive"; }).map(function (e) { return e.id; });
+    var pubs = St.publicationsVisibles().filter(function (p) { return archives.indexOf(p.espace_id) < 0; }), maintenant = new Date(), h = maintenant.getHours();   // un espace archivé ne remonte plus
     var duJour = pubs.filter(function (p) { return p.date_prevue && St.memeJour(p.date_prevue, maintenant); }).sort(function (a, b) { return a.date_prevue.localeCompare(b.date_prevue); });
     var aValider = pubs.filter(function (p) { return p.statut === "a-valider"; }).sort(function (a, b) { return String(a.envoye_le).localeCompare(String(b.envoye_le)); });
     var modifs = pubs.filter(function (p) { return p.statut === "modifs-demandees"; });
