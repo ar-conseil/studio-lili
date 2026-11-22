@@ -196,19 +196,33 @@ window.Studio = (function () {
       return q.then(function (r) { if (r.error) throw r.error; S[t[1]] = r.data || []; });
     })).then(signerMedias);
   }
-  // Fichiers privés : adresses signées (1 h), par lots ; les vignettes d'abord
+  // Fichiers privés : adresses signées (1 h), par lots. Celles qui expirent dans moins de 15 min sont renouvelées
+  // (au rechargement et toutes les 5 min) ; les images déjà affichées reçoivent la nouvelle adresse sans redessiner.
+  var DUREE_URL = 3600, MARGE_URL = 15 * 60 * 1000, expirations = {};
   function signerMedias() {
-    var chemins = [];
-    S.medias.forEach(function (m) { if (!S.urls[m.chemin]) chemins.push(m.chemin); if (m.apercu_chemin && !S.urls[m.apercu_chemin]) chemins.push(m.apercu_chemin); });
-    S.espaces.forEach(function (e) { [e.logo_path, e.couverture_path].forEach(function (c) { if (c && !S.urls[c]) chemins.push(c); }); });
-    if (!chemins.length) return;
+    var chemins = [], limite = Date.now() + MARGE_URL;
+    var aSigner = function (c) { return c && (!S.urls[c] || (expirations[c] && expirations[c] < limite)); };
+    S.medias.forEach(function (m) { if (aSigner(m.chemin)) chemins.push(m.chemin); if (aSigner(m.apercu_chemin)) chemins.push(m.apercu_chemin); });
+    S.espaces.forEach(function (e) { [e.logo_path, e.couverture_path].forEach(function (c) { if (aSigner(c)) chemins.push(c); }); });
+    if (!chemins.length) return Promise.resolve();
     var lots = []; for (var i = 0; i < chemins.length; i += 100) lots.push(chemins.slice(i, i + 100));
+    var echeance = Date.now() + DUREE_URL * 1000, remplacees = {};
     return Promise.all(lots.map(function (lot) {
-      return X.db.storage.from("medias").createSignedUrls(lot, 3600).then(function (r) {
-        (r.data || []).forEach(function (x) { if (x.signedUrl) S.urls[x.path] = x.signedUrl; });
+      return X.db.storage.from("medias").createSignedUrls(lot, DUREE_URL).then(function (r) {
+        (r.data || []).forEach(function (x) {
+          if (!x.signedUrl) return;
+          if (S.urls[x.path] && S.urls[x.path] !== x.signedUrl) remplacees[S.urls[x.path]] = x.signedUrl;
+          S.urls[x.path] = x.signedUrl; expirations[x.path] = echeance;
+        });
       });
-    }));
+    })).then(function () {
+      if (!Object.keys(remplacees).length) return;
+      document.querySelectorAll("img[src], video[src], video[poster], source[src]").forEach(function (n) {
+        ["src", "poster"].forEach(function (a) { var v = n.getAttribute(a); if (v && remplacees[v]) n.setAttribute(a, remplacees[v]); });
+      });
+    });
   }
+  setInterval(function () { if (X.demarre && !X.demo && X.db) signerMedias().catch(function () { /* nouvel essai dans 5 min */ }); }, 5 * 60 * 1000);
   function urlMedia(m, apercu) {
     if (!m) return "";
     if (apercu && m.apercu_chemin && S.urls[m.apercu_chemin]) return S.urls[m.apercu_chemin];
@@ -668,7 +682,7 @@ window.Studio = (function () {
   function fermer() { X.demarre = false; if (X.canal && X.db) { X.db.removeChannel(X.canal); X.canal = null; } if (V.quitterPresence) V.quitterPresence(); }
 
   return {
-    S: S, X: X, V: V, el: el, foncee: foncee, icone: icone, fmt: fmt, iso: iso, hm: hm, quand: quand, ilya: ilya, memeJour: memeJour, joursEntre: joursEntre,
+    S: S, X: X, V: V, el: el, signerMedias: signerMedias, foncee: foncee, icone: icone, fmt: fmt, iso: iso, hm: hm, quand: quand, ilya: ilya, memeJour: memeJour, joursEntre: joursEntre,
     debutJour: debutJour, ajouterJours: ajouterJours, lundi: lundi, pad: pad, uuid: uuid, initiales: initiales, enSaisie: enSaisie,
     RESERVES: RESERVES, STATUTS: STATUTS, ORDRE_STATUTS: ORDRE_STATUTS, RESEAUX: RESEAUX, FORMATS: FORMATS, ETAPES: ETAPES, HEURES: HEURES,
     pastilleStatut: pastilleStatut, pastillesReseaux: pastillesReseaux, logoEspace: logoEspace, urlEspace: urlEspace,

@@ -116,6 +116,11 @@ insert into public.mails_programmes (personne_id, envoyer_le, contenu) values ('
 select essais.verifier(exists (select 1 from public.mails_programmes where contenu ->> 'objet' = 'Envoi de demain'), 'Lili programme un envoi');
 select essais.doit_echouer('select refresh_token from public.comptes_mail', 'le navigateur de Lili lit le jeton Gmail');
 select essais.doit_echouer('select jeton_acces from public.comptes_mail', 'le navigateur de Lili lit le jeton d''accès Gmail');
+-- Audit du 22/11 : Lili commente une idée interne sans cocher « Lili seule » : rien ne sort vers le client
+insert into public.commentaires (publication_id, contenu, visibilite) values ('20000000-0000-4000-a000-000000000002', 'Idée à creuser, budget serré', 'partage');
+select essais.verifier((select visibilite from public.publications where id = '20000000-0000-4000-a000-000000000002') = 'interne', 'l''idée du décor est interne');
+select essais.verifier(not exists (select 1 from public.journal where objet_id = '20000000-0000-4000-a000-000000000002' and action = 'commentaire.ajoute' and visibilite = 'partage'), 'un commentaire sur une idée interne reste interne dans le journal');
+select essais.verifier(not exists (select 1 from public.notifications n join public.journal j on j.id = n.journal_id where j.objet_id = '20000000-0000-4000-a000-000000000002' and j.action = 'commentaire.ajoute'), 'un commentaire sur une idée interne ne prévient personne');
 -- Nouveau client créé depuis l'application (bouton « Nouveau client »)
 insert into public.espaces (id, slug, nom, couleur, reseaux) values ('10000000-0000-4000-a000-00000000000c', 'essai-c', 'Marque C (essai)', '#335544', array['instagram','linkedin']);
 insert into public.espaces_prive (espace_id, raison_sociale, email_facturation) values ('10000000-0000-4000-a000-00000000000c', 'C SARL', 'compta@essai.invalid');
@@ -190,8 +195,17 @@ delete from public.publications where id = '20000000-0000-4000-a000-000000000001
 -- Écritures permises
 insert into public.publications (espace_id, titre, statut, auteur_id, visibilite) values ('10000000-0000-4000-a000-00000000000a', 'Idée de A', 'idee', '00000000-0000-4000-a000-0000000000a1', 'partage');
 insert into public.commentaires (publication_id, cible, x, y, contenu) values ('20000000-0000-4000-a000-000000000001', 'visuel', .4, .3, 'Plus de lumière ici');
-insert into public.medias (espace_id, chemin, depose_par, nom_fichier) values ('10000000-0000-4000-a000-00000000000a', '10000000-0000-4000-a000-00000000000a/depot.jpg', '00000000-0000-4000-a000-0000000000a1', 'depot.jpg');
-insert into storage.objects (bucket_id, name) values ('medias', '10000000-0000-4000-a000-00000000000a/depot.jpg');
+select essais.doit_echouer($$update public.commentaires set publication_id = '20000000-0000-4000-a000-000000000002' where contenu = 'Plus de lumière ici'$$, 'A déplace son commentaire sur une idée interne');
+update public.commentaires set contenu = 'Plus de lumière ici' , resolu = false where contenu = 'Plus de lumière ici';
+insert into public.medias (id, espace_id, chemin, apercu_chemin, depose_par, nom_fichier) values ('30000000-0000-4000-a000-00000000000d', '10000000-0000-4000-a000-00000000000a', '10000000-0000-4000-a000-00000000000a/30000000-0000-4000-a000-00000000000d.jpg', '10000000-0000-4000-a000-00000000000a/30000000-0000-4000-a000-00000000000d-apercu.jpg', '00000000-0000-4000-a000-0000000000a1', 'depot.jpg');
+insert into storage.objects (bucket_id, name) values ('medias', '10000000-0000-4000-a000-00000000000a/30000000-0000-4000-a000-00000000000d.jpg');
+-- Audit du 22/11 : un dépôt ne peut viser que sa propre adresse, et rien ne se déplace après coup
+select essais.doit_echouer($$insert into public.medias (espace_id, chemin, apercu_chemin, depose_par) values ('10000000-0000-4000-a000-00000000000a', '10000000-0000-4000-a000-00000000000a/30000000-0000-4000-a000-0000000000e1.jpg', '10000000-0000-4000-a000-00000000000a/m2.jpg', '00000000-0000-4000-a000-0000000000a1')$$, 'A déclare comme vignette le fichier interne m2 (pour en obtenir l''adresse)');
+select essais.doit_echouer($$insert into public.medias (id, espace_id, chemin, depose_par) values ('30000000-0000-4000-a000-0000000000e2', '10000000-0000-4000-a000-00000000000a', '10000000-0000-4000-a000-00000000000a/autre-chose.jpg', '00000000-0000-4000-a000-0000000000a1')$$, 'A dépose à une adresse qui n''est pas la sienne');
+select essais.doit_echouer($$update public.medias set espace_id = '10000000-0000-4000-a000-00000000000b' where id = '30000000-0000-4000-a000-00000000000d'$$, 'A déplace son média chez B');
+select essais.doit_echouer($$update public.medias set apercu_chemin = '10000000-0000-4000-a000-00000000000a/m2.jpg' where id = '30000000-0000-4000-a000-00000000000d'$$, 'A fait pointer son média vers un fichier interne');
+update public.medias set dossier = 'Shooting', etiquettes = array['noel'] where id = '30000000-0000-4000-a000-00000000000d';
+select essais.verifier((select dossier from public.medias where id = '30000000-0000-4000-a000-00000000000d') = 'Shooting', 'A range son propre média');
 insert into public.messages (espace_id, auteur_id, contenu) values ('10000000-0000-4000-a000-00000000000a', '00000000-0000-4000-a000-0000000000a1', 'Bonjour Lili');
 select essais.verifier(public.repondre_publication('20000000-0000-4000-a000-000000000001', 'valide') = 'valide', 'A valide sa publication');
 reset role;

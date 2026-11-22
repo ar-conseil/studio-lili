@@ -156,6 +156,14 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   inscriptions ouvertes, fonctions sensibles qui répondraient sans connexion, suppressions en masse. Alertes dans
   `securite_alertes` (sans doublon 6 h), push + e-mail à Lili (même en vacances) ; état dans `reglages.vigie`.
   Affichage : Réglages > Sécurité (voyant, journal, « Lancer une ronde »), pastille sur le lien Réglages.
+- Audit du 22/11/2026 (migration `20261122130000_audit.sql`, tests dans droits.sql) : un commentaire sur une
+  publication interne reste interne dans le journal (ni notification ni e-mail au client) ; un client ne dépose qu'à
+  `<espace>/<id>.<ext>` (vignette `<espace>/<id>-apercu.jpg`) ; déclencheur `garder_place` : hors Lili, ni commentaire
+  ni média ne change de publication, d'espace, d'auteur, de visibilité ou de fichier. Adresses signées des fichiers
+  renouvelées 15 min avant leur expiration (toutes les 5 min, images affichées mises à jour sans redessiner).
+  Restent à traiter (audit) : écritures refusées par RLS vues comme réussies (0 ligne), temps réel qui recharge tout
+  et peut effacer une saisie, verrouillage qui laisse visibles la rédaction de mail et les fenêtres ouvertes, essais
+  de `signer-devis` non atomiques, canaux de présence publics, adresses e-mail des clients visibles d'un invité.
 - Supabase : mots de passe fuités refusés (HIBP), `rate_limit_verify` 15, `rate_limit_otp` 10 (dans le déploiement).
 - Anti-IA : balises robots (noindex, noarchive, noai, noimageai) sur toutes les pages, `robots.txt` refusant les robots
   d'IA connus ; la vraie barrière reste la connexion avec code (rien de privé n'est lisible sans compte).
