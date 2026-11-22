@@ -143,6 +143,9 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   (propriétés, valider / demander une modification, visuels, légende, commentaires). `espaces.vue_client`
   (`classique` | `planning`, migration `20261122180000_vue_client.sql`, réglé dans la fiche) : `planning` = l'accueil
   du client est le planning. Aushopping Noyelles réglé sur `planning` le 22/11/2026.
+  Kanban : seules les colonnes non vides (plus « À valider ») ; galerie : à venir d'abord, puis passées, sans visuel =
+  carte de la légende ; listes longues par paquets (« Afficher n de plus »). Téléphone : date sous le nom, galerie à 2 colonnes.
+- Barre latérale : un second clic sur le client ouvert replie ses rubriques (`sousFermes` dans studio.js).
 - Couleur de marque lisible : `Studio.foncee(couleur)` fonce une couleur trop claire jusqu'au contraste AA sous du texte
   blanc (variable CSS `--cf`, utilisée pour les boutons et pastilles ; `--c` reste la couleur d'origine pour les teintes).
 - `outils/notion-analyse.mjs` : lit l'export Notion (`~/.lili/notion-export/`) et décrit sa STRUCTURE (bases, colonnes,

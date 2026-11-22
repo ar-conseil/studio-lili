@@ -151,7 +151,7 @@
           var det = el("details", { class: "pl-groupe", open: !ferme }, [el("summary", {}, [el("b", { text: nomMois(k) }), el("small", { text: String(groupes[k].length) })])].concat(groupes[k].map(function (p) {
             var cs = St.commentairesDe(p.id).filter(function (c) { return lili || c.visibilite === "partage"; }).length;
             return el("a", { href: "#p/" + p.id, class: "pl-ligne", role: "row", onclick: ouvrir(p) }, [
-              el("span", { class: "pl-c-nom", role: "cell" }, [vignette(p), el("b", { text: p.titre || "Sans titre" }), cs ? el("small", { class: "pl-coms", title: cs + " commentaire" + (cs > 1 ? "s" : "") }, [St.icone("commentaire"), String(cs)]) : null, el("span", { class: "pl-ouvrir", text: "Ouvrir" })]),
+              el("span", { class: "pl-c-nom", role: "cell" }, [vignette(p), el("span", { class: "pl-nom-txt" }, [el("b", { text: p.titre || "Sans titre" }), el("small", { class: "pl-date-tel", text: dateCourte(p) })]), cs ? el("small", { class: "pl-coms", title: cs + " commentaire" + (cs > 1 ? "s" : "") }, [St.icone("commentaire"), String(cs)]) : null, el("span", { class: "pl-ouvrir", text: "Ouvrir" })]),
               el("span", { class: "pl-c-date", role: "cell", text: dateCourte(p) }),
               el("span", { class: "pl-c-statut", role: "cell" }, [tagStatut(p.statut)]),
               el("span", { class: "pl-c-res", role: "cell" }, tagsReseaux(p)),

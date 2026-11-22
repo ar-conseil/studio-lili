@@ -1074,6 +1074,14 @@ a.pl-ligne:hover .pl-ouvrir, a.pl-ligne:focus-visible .pl-ouvrir { opacity: 1; }
   .pl-jour { min-height: 64px; } .pl-evt { font-size: 0; padding: 0; height: 8px; border: 0; background: none; } .pl-evt i { width: 8px; height: 8px; }
   .pl-cote { width: 100vw; } .pl-cote-corps { padding: 14px 16px 40px; }
 }
+.pl-nom-txt { display: grid; min-width: 0; } .pl-nom-txt b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-date-tel { display: none; color: var(--encre-3); font-size: 12px; }
+@media (max-width: 640px) {
+  .pl-date-tel { display: block; } .pl-ligne { min-height: 52px; }
+  .pl-galerie { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .pl-fiche-txt { padding: 10px; } .pl-fiche-txt p { font-size: 13px; -webkit-line-clamp: 5; }
+  .pl-fiche-texte { padding: 8px 10px 10px; } .pl-fiche-texte b { font-size: 13.5px; }
+}
 .pl-outils { margin-left: auto; }
 .pl-outils .pl-recherche { width: 190px; flex: none; }
 .pl-outils .pl-filtre { width: auto; flex: none; }

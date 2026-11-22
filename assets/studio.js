@@ -419,6 +419,7 @@ window.Studio = (function () {
   // ======================================================================
   // Coquille : barre latérale façon Notion, barre du haut, barre d'onglets sur téléphone
   // ======================================================================
+  var sousFermes = {};   // clients dont Lili a replié les rubriques dans la barre latérale
   function lienCote(href, nom, ic, actif, compte, touche) {
     var a = el("a", { href: href, class: "cote-lien", "aria-current": actif ? "page" : null, title: touche ? nom + " (touche " + touche + ")" : null }, [
       typeof ic === "string" ? icone(ic) : ic, el("span", { class: "cote-texte", text: nom }), compte ? el("span", { class: "cote-compte", text: String(compte) }) : null
@@ -456,9 +457,18 @@ window.Studio = (function () {
       el("button", { type: "button", class: "btn-icone cote-ajout", "aria-label": "Nouveau client", title: "Nouveau client", onclick: function () { menu(false); if (window.Studio.nouveauClient) window.Studio.nouveauClient(); } }, [icone("plus")])]), el("nav", { class: "cote-clients", "aria-label": "Clients" }, espacesActifs().map(function (e, i) {
       var actif = r.nom === "client" && r.param === e.slug;
       var a = lienCote("#" + e.slug, e.nom, el("i", { class: "pastille-client", style: { "--c": e.couleur } }), actif, null, i < 9 ? String(i + 1) : null);
-      if (actif) a.appendChild(el("span", { class: "cote-sous" }, rubriquesClient().map(function (x) {
+      // Un second clic sur le client ouvert replie ses rubriques ; un clic de plus les rouvre.
+      var ouvert = actif && !sousFermes[e.slug];
+      if (actif) a.setAttribute("aria-expanded", ouvert ? "true" : "false");
+      if (ouvert) a.appendChild(el("span", { class: "cote-sous" }, rubriquesClient().map(function (x) {
         return el("a", { href: "#" + e.slug + "/" + x.id, "aria-current": r.rubrique === x.id ? "page" : null, text: x.nom });
       })));
+      a.addEventListener("click", function (ev) {
+        if (!actif || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.target.closest(".cote-sous")) return;
+        if (ouvert) { ev.preventDefault(); sousFermes[e.slug] = true; dessinerCoquille(); return; }
+        delete sousFermes[e.slug];
+        if (location.hash === "#" + e.slug) { ev.preventDefault(); dessinerCoquille(); }
+      });
       return a;
     }))] : [];
     var nonLues = S.notifications.filter(function (n) { return !n.lue_le && (!S.moi || n.personne_id === S.moi.id); }).length;
