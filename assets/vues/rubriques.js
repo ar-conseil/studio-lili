@@ -544,6 +544,70 @@
       } }] });
   };
 
+  // ======================================================================
+  // Nouveau client : Lili crée l'espace d'une marque elle-même (barre latérale « + », Aujourd'hui, Prospects)
+  // o = { nom, raison_sociale, email_facturation, forfait_mensuel_ht, apres(espace) } pour partir d'un prospect
+  // ======================================================================
+  function slugLibre(nom) {
+    var base = String(nom || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "client", slug = base, i = 2;
+    while (St.espaceSlug(slug) || (St.RESERVES || []).indexOf(slug) >= 0) slug = base + "-" + i++;
+    return slug;
+  }
+  St.nouveauClient = function (o) {
+    o = o || {};
+    var nom = texte(o.nom, { aide: "Le nom de la marque, tel que le client le verra" });
+    var adresse = el("small", { class: "aide-adresse" });
+    var majAdresse = function () { adresse.textContent = nom.value.trim() ? "Adresse de son espace : #" + slugLibre(nom.value) : ""; };
+    nom.addEventListener("input", majAdresse); majAdresse();
+    var couleur = el("input", { type: "color", value: "#A9553A", "aria-label": "Couleur de la marque" });
+    var logo = el("input", { type: "file", accept: "image/*", "aria-label": "Logo" });
+    var res = el("div", { class: "cases" }, Object.keys(St.RESEAUX).map(function (k) { return el("label", { class: "case" }, [el("input", { type: "checkbox", value: k, checked: k === "instagram" }), St.RESEAUX[k].nom]); }));
+    var p = { raison_sociale: texte(o.raison_sociale || ""), email_facturation: texte(o.email_facturation || "", { type: "email" }),
+      forfait_mensuel_ht: texte(o.forfait_mensuel_ht == null ? "" : o.forfait_mensuel_ht, { type: "number", attrs: { min: 0, step: "10" } }) };
+    var inviter = el("input", { type: "checkbox", checked: true });
+    St.fenetre({ titre: "Nouveau client", classe: "large", sous: "Son espace est créé vide et privé : rien n'est visible du client tant que vous ne l'invitez pas et ne partagez rien.", corps: [
+      el("label", { class: "champ" }, [el("span", { text: "Nom de la marque" }), nom, adresse]),
+      el("div", { class: "deux-colonnes" }, [champ("Couleur de la marque", couleur, "Elle habille son espace et ses pastilles"), champ("Logo (facultatif)", logo, "PNG ou JPG carré")]),
+      champ("Réseaux", res),
+      el("h3", { class: "titre-fiche", text: "Facturation (interne, jamais visible du client)" }),
+      el("div", { class: "deux-colonnes" }, [champ("Raison sociale", p.raison_sociale), champ("E-mail de facturation", p.email_facturation)]),
+      champ("Forfait mensuel HT (€)", p.forfait_mensuel_ht, "Facultatif ; le reste (adresse, SIRET…) se complète dans sa fiche"),
+      el("label", { class: "case" }, [inviter, "Ensuite, inviter le client dans son espace"])],
+      actions: [{ texte: "Annuler" }, { texte: "Créer le client", principal: true, action: function (fermer) {
+        var n = nom.value.trim();
+        if (!n) { nom.focus(); return; }
+        var doublon = S.espaces.filter(function (x) { return x.nom.trim().toLowerCase() === n.toLowerCase(); })[0];
+        if (doublon && !confirm("Un client « " + doublon.nom + " » existe déjà" + (doublon.statut === "archive" ? " (archivé)" : "") + ". Créer quand même un second espace ?")) return;
+        var id = St.uuid(), slug = slugLibre(n), reseaux = Array.from(res.querySelectorAll("input:checked")).map(function (x) { return x.value; });
+        var espace = { id: id, slug: slug, nom: n, statut: "actif", couleur: couleur.value, reseaux: reseaux.length ? reseaux : ["instagram"], heures_defaut: {},
+          ordre: S.espaces.reduce(function (m, x) { return Math.max(m, x.ordre || 0); }, 0) + 1 };
+        var prive = { espace_id: id }; Object.keys(p).forEach(function (k) { var v = String(p[k].value).trim(); prive[k] = v === "" ? null : (k === "forfait_mensuel_ht" ? +v : v); });
+        var f = logo.files && logo.files[0];
+        St.creer("espaces", espace).then(function (e) {
+          var etapes = [St.enregistrer("espaces_prive", prive)];
+          if (f) {
+            var chemin = id + "/logo-" + St.uuid().slice(0, 8) + "." + ((f.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 4));
+            etapes.push(St.X.demo ? Promise.resolve().then(function () { e.logo_url = URL.createObjectURL(f); })
+              : St.X.db.storage.from("medias").upload(chemin, f, { contentType: f.type }).then(function (r) { if (r.error) throw r.error; return St.maj("espaces", id, { logo_path: chemin }); }));
+          }
+          return Promise.all(etapes).then(function () { return o.apres ? o.apres(e) : null; })
+            .then(function () { return St.X.demo ? null : St.charger(); })
+            .then(function () { fermer(); St.signaler(n + " : espace créé"); St.aller(slug + (inviter.checked ? "/equipe" : "")); });
+        }).catch(function (x) { St.signaler("Client non créé : " + (x && x.message || x), true); });
+      } }] });
+    setTimeout(function () { nom.focus(); }, 50);
+  };
+
+  // Clients archivés : masqués partout, mais on peut les rouvrir (fiche > État)
+  St.clientsArchives = function () {
+    var arch = S.espaces.filter(function (e) { return e.statut === "archive"; }).sort(function (a, b) { return a.nom.localeCompare(b.nom, "fr"); });
+    St.fenetre({ titre: "Clients archivés", sous: "Masqués du studio. Ouvrez la fiche d'un client et passez son état à « Actif » pour le faire revenir.", corps: [
+      arch.length ? el("ul", { class: "liste-archives" }, arch.map(function (e) {
+        return el("li", {}, [el("i", { class: "pastille-client", style: { "--c": e.couleur } }), el("span", { text: e.nom }),
+          el("button", { type: "button", class: "btn-texte", onclick: function () { document.querySelector("dialog[open]").close(); St.editerEspace(e); } }, [St.icone("reglages"), "Fiche"])]);
+      })) : St.vide("Aucun client archivé.")], actions: [{ texte: "Fermer" }] });
+  };
+
   St.aides = { champ: champ, texte: texte, choix: choix, confirmer: confirmer, imprimer: imprimer, echapper: echapper, euros: euros, entreprise: entreprise, totaux: totaux, imprimerPiece: function (t, f) { imprimerPiece(t, f); } };
 
   // Résumés des tuiles de la page client
@@ -637,16 +701,10 @@
         { texte: "Annuler" }, { texte: "Enregistrer", principal: true, action: function (fermer) { var s = sauver(); if (s) s.then(function () { fermer(); St.dessiner(false); }); } }].filter(Boolean) });
   }
   function creerEspace(p) {
-    var base = p.nom.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "client", slug = base, i = 2;
-    while (St.espaceSlug(slug) || ["calendrier", "publications", "mediatheque", "valider", "p", "mails", "taches", "prospects", "reglages", "brief", "rapports", "messages"].indexOf(slug) >= 0) slug = base + "-" + i++;
-    confirmer("Créer l'espace de " + p.nom + " ?", "Un espace vide (adresse #" + slug + "), à compléter ensuite : couleur, logo, réseaux, puis l'invitation du client.", "Créer l'espace", function () {
-      St.creer("espaces", { slug: slug, nom: p.nom, statut: "actif", couleur: "#1E1A17", reseaux: ["instagram"], heures_defaut: {}, ordre: S.espaces.length + 1 }).then(function (e) {
-        return St.creer("espaces_prive", { espace_id: e.id, raison_sociale: p.nom, email_facturation: p.email, forfait_mensuel_ht: p.montant_mensuel })
-          .then(function () { return St.maj("prospects", p.id, { espace_id: e.id, etape: "signe" }); })
-          .then(function () { St.signaler("Espace créé"); St.aller(e.slug + "/equipe"); });
-      });
-    });
+    St.nouveauClient({ nom: p.nom, raison_sociale: p.nom, email_facturation: p.email, forfait_mensuel_ht: p.montant_mensuel,
+      apres: function (e) { return St.maj("prospects", p.id, { espace_id: e.id, etape: "signe" }); } });
   }
+
 
   // ======================================================================
   // L'assistant : une conversation (touche /), dictée possible au micro

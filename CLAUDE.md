@@ -114,6 +114,11 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   `assets/marque/pistes/` (planche : `pistes/planche.html`).
 - Aperçu local : `python3 -m http.server 8772 --bind 127.0.0.1` à la racine (le port 8771 est pris par un autre outil).
 - `docs/import-notion.md` : plan de correspondance Notion -> studio et bilan de l'import ; `outils/import-notion.mjs`.
+- Nouveau client depuis l'application (22/11/2026) : `St.nouveauClient(o)` dans rubriques.js (bouton « + » de la
+  barre latérale à côté de « Clients », carte « Nouveau client » d'Aujourd'hui, et « Signé : créer son espace » des
+  Prospects avec `o` prérempli) : nom, couleur, logo, réseaux, facturation interne ; adresse `#slug` libre calculée
+  (hors `St.RESERVES`) ; ouvre ensuite `#<slug>/equipe` pour inviter. `St.clientsArchives()` (lien « Archivés (n) »)
+  pour rouvrir la fiche d'un client archivé. Droit testé dans droits.sql (Lili oui ; client, invité, Lili sans code non).
 - Couleur de marque lisible : `Studio.foncee(couleur)` fonce une couleur trop claire jusqu'au contraste AA sous du texte
   blanc (variable CSS `--cf`, utilisée pour les boutons et pastilles ; `--c` reste la couleur d'origine pour les teintes).
 - `outils/notion-analyse.mjs` : lit l'export Notion (`~/.lili/notion-export/`) et décrit sa STRUCTURE (bases, colonnes,

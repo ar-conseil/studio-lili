@@ -416,7 +416,8 @@ window.Studio = (function () {
       lienCote("#messages", "Messages", "commentaire", r.nom === "messages"),
       devisDuClient().length ? lienCote("#devis", "Devis", "euro", r.nom === "devis", devisDuClient().filter(function (d) { return d.statut === "envoye"; }).length || null) : null
     ]);
-    var clients = lili ? [el("p", { class: "cote-titre", text: "Clients" }), el("nav", { class: "cote-clients", "aria-label": "Clients" }, espacesActifs().map(function (e, i) {
+    var clients = lili ? [el("div", { class: "cote-titre-ligne" }, [el("p", { class: "cote-titre", text: "Clients" }),
+      el("button", { type: "button", class: "btn-icone cote-ajout", "aria-label": "Nouveau client", title: "Nouveau client", onclick: function () { menu(false); if (window.Studio.nouveauClient) window.Studio.nouveauClient(); } }, [icone("plus")])]), el("nav", { class: "cote-clients", "aria-label": "Clients" }, espacesActifs().map(function (e, i) {
       var actif = r.nom === "client" && r.param === e.slug;
       var a = lienCote("#" + e.slug, e.nom, el("i", { class: "pastille-client", style: { "--c": e.couleur } }), actif, null, i < 9 ? String(i + 1) : null);
       if (actif) a.appendChild(el("span", { class: "cote-sous" }, rubriquesClient().map(function (x) {
@@ -669,7 +670,7 @@ window.Studio = (function () {
   return {
     S: S, X: X, V: V, el: el, foncee: foncee, icone: icone, fmt: fmt, iso: iso, hm: hm, quand: quand, ilya: ilya, memeJour: memeJour, joursEntre: joursEntre,
     debutJour: debutJour, ajouterJours: ajouterJours, lundi: lundi, pad: pad, uuid: uuid, initiales: initiales, enSaisie: enSaisie,
-    STATUTS: STATUTS, ORDRE_STATUTS: ORDRE_STATUTS, RESEAUX: RESEAUX, FORMATS: FORMATS, ETAPES: ETAPES, HEURES: HEURES,
+    RESERVES: RESERVES, STATUTS: STATUTS, ORDRE_STATUTS: ORDRE_STATUTS, RESEAUX: RESEAUX, FORMATS: FORMATS, ETAPES: ETAPES, HEURES: HEURES,
     pastilleStatut: pastilleStatut, pastillesReseaux: pastillesReseaux, logoEspace: logoEspace, urlEspace: urlEspace,
     espace: espace, espaceSlug: espaceSlug, personne: personne, publication: publication, media: media, prive: prive, mediasDe: mediasDe,
     commentairesDe: commentairesDe, comptesDe: comptesDe, estLili: estLili, publicationsVisibles: function () { return publicationsVisibles().filter(visible); },

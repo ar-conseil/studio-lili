@@ -67,14 +67,17 @@
       })) : St.vide("Tout est fait."))
     ]);
 
-    var cartes = el("section", { class: "clients-cartes" }, [el("h2", { text: "Mes clients" }), el("div", { class: "cartes" }, St.espacesActifs().map(function (e) {
+    var nbArch = S.espaces.filter(function (e) { return e.statut === "archive"; }).length;
+    var cartes = el("section", { class: "clients-cartes" }, [el("div", { class: "titre-ligne" }, [el("h2", { text: "Mes clients" }),
+      nbArch ? el("button", { type: "button", class: "btn-texte", onclick: function () { St.clientsArchives(); } }, [St.icone("archiver"), "Archivés (" + nbArch + ")"]) : null]),
+      el("div", { class: "cartes" }, St.espacesActifs().map(function (e) {
       var av = St.avance(e.id), couv = St.urlEspace(e, "couverture_path"), aV = pubs.filter(function (p) { return p.espace_id === e.id && p.statut === "a-valider"; }).length;
       return el("a", { class: "carte-client", href: "#" + e.slug, style: { "--c": e.couleur } }, [
         el("div", { class: "carte-client-couv" }, [couv ? el("img", { src: couv, alt: "", loading: "lazy" }) : null]),
         el("div", { class: "carte-client-texte" }, [St.logoEspace(e), el("b", { text: e.nom }), el("small", { text: [e.metier, (e.reseaux || []).map(function (r) { return (St.RESEAUX[r] || {}).nom; }).join(", ")].filter(Boolean).join(" · ") }),
           el("span", { class: "avance a-" + av.niveau, text: av.texte }), aV ? el("span", { class: "a-valider-nb", text: aV + " à valider" }) : null])
       ]);
-    }))]);
+    }).concat([el("button", { type: "button", class: "carte-client carte-nouveau", onclick: function () { St.nouveauClient(); } }, [St.icone("plus"), el("b", { text: "Nouveau client" }), el("small", { text: "Créer l'espace d'une marque" })])]))]);
 
     return el("div", { class: "vue-aujourdhui" }, [
       St.entete(St.fmt(maintenant, { weekday: "long", day: "numeric", month: "long" }), (h < 5 || h >= 18 ? "Bonsoir" : "Bonjour") + (prenom ? " " + prenom : ""), phraseDuJour(duJour, aValider, modifs)),

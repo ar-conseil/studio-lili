@@ -88,6 +88,7 @@ select essais.devenir('00000000-0000-4000-a000-000000000001', 'aal1');
 set local role authenticated;
 select essais.verifier((select count(*) from public.publications) = 0, 'Lili sans code ne voit aucune publication');
 select essais.verifier((select count(*) from public.factures) = 0, 'Lili sans code ne voit aucune facture');
+select essais.doit_echouer($q$insert into public.espaces (slug, nom) values ('essai-sans-code', 'Sans code')$q$, 'Lili sans code crée un client');
 reset role;
 
 -- ---------- Lili avec son code : tout ----------
@@ -115,6 +116,10 @@ insert into public.mails_programmes (personne_id, envoyer_le, contenu) values ('
 select essais.verifier(exists (select 1 from public.mails_programmes where contenu ->> 'objet' = 'Envoi de demain'), 'Lili programme un envoi');
 select essais.doit_echouer('select refresh_token from public.comptes_mail', 'le navigateur de Lili lit le jeton Gmail');
 select essais.doit_echouer('select jeton_acces from public.comptes_mail', 'le navigateur de Lili lit le jeton d''accès Gmail');
+-- Nouveau client créé depuis l'application (bouton « Nouveau client »)
+insert into public.espaces (id, slug, nom, couleur, reseaux) values ('10000000-0000-4000-a000-00000000000c', 'essai-c', 'Marque C (essai)', '#335544', array['instagram','linkedin']);
+insert into public.espaces_prive (espace_id, raison_sociale, email_facturation) values ('10000000-0000-4000-a000-00000000000c', 'C SARL', 'compta@essai.invalid');
+select essais.verifier(exists (select 1 from public.espaces where slug = 'essai-c') and exists (select 1 from public.espaces_prive where espace_id = '10000000-0000-4000-a000-00000000000c'), 'Lili crée un nouveau client depuis l''application');
 reset role;
 -- La signature d'un devis n'est écrite que par la fonction serveur (rôle service)
 insert into public.devis_signatures (devis_id, personne_id, nom_signataire, signature, empreinte)
@@ -133,6 +138,8 @@ select essais.devenir('00000000-0000-4000-a000-0000000000a1', 'aal1');
 set local role authenticated;
 select essais.verifier((select count(*) from public.espaces) = 1, 'A ne voit que son espace');
 select essais.verifier(not exists (select 1 from public.espaces where slug = 'essai-b'), 'A ne voit pas l''espace B');
+select essais.verifier(not exists (select 1 from public.espaces where slug = 'essai-c'), 'A ne voit pas le nouveau client C');
+select essais.doit_echouer($q$insert into public.espaces (slug, nom) values ('essai-pirate', 'Pirate')$q$, 'un client crée un espace');
 select essais.verifier((select count(*) from public.publications where espace_id = '10000000-0000-4000-a000-00000000000b') = 0, 'A ne voit aucun post de B');
 select essais.verifier(not exists (select 1 from public.publications where id = '20000000-0000-4000-a000-000000000002'), 'A ne voit pas l''idée en création de son espace');
 select essais.verifier(exists (select 1 from public.publications where id = '20000000-0000-4000-a000-000000000001'), 'A voit la publication à valider');
@@ -236,6 +243,7 @@ select essais.verifier((select count(*) from public.publications) = 1, 'l''invit
 select essais.verifier((select count(*) from public.messages) = 0, 'l''invité ne lit pas les messages du client');
 select essais.verifier((select count(*) from public.briefs) = 0, 'l''invité ne lit pas le brief');
 select essais.verifier((select count(*) from public.medias) = 0, 'l''invité ne voit pas la médiathèque');
+select essais.doit_echouer($q$insert into public.espaces (slug, nom) values ('essai-invite', 'Invité')$q$, 'un invité crée un espace');
 reset role;
 
 select 'Droits vérifiés : tous les tests passent' as resultat;

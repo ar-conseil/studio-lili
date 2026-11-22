@@ -831,3 +831,21 @@ kbd { font: 12px var(--mono); padding: 2px 7px; border-radius: 6px; border: 1px 
 .journal-securite .niveau { flex: none; font: 600 11px var(--sans); letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--creme); color: var(--encre-2); }
 .n-alerte .niveau { background: color-mix(in srgb, #C99A2E 18%, var(--blanc)); color: #7A5512; } .n-critique .niveau { background: color-mix(in srgb, var(--rouge) 16%, var(--blanc)); color: var(--rouge); }
 .qr-compte { display: grid; place-items: center; } .qr-compte img { width: 200px; height: 200px; background: #fff; padding: 8px; border-radius: 12px; }
+
+/* Nouveau client : bouton « + » de la barre latérale, carte d'Aujourd'hui, clients archivés */
+.cote-titre-ligne { display: flex; align-items: center; justify-content: space-between; padding-right: 4px; }
+.cote-titre-ligne .cote-titre { margin-bottom: 6px; }
+.cote-ajout { width: 28px; height: 28px; margin-top: 12px; color: var(--encre-3); }
+.cote-ajout:hover { color: var(--encre); }
+.titre-ligne { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.clients-cartes .titre-ligne h2 { margin-bottom: 0; }
+.carte-nouveau { display: grid; place-content: center; justify-items: center; gap: 6px; min-height: 220px; padding: 20px; text-align: center; cursor: pointer;
+  font: inherit; color: var(--encre-2); background: transparent; border: 1.5px dashed var(--filet); }
+.carte-nouveau svg { width: 26px; height: 26px; color: var(--terre, #A9553A); }
+.carte-nouveau b { font: 500 21px/1.15 var(--titres); color: var(--encre); }
+.carte-nouveau small { color: var(--encre-3); font-size: 12px; }
+.carte-nouveau:hover, .carte-nouveau:focus-visible { border-color: var(--encre-3); }
+.aide-adresse { color: var(--encre-3); font-size: 12px; min-height: 1em; }
+.liste-archives { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.liste-archives li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--filet); }
+.liste-archives li > span { flex: 1; }

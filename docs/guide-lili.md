@@ -102,7 +102,13 @@ sien peut aussi cliquer « Mot de passe oublié » sur la page d'entrée : l'e-m
 reliée, voir 10), comme les liens de connexion. Joins-lui le guide « Comment valider vos publications » :
 https://ar-conseil.github.io/studio-lili/guide.html
 
-Pour un nouveau client venu d'un prospect : page **Prospects** › sa fiche › « Signé : créer son espace ».
+**Ajouter un nouveau client** : le **+** à côté de « Clients » dans la barre latérale, ou la carte « Nouveau client »
+en bas d'Aujourd'hui. Tu donnes son nom, sa couleur, son logo si tu l'as, ses réseaux et, si tu veux, sa facturation ;
+« Créer le client » ouvre directement son Équipe pour l'inviter. Son espace naît vide et privé : il ne voit rien tant
+que tu ne l'invites pas et ne partages rien. Le reste (adresse, SIRET, heures prévues) se complète dans sa **Fiche**.
+Pour un client venu d'un prospect : page **Prospects** › sa fiche › « Signé : créer son espace » (même formulaire,
+déjà rempli). Un client archivé disparaît du studio ; « Archivés » (au-dessus de tes clients, sur Aujourd'hui) permet
+de rouvrir sa fiche et de le remettre « Actif ».
 
 ## 7. Rapports
 
