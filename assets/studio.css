@@ -1302,3 +1302,29 @@ a.pl-ligne:hover .pl-ouvrir, a.pl-ligne:focus-visible .pl-ouvrir { opacity: 1; }
   .doc-choix { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .liste-docs .etiquette-interne, .liste-docs .etiquette-partage { display: none; }
 }
+
+/* ---------- Comptabilité (22/11/2026) ---------- */
+.compta-mois { display: inline-flex; align-items: center; gap: 4px; padding: 3px; border: 1px solid var(--filet); border-radius: 12px; background: var(--blanc); }
+.compta-mois b { min-width: 130px; text-align: center; font-weight: 500; } .compta-mois .retourne .ic { transform: scaleX(-1); }
+.compta-cartes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.compta-carte { display: grid; align-content: start; gap: 6px; padding: 18px 20px; border-radius: var(--rayon); border: 1px solid var(--filet); background: var(--blanc); }
+.compta-carte.terre { background: color-mix(in srgb, var(--terre) 9%, var(--blanc)); border-color: color-mix(in srgb, var(--terre) 28%, var(--filet)); }
+.compta-carte.encre { background: var(--encre); border-color: var(--encre); color: var(--papier); }
+.compta-carte.encre p, .compta-carte.encre .compta-etiquette { color: color-mix(in srgb, var(--papier) 72%, transparent); } .compta-carte.encre .btn-texte { color: var(--papier); }
+.compta-carte.creme { background: var(--creme); }
+.compta-etiquette { font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--encre-3); }
+.compta-valeur { font: 500 32px/1.1 var(--titres); letter-spacing: -.01em; }
+.compta-carte p { margin: 0; font-size: 13.5px; color: var(--encre-2); }
+.compta-echeance { display: flex; align-items: center; gap: 6px; font-weight: 600; color: var(--terre) !important; } .compta-carte.encre .compta-echeance { color: var(--papier) !important; }
+.compta-carte .btn-texte.petit, .compta-carte a.btn-texte { justify-self: start; padding-left: 0; font-size: 13px; }
+.liste-compta { list-style: none; margin: 10px 0 0; padding: 0; }
+.liste-compta li { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-top: 1px solid var(--filet); flex-wrap: wrap; } .liste-compta li:first-child { border-top: 0; }
+.liste-compta li > span:first-child { min-width: 70px; } .liste-compta li > small { color: var(--encre-3); flex: 1; } .liste-compta li > b { margin-left: auto; }
+.liste-compta .actions-ligne { display: flex; gap: 2px; }
+.liste-compta.banque .banque-libelle { flex: 1; display: grid; min-width: 140px; } .liste-compta.banque .banque-libelle small { color: var(--encre-3); font-size: 12px; }
+.liste-compta.banque select { min-height: 32px; font-size: 13px; padding: 4px 8px; width: auto; } .liste-compta.banque b { margin-left: 0; min-width: 90px; text-align: right; }
+.liste-compta .positif { color: #2F6B4F; }
+.etat-piece.e-retard { background: color-mix(in srgb, var(--terre) 16%, var(--blanc)); color: var(--terre); }
+tr.en-retard td { background: color-mix(in srgb, var(--terre) 5%, transparent); }
+.etapes-liaison { display: grid; gap: 14px; padding-left: 20px; margin: 0; } .etapes-liaison li { display: grid; gap: 6px; } .etapes-liaison textarea { font-size: 11px; }
+@media (max-width: 700px) { .compta-valeur { font-size: 26px; } .liste-compta.banque select { display: none; } }

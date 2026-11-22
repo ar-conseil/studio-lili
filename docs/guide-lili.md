@@ -180,6 +180,22 @@ en PDF.
 
 Tes anciennes factures importées de Notion gardent leur PDF d'origine.
 
+## 8 bis. Comptabilité
+
+Lien **Comptabilité** dans la barre de gauche (une pastille quand des factures attendent ou sont en retard).
+
+- **URSSAF · à déclarer** : ce que tu as encaissé (HT) dans le mois, et les cotisations estimées. Déclaration sur le
+  site de l'URSSAF avant la fin du mois suivant (bouton dans la carte).
+- **TVA à mettre de côté** : la TVA de tes factures payées dans le mois, moins la TVA de tes achats si tu la notes.
+- **À mettre de côté** : les deux ensemble, à virer sur un compte d'épargne chaque mois.
+- **Factures de fin de mois** : coche « Facture automatique en fin de mois » dans la fiche d'un client (avec son
+  forfait). Le dernier jour du mois, les brouillons sont prêts ; tu relis, puis « Émettre et envoyer » : numéro, PDF
+  et mail depuis ta boîte Gmail, en un clic.
+- **À encaisser** : factures envoyées, en retard, « Relancer » (mail avec le PDF), « Payée ».
+- **Compte pro** : « Relier Revolut Business » ; crée dans Revolut une clé API avec seulement « Accounts : Read » et
+  « Transactions : Read », colle-la. Les virements de tes clients se rapprochent de tes factures en un clic.
+- **Taux et régime** : vérifie les taux chaque année (2026 : 25,6 % + 0,2 % de formation).
+
 ## 9. Tâches et prospects
 
 - **Tâches** : des colonnes À faire, En cours, En relecture, Fait. Glisse une carte pour changer son étape ; un clic

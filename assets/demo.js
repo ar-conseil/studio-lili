@@ -28,9 +28,9 @@ window.DEMO_DONNEES = function () {
     { id: E.ecrin, slug: "studio-ecrin", nom: "Studio Écrin", statut: "actif", couleur: "#9C4660", reseaux: ["instagram", "tiktok"], ordre: 4, couverture_url: u(PHOTOS.serum, 900, 386), metier: "Onglerie" }
   ];
   var prives = [
-    { espace_id: E.ondine, raison_sociale: "Ondine SARL (fictive)", forfait_mensuel_ht: 650, heures_forfait: 12 },
-    { espace_id: E.lumiere, raison_sociale: "Lumière & Co (fictive)", forfait_mensuel_ht: 500, heures_forfait: 10 },
-    { espace_id: E.sable, raison_sociale: "Atelier Sable (fictive)", forfait_mensuel_ht: 420, heures_forfait: 8 },
+    { espace_id: E.ondine, raison_sociale: "Ondine SARL (fictive)", forfait_mensuel_ht: 650, heures_forfait: 12, facture_auto: true, email_facturation: "compta@ondine.exemple" },
+    { espace_id: E.lumiere, raison_sociale: "Lumière & Co (fictive)", forfait_mensuel_ht: 500, heures_forfait: 10, facture_auto: true, email_facturation: "compta@lumiere.exemple" },
+    { espace_id: E.sable, raison_sociale: "Atelier Sable (fictive)", forfait_mensuel_ht: 420, heures_forfait: 8, facture_auto: true, email_facturation: "compta@atelier.exemple" },
     { espace_id: E.ecrin, raison_sociale: "Écrin Beauté (fictive)", forfait_mensuel_ht: 480, heures_forfait: 9 }
   ];
   var comptes = [
@@ -215,5 +215,13 @@ window.DEMO_DONNEES = function () {
   return { lili: LILI, personnesDemo: P, espaces: espaces, espaces_prive: prives, comptes: comptes, personnes: personnes, membres: membres,
     medias: medias, publications: pubs, publication_medias: pm, commentaires: commentaires, versions: versions, operations: operations,
     temps_forts: tempsForts, taches: taches, rendez_vous: rendezVous, journal: journal, notes_internes: [{ id: "n1", espace_id: E.ondine, publication_id: pubs[0].id, contenu: "Inès préfère les visuels sans texte." }],
-    briefs: briefs, messages: messages, rapports: rapports, veille: veille, partenaires: partenaires, temps: temps, factures: factures, devis: devis, prospects: prospects, reglages: reglages };
+    briefs: briefs, messages: messages, rapports: rapports, veille: veille, partenaires: partenaires, temps: temps, factures: factures, devis: devis, prospects: prospects, reglages: reglages,
+    // Compte pro de démonstration (opérations fictives)
+    banque_liaisons: [{ id: "b1", fournisseur: "revolut", nom: "Compte pro (démonstration)", derniere_synchro: jour(0) }],
+    banque_operations: [
+      { id: "o1", date: jour(-2), montant: 600, contrepartie: "Lumière & Co", reference: "Facture", libelle: "Virement reçu" },
+      { id: "o2", date: jour(-4), montant: -389, contrepartie: "URSSAF", libelle: "Prélèvement URSSAF" },
+      { id: "o3", date: jour(-6), montant: -23.99, contrepartie: "Logiciel de création", libelle: "Carte" },
+      { id: "o4", date: jour(-9), montant: 780, contrepartie: "Ondine SARL", reference: "Facture novembre", libelle: "Virement reçu", facture_id: null },
+      { id: "o5", date: jour(-11), montant: -12.5, contrepartie: "Café", libelle: "Carte" }] };
 };

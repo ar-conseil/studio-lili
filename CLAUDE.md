@@ -109,6 +109,19 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   commande) à l'identité Papier. Champs : `reglages.entreprise.nom_legal`, `.naf` ; `espaces_prive.tva_intra`,
   `factures.reference`, `devis.reference` (migration `20261122200000_factures_mentions.sql`). Les factures importées
   de Notion gardent leur PDF d'origine (`pdf_path`). Vérifier un rendu : node + `sips` (voir l'historique du 22/11).
+- **Comptabilité** (`#compta?mois=AAAA-MM`, Lili seule, 22/11/2026) : `assets/vues/compta.js`. URSSAF du mois (chiffre
+  encaissé HT = factures `payee_le` du mois ; taux 2026 : 25,6 % + CFP 0,2 %, versement libératoire 2,2 % en option,
+  plafond 83 600 €), TVA à mettre de côté (collectée sur encaissements − déductible notée), total à mettre de côté,
+  chiffre de l'année. Réglages dans `reglages.compta` (taux, plafond, régime TVA ; le réel simplifié disparaît en 2027).
+  Factures de fin de mois : `espaces_prive.facture_auto` / `facture_libelle` (fiche client), fonction SQL
+  `preparer_factures_du_mois()` (pg_cron « factures-du-mois », dernier jour du mois 6 h UTC ; brouillons seulement,
+  `factures.auto_mois` unique par client), puis « Émettre et envoyer » : numéro, PDF, envoi par `messagerie` depuis
+  le Gmail de Lili, `envoyee_le`. Suivi : à encaisser, retard, relance (`relancee_le`), payée.
+  Compte pro : fonction `banque` (Revolut Business, **clé API en lecture seule** créée par Lili dans la console API de
+  Revolut, « Accounts : Read » + « Transactions : Read » ; l'ancien OAuth par certificat est déprécié par Revolut),
+  `banque_liaisons.cle_api` jamais accordée au navigateur, `banque_operations` (catégorie et rapprochement modifiables
+  par Lili, montant non), pg_cron « banque » toutes les heures. Rapprochement proposé quand un virement égale le TTC
+  d'une facture émise. Migration `20261122210000_comptabilite.sql`, testée (droits.sql).
 - Espace « Lili Rouzier » (`#lili-rouzier`, 22/11/2026) : sa propre marque ; ses portraits (dossier Portraits, internes). HTML des mails dans un iframe isolé,
   images distantes bloquées jusqu'au clic ; le HTML envoyé est nettoyé côté serveur (`nettoyerHtml`).
 - **Ma signature** (22/11/2026, comme Evoalys) : `assets/vues/signature.js`, en tête de Réglages › Signatures de mail.

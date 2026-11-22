@@ -8,7 +8,7 @@ window.Studio = (function () {
   var S = {
     moi: null, role: "proprietaire", espaces: [], prives: [], comptes: [], membres: [], personnes: [], medias: [], publications: [],
     pubMedias: [], commentaires: [], versions: [], operations: [], tempsForts: [], taches: [], journal: [], notes: [], notifications: [], boitesMail: [],
-    briefs: [], messages: [], rapports: [], signaturesDevis: [], mailsNonLus: 0, alertesSecurite: [], veille: [], partenaires: [], temps: [], devis: [], factures: [], prospects: [], reglages: [], briefsJour: [], rdv: [],
+    briefs: [], messages: [], rapports: [], signaturesDevis: [], mailsNonLus: 0, alertesSecurite: [], veille: [], partenaires: [], temps: [], devis: [], factures: [], prospects: [], reglages: [], briefsJour: [], rdv: [], banqueOps: [], banqueLiaisons: [],
     urls: {}, route: { nom: "", param: "", rubrique: "", query: {} }, voirCommeEspace: null
   };
   var X = { db: null, demo: false, quitter: null, verrouiller: null, coquille: null, page: null, demarre: false };
@@ -94,6 +94,7 @@ window.Studio = (function () {
     personnes: '<circle cx="6" cy="5.5" r="2.3"/><path d="M1.8 13.5a4.2 4.2 0 0 1 8.4 0M10.8 3.4a2.3 2.3 0 0 1 0 4.4M12 9.6a4.2 4.2 0 0 1 2.2 3.9"/>',
     prospects: '<path d="M2 3h12l-4.5 5.5V13l-3 1.2V8.5z"/>',
     reglages: '<circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/>',
+    copier: '<rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5V3.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/>',
     micro: '<rect x="6" y="1.8" width="4" height="7.5" rx="2"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.2"/>',
     imprimer: '<path d="M4.5 6V2h7v4M4.5 11.5H3a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v3.5a1 1 0 0 1-1 1h-1.5"/><path d="M4.5 9.5h7V14h-7z"/>',
     bouclier: '<path d="M8 1.8 13 3.6v4.1c0 3.2-2.1 5.6-5 6.5-2.9-.9-5-3.3-5-6.5V3.6z"/><path d="m5.8 8 1.6 1.6 2.9-3"/>',
@@ -169,7 +170,8 @@ window.Studio = (function () {
     ["devis", "devis"], ["devis_signatures", "signaturesDevis"]];
   var TABLES_LILI = [["espaces_prive", "prives"], ["taches", "taches"], ["notes_internes", "notes"],
     ["comptes_mail", "boitesMail", "id, email, droits, derniere_erreur, cree_le"],
-    ["securite_alertes", "alertesSecurite"], ["rendez_vous", "rdv"], ["temps", "temps"], ["factures", "factures"], ["prospects", "prospects"], ["reglages", "reglages"], ["briefs_jour", "briefsJour"]];
+    ["securite_alertes", "alertesSecurite"], ["rendez_vous", "rdv"], ["temps", "temps"], ["factures", "factures"], ["prospects", "prospects"], ["reglages", "reglages"], ["briefs_jour", "briefsJour"],
+    ["banque_liaisons", "banqueLiaisons", "id, fournisseur, nom, derniere_synchro, derniere_erreur, cree_le"], ["banque_operations", "banqueOps"]];
   function charger(seules) {
     if (X.demo) {
       if (!X.donneesDemo) {
@@ -180,6 +182,7 @@ window.Studio = (function () {
         S.versions = d.versions; S.operations = d.operations; S.tempsForts = d.temps_forts; S.taches = d.taches; S.journal = d.journal; S.notes = d.notes_internes;
         ["briefs", "messages", "rapports", "veille", "partenaires", "temps", "devis", "factures", "prospects", "reglages"].forEach(function (k) { S[k] = d[k] || []; });
         S.rdv = d.rendez_vous || [];
+        S.banqueOps = d.banque_operations || []; S.banqueLiaisons = d.banque_liaisons || [];
         S.signaturesDevis = d.devis_signatures || [];
         S.notifications = d.journal.map(function (j, i) { return { id: i + 1, personne_id: d.lili, journal_id: j.id, lue_le: null, cree_le: j.cree_le }; });
         S.medias.forEach(function (m) { S.urls[m.chemin] = m.url; if (m.apercu_url) S.urls[m.chemin + "#apercu"] = m.apercu_url; });
@@ -199,6 +202,7 @@ window.Studio = (function () {
       if (t[0] === "notifications") q = q.order("cree_le", { ascending: false }).limit(100);
       if (t[0] === "messages") q = q.order("cree_le", { ascending: false }).limit(500);
       if (t[0] === "briefs_jour") q = q.order("jour", { ascending: false }).limit(7);
+      if (t[0] === "banque_operations") q = q.order("date", { ascending: false }).limit(1500);
       if (t[0] === "securite_alertes") q = q.order("cree_le", { ascending: false }).limit(50);
       return q.then(function (r) { if (r.error) throw r.error; if (n === generations[t[0]]) S[t[1]] = r.data || []; });
     })).then(signerMedias);
@@ -254,7 +258,7 @@ window.Studio = (function () {
   var LOCALE = { publications: "publications", medias: "medias", commentaires: "commentaires", taches: "taches", espaces: "espaces", espaces_prive: "prives",
     notes_internes: "notes", operations: "operations", temps_forts: "tempsForts", comptes: "comptes", publication_medias: "pubMedias", versions: "versions",
     briefs: "briefs", messages: "messages", rapports: "rapports", veille: "veille", partenaires: "partenaires", temps: "temps", devis: "devis", factures: "factures",
-    prospects: "prospects", reglages: "reglages", briefs_jour: "briefsJour", devis_signatures: "signaturesDevis", securite_alertes: "alertesSecurite", rendez_vous: "rdv", membres: "membres", personnes: "personnes" };
+    prospects: "prospects", reglages: "reglages", briefs_jour: "briefsJour", banque_operations: "banqueOps", devis_signatures: "signaturesDevis", securite_alertes: "alertesSecurite", rendez_vous: "rdv", membres: "membres", personnes: "personnes" };
   // Tables sans colonne « cree_le » (la base refuserait une colonne inconnue)
   var SANS_DATE = ["espaces_prive", "comptes", "operations", "temps_forts", "publication_medias", "briefs", "rapports", "temps", "reglages"];
   function maj(table, id, champs) {
@@ -517,7 +521,8 @@ window.Studio = (function () {
       lienCote("#mediatheque", "Médiathèque", "mediatheque", r.nom === "mediatheque", null, "M"),
       lienCote("#mails", "Mails", "mail", r.nom === "mails", S.mailsNonLus || null, "E"),
       lienCote("#taches", "Tâches", "taches", r.nom === "taches", S.taches.filter(function (t) { return t.statut !== "fait" && t.echeance && t.echeance <= iso(new Date()); }).length || null),
-      lienCote("#prospects", "Prospects", "prospects", r.nom === "prospects")
+      lienCote("#prospects", "Prospects", "prospects", r.nom === "prospects"),
+      lienCote("#compta", "Comptabilité", "euro", r.nom === "compta", V.comptaAlerte ? V.comptaAlerte() || null : null)
     ] : [
       (espacesClient()[0] || {}).vue_client === "planning" ? lienCote("#", "Planning", "liste", r.nom === "" || r.nom === "planning") : lienCote("#", "Accueil", "aujourdhui", r.nom === ""),
       lienCote("#valider", "À valider", "valider", r.nom === "valider", aValider.length || null),
@@ -591,7 +596,7 @@ window.Studio = (function () {
   function filAriane() {
     var r = S.route, morceaux = [];
     var noms = { "": estLili() ? "Aujourd'hui" : "Accueil", calendrier: "Calendrier", publications: "Publications", mediatheque: "Médiathèque", valider: "À valider", mails: "Mails",
-      taches: "Tâches", prospects: "Prospects", reglages: "Réglages", clients: "Clients", planning: "Planning", devis: "Devis", compte: "Mon compte", brief: "Brief et ligne éditoriale", rapports: "Rapports", messages: "Messages" };
+      taches: "Tâches", prospects: "Prospects", reglages: "Réglages", clients: "Clients", planning: "Planning", devis: "Devis", compte: "Mon compte", brief: "Brief et ligne éditoriale", rapports: "Rapports", messages: "Messages", compta: "Comptabilité" };
     if (r.nom === "client" && !estLili()) morceaux.push(el("span", { text: "Page introuvable" }));
     else if (r.nom === "client") {
       var e = espaceSlug(r.param);
@@ -651,7 +656,7 @@ window.Studio = (function () {
   // ======================================================================
   // Routeur et rendu
   // ======================================================================
-  var RESERVES = ["", "calendrier", "publications", "mediatheque", "valider", "p", "mails", "taches", "prospects", "reglages", "clients", "planning", "brief", "rapports", "messages", "devis", "compte", "documents"];
+  var RESERVES = ["", "calendrier", "publications", "mediatheque", "valider", "p", "mails", "taches", "prospects", "reglages", "clients", "planning", "brief", "rapports", "messages", "devis", "compte", "documents", "compta"];
   function lireRoute() {
     var h = decodeURIComponent(location.hash.replace(/^#/, "")), q = {}, i = h.indexOf("?");
     if (i >= 0) { new URLSearchParams(h.slice(i + 1)).forEach(function (v, k) { q[k] = v; }); h = h.slice(0, i); }
@@ -675,7 +680,7 @@ window.Studio = (function () {
     if (r.nom === "publications") return V.publications(r);
     if (r.nom === "mediatheque") return V.mediatheque(r);
     if (r.nom === "mails") return estLili() ? V.mails(r) : introuvable();
-    if (["taches", "prospects", "reglages", "clients"].indexOf(r.nom) >= 0) return estLili() ? V[r.nom](r) : introuvable();
+    if (["taches", "prospects", "reglages", "clients", "compta"].indexOf(r.nom) >= 0) return estLili() ? V[r.nom](r) : introuvable();
     if (r.nom === "compte") return !estLili() && V.compte ? V.compte(r) : introuvable();
     if (r.nom === "devis") { var ed = espacesClient()[0]; return !estLili() && ed && V.devisClient ? V.devisClient(r, ed) : introuvable(); }
     if (["brief", "rapports", "messages"].indexOf(r.nom) >= 0) { var ec = espacesClient()[0]; return !estLili() && ec ? V["rub_" + r.nom](r, ec) : introuvable(); }

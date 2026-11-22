@@ -129,8 +129,18 @@ select cron.schedule('brief-du-jour', '0 5 * * *', \$\$ select net.http_post(url
     headers := jsonb_build_object('Content-Type', 'application/json',
       'x-cle-synchro', (select decrypted_secret from vault.decrypted_secrets where name = 'cle_synchro')),
     body := '{}'::jsonb, timeout_milliseconds := 120000) \$\$);
+-- Factures de fin de mois : le dernier jour du mois à 6 h UTC, un brouillon par client au forfait (rien n'est envoyé)
+select cron.unschedule('factures-du-mois') where exists (select 1 from cron.job where jobname = 'factures-du-mois');
+select cron.schedule('factures-du-mois', '0 6 28-31 * *', \$\$ select public.preparer_factures_du_mois(current_date)
+  where current_date = (date_trunc('month', current_date) + interval '1 month - 1 day')::date \$\$);
+-- Compte pro (Revolut, lecture seule) : relu toutes les heures
+select cron.unschedule('banque') where exists (select 1 from cron.job where jobname = 'banque');
+select cron.schedule('banque', '17 * * * *', \$\$ select net.http_post(url := 'https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/banque',
+    headers := jsonb_build_object('Content-Type', 'application/json',
+      'x-cle-synchro', (select decrypted_secret from vault.decrypted_secrets where name = 'cle_synchro')),
+    body := '{}'::jsonb, timeout_milliseconds := 120000) \$\$);
 SQL
-sql "$PRIVE/cron.sql" && echo "   tâches « notifier » (5 min), « mails-programmes » (1 min), « vigie » (10 min), « brief-du-jour » (chaque matin) et « menage »"
+sql "$PRIVE/cron.sql" && echo "   tâches « notifier » (5 min), « mails-programmes » (1 min), « vigie » (10 min), « brief-du-jour » (chaque matin), « factures-du-mois », « banque » (1 h) et « menage »"
 
 echo "6. Clé publique du site (assets/config.js)"
 curl -s "$API/api-keys" -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" > "$PRIVE/cles.json"

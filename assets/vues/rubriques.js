@@ -577,6 +577,8 @@
       type_contrat: texte(pr.type_contrat, { aide: "Forfait mensuel, ponctuel, à la prestation…" }),
       forfait_mensuel_ht: texte(pr.forfait_mensuel_ht, { type: "number", attrs: { min: 0, step: "10" } }), heures_forfait: texte(pr.heures_forfait, { type: "number", attrs: { min: 0, step: "0.5" } }),
       note_interne: texte(pr.note_interne, { lignes: 3, aide: "Ce qu'il faut savoir sur ce client (jamais visible de lui)" }) };
+    var factureAuto = el("input", { type: "checkbox", checked: !!pr.facture_auto });
+    var factureLibelle = texte(pr.facture_libelle, { aide: "Prestation social media & community manager" });
 
     St.fenetre({ titre: "Fiche de " + e.nom, classe: "large", sous: "Adresse de son espace : #" + e.slug + ". La couleur, le logo et la couverture habillent son espace ; la facturation reste entre vous et le studio.", corps: [
       el("h3", { class: "titre-fiche", text: "Identité" }),
@@ -594,6 +596,8 @@
       el("div", { class: "deux-colonnes" }, [champ("Adresse", p.adresse), champ("TVA intracommunautaire", p.tva_intra)]),
       el("div", { class: "deux-colonnes" }, [champ("E-mail de facturation", p.email_facturation), champ("Type de contrat", p.type_contrat)]),
       el("div", { class: "deux-colonnes" }, [champ("Forfait mensuel HT (€)", p.forfait_mensuel_ht), champ("Heures prévues par mois", p.heures_forfait)]),
+      el("label", { class: "case-option" }, [factureAuto, el("span", {}, [el("b", { text: "Facture automatique en fin de mois" }), el("small", { text: "Le dernier jour du mois, un brouillon au montant du forfait est préparé dans Comptabilité ; vous l'envoyez en un clic." })])]),
+      champ("Libellé de la facture automatique", factureLibelle),
       champ("Note interne", p.note_interne)],
       actions: [{ texte: "Annuler" }, { texte: "Enregistrer", principal: true, action: function (fermer) {
         if (!nom.value.trim()) { nom.focus(); return; }
@@ -603,7 +607,7 @@
           reseaux: cochés.map(function (x) { return x.k; }), heures_defaut: h, modifie_le: new Date().toISOString() };
         if (oterLogo) { champs.logo_path = null; e.logo_url = null; }
         if (oterCouv) { champs.couverture_path = null; e.couverture_url = null; }
-        var prive = { espace_id: e.id }; Object.keys(p).forEach(function (k) { var v = String(p[k].value).trim(); prive[k] = v === "" ? null : (/forfait|heures/.test(k) ? +v : v); });
+        var prive = { espace_id: e.id }; Object.keys(p).forEach(function (k) { var v = String(p[k].value).trim(); prive[k] = v === "" ? null : (/forfait|heures/.test(k) ? +v : v); }); prive.facture_auto = factureAuto.checked; prive.facture_libelle = factureLibelle.value.trim() || null;
         var envois = [];
         [[logo, "logo", "logo_path", "logo_url"], [couv, "couverture", "couverture_path", "couverture_url"]].forEach(function (x) {
           var fichier = x[0].files && x[0].files[0]; if (!fichier) return;

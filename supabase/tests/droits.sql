@@ -89,6 +89,8 @@ set local role authenticated;
 select essais.verifier((select count(*) from public.publications) = 0, 'Lili sans code ne voit aucune publication');
 select essais.verifier((select count(*) from public.factures) = 0, 'Lili sans code ne voit aucune facture');
 select essais.doit_echouer($q$insert into public.espaces (slug, nom) values ('essai-sans-code', 'Sans code')$q$, 'Lili sans code crée un client');
+select essais.verifier((select count(*) from public.banque_operations) = 0, 'Lili sans code ne voit pas son compte pro');
+select essais.doit_echouer('select public.preparer_factures_du_mois()', 'Lili sans code prépare les factures du mois');
 select essais.doit_echouer($q$insert into public.signature_images (type, contenu) values ('image/png', 'iVBORw0KGgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')$q$, 'Lili sans code dépose une image de signature');
 reset role;
 
@@ -120,6 +122,20 @@ insert into public.mails_programmes (personne_id, envoyer_le, contenu) values ('
 select essais.verifier(exists (select 1 from public.mails_programmes where contenu ->> 'objet' = 'Envoi de demain'), 'Lili programme un envoi');
 select essais.doit_echouer('select refresh_token from public.comptes_mail', 'le navigateur de Lili lit le jeton Gmail');
 select essais.doit_echouer('select jeton_acces from public.comptes_mail', 'le navigateur de Lili lit le jeton d''accès Gmail');
+-- Comptabilité : compte pro relié (lecture seule, jetons illisibles), factures automatiques de fin de mois
+reset role;
+insert into public.banque_liaisons (id, cle_api, nom) values ('30000000-0000-4000-a000-000000000001', 'r_prod_secret', 'Compte pro');
+insert into public.banque_operations (id, liaison_id, date, montant, libelle) values ('op-essai-1', '30000000-0000-4000-a000-000000000001', now(), 1980, 'Virement client');
+update public.espaces_prive set facture_auto = true, forfait_mensuel_ht = 500 where espace_id::text like '10000000-%';
+set local role authenticated;
+select essais.verifier((select count(*) from public.banque_operations) = 1 and (select nom from public.banque_liaisons) = 'Compte pro', 'Lili voit son compte pro et ses opérations');
+select essais.doit_echouer('select cle_api from public.banque_liaisons', 'le navigateur de Lili lit la clé API Revolut');
+select essais.doit_echouer($$update public.banque_operations set montant = 1$$, 'Lili change le montant d''une opération bancaire');
+update public.banque_operations set categorie = 'client' where id = 'op-essai-1';
+select essais.verifier((select categorie from public.banque_operations where id = 'op-essai-1') = 'client', 'Lili classe une opération');
+select essais.verifier(public.preparer_factures_du_mois() = 1, 'Lili prépare la facture du mois du client au forfait');
+select essais.verifier(public.preparer_factures_du_mois() = 0, 'une seule facture automatique par client et par mois');
+select essais.verifier((select statut from public.factures where auto_mois = to_char(current_date, 'YYYY-MM')) = 'brouillon', 'la facture automatique reste un brouillon (rien n''est émis ni envoyé)');
 -- Audit du 22/11 : Lili commente une idée interne sans cocher « Lili seule » : rien ne sort vers le client
 insert into public.commentaires (publication_id, contenu, visibilite) values ('20000000-0000-4000-a000-000000000002', 'Idée à creuser, budget serré', 'partage');
 select essais.verifier((select visibilite from public.publications where id = '20000000-0000-4000-a000-000000000002') = 'interne', 'l''idée du décor est interne');
@@ -185,6 +201,9 @@ select essais.verifier((select count(*) from public.notifications) >= 1 and not 
 select essais.verifier((select count(*) from public.comptes_mail) = 0, 'A ne voit pas la boîte Gmail de Lili');
 select essais.verifier((select count(*) from public.reglages) = 0, 'A ne voit pas les réglages de Lili (SIRET, IBAN…)');
 select essais.verifier((select count(*) from public.signature_images) = 0, 'A ne voit pas les images de signature de Lili');
+select essais.verifier((select count(*) from public.banque_operations) = 0 and (select count(*) from public.banque_liaisons) = 0, 'A ne voit pas le compte pro de Lili');
+select essais.doit_echouer('select cle_api from public.banque_liaisons', 'A lit la clé API Revolut');
+select essais.doit_echouer('select public.preparer_factures_du_mois()', 'A prépare des factures');
 select essais.doit_echouer($q$insert into public.signature_images (type, contenu) values ('image/png', 'iVBORw0KGgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')$q$, 'A dépose une image de signature');
 select essais.verifier((select count(*) from public.briefs_jour) = 0, 'A ne voit pas le brief du jour de Lili');
 select essais.verifier((select count(*) from public.assistant_journal) = 0, 'A ne voit pas ce que Lili demande à son assistant');
