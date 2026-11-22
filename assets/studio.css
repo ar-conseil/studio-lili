@@ -785,9 +785,9 @@ kbd { font: 12px var(--mono); padding: 2px 7px; border-radius: 6px; border: 1px 
 .etapes-fiche li.ok small { color: #2F7A4F; }
 .rond { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; border: 2px solid #D9B25A; font: 600 13px var(--mono); color: #9A6A18; }
 .etapes-fiche li.ok .rond { background: #2F7A4F; border-color: #2F7A4F; color: #fff; }
-.grille-signatures { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.grille-signatures { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr)); gap: 12px; }
 .signature-carte { display: grid; gap: 10px; } .signature-carte header { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.signature-apercu { padding: 12px; border-radius: 10px; background: #fff; color: #1E1A17; border: 1px solid var(--filet); font: 13px/1.5 Arial, sans-serif; overflow: hidden; }
+.signature-apercu { padding: 12px; border-radius: 10px; background: #fff; color: #1E1A17; border: 1px solid var(--filet); font: 13px/1.5 Arial, sans-serif; overflow-x: auto; }
 .signature-apercu a { color: #A9553A; } .editeur-signature .editeur-zone { min-height: 160px; }
 .liste-modeles { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .liste-modeles li { display: flex; gap: 14px; justify-content: space-between; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--filet); border-radius: 12px; }
