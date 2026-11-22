@@ -815,3 +815,6 @@ kbd { font: 12px var(--mono); padding: 2px 7px; border-radius: 6px; border: 1px 
 .etape-code { display: grid; gap: 10px; padding: 14px 16px; border-radius: 12px; background: color-mix(in srgb, var(--terre) 7%, var(--blanc)); border: 1px solid color-mix(in srgb, var(--terre) 30%, var(--filet)); }
 .etape-code .phrase { margin: 0; font-size: 14px; color: var(--encre); } .etape-code .btn-texte { justify-self: start; }
 .code-signature { font: 600 22px var(--mono) !important; letter-spacing: .35em; max-width: 220px; text-align: center; }
+/* La rédaction d'un mail se fait sur fond blanc, comme le message reçu (la signature, en encre, reste lisible en mode sombre) */
+.mx-redaction .editeur-zone { background: #FFFFFF; color: #1E1A17; }
+.mx-redaction .editeur-zone:empty::before { color: #8B8178; }
