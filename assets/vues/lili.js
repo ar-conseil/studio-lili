@@ -97,6 +97,60 @@
     ]);
   };
 
+  // ---------- Sommaire d'un client : quatre « unes » vivantes, puis le dossier en table des matières ----------
+  var COULEURS_STATUT = { "idee": "#8A78B5", "en-creation": "#B98A52", "a-valider": "#A9553A", "modifs-demandees": "#C4513F", "valide": "#3F8A66", "programme": "#3F78AE", "publie": "#A8A29A" };
+  function sommaire(e, pubs, prochaines) {
+    var base = "#" + e.slug + "/", rubs = St.rubriquesClient();
+    var a = function (id) { return rubs.some(function (x) { return x.id === id; }); };
+    var une = function (id, titre, corps, pied) {
+      return el("a", { class: "som-une som-" + id, href: base + id }, [
+        el("span", { class: "som-sur" }, [el("span", { text: titre }), St.icone("fleche", "som-fleche")]), corps, pied ? el("small", { class: "som-pied", text: pied }) : null]);
+    };
+    // Calendrier : la prochaine date, en grand
+    var p0 = prochaines[0], d0 = p0 && new Date(p0.date_prevue);
+    var calendrier = une("calendrier", "Calendrier", p0 ? el("div", { class: "som-date" }, [
+      el("b", { text: String(d0.getDate()) }),
+      el("span", {}, [el("i", { text: St.fmt(d0, { weekday: "long" }) }), el("em", { text: St.fmt(d0, { month: "long" }) + " · " + St.hm(p0.date_prevue) })])
+    ]) : el("div", { class: "som-date vide" }, [el("b", { text: "—" })]), p0 ? (p0.titre || "Sans titre") : "Rien de prévu pour l'instant");
+    // Publications : le total et la répartition par statut
+    var actives = pubs.filter(function (p) { return !p.corbeille_le; });
+    var parts = St.ORDRE_STATUTS.map(function (st) { return [st, actives.filter(function (p) { return p.statut === st; }).length]; }).filter(function (x) { return x[1]; });
+    var enCours = parts.filter(function (x) { return x[0] !== "publie"; });
+    var publications = une("publications", "Publications", el("div", { class: "som-pubs" }, [
+      el("b", { class: "som-nombre", text: String(actives.length) }),
+      el("div", { class: "som-barre", role: "img", "aria-label": parts.map(function (x) { return x[1] + " " + St.STATUTS[x[0]]; }).join(", ") }, parts.map(function (x) { return el("i", { style: { "flex-grow": String(x[1]), background: COULEURS_STATUT[x[0]] } }); })),
+      el("ul", { class: "som-legende" }, (enCours.length ? enCours : parts).slice(0, 4).map(function (x) { return el("li", {}, [el("i", { style: { background: COULEURS_STATUT[x[0]] } }), el("b", { text: String(x[1]) }), " " + St.STATUTS[x[0]].toLowerCase()]); }))
+    ]));
+    // Planning : les prochaines lignes, comme le client les voit
+    var lignes = prochaines.filter(function (p) { return p.visibilite === "partage"; }).slice(0, 3);
+    var planning = a("planning") ? une("planning", "Planning", el("div", { class: "som-lignes" }, lignes.length ? lignes.map(function (p) {
+      return el("span", {}, [el("i", { style: { background: COULEURS_STATUT[p.statut] } }), el("b", { text: p.titre || "Sans titre" }), el("em", { text: St.fmt(p.date_prevue, { day: "numeric", month: "short" }) })]);
+    }) : [el("p", { class: "som-rien", text: "Rien de partagé à venir" })]), "Ce que voit le client") : null;
+    // Médiathèque : les derniers visuels
+    var medias = S.medias.filter(function (m) { return m.espace_id === e.id && !m.corbeille_le; });
+    var derniers = medias.filter(function (m) { return m.type !== "video" || m.apercu_chemin; }).sort(function (x, y) { return String(y.cree_le).localeCompare(String(x.cree_le)); }).slice(0, 4);
+    var mediatheque = une("mediatheque", "Médiathèque", el("div", { class: "som-mosaique n" + derniers.length }, derniers.length ? derniers.map(function (m) { return St.image(m, { classe: "som-img" }); })
+      : [el("p", { class: "som-rien", text: "Aucun fichier" })]), medias.length + " fichier" + (medias.length > 1 ? "s" : ""));
+    // Le dossier : table des matières numérotée
+    var dossier = rubs.filter(function (x) { return ["calendrier", "publications", "planning", "mediatheque"].indexOf(x.id) < 0; });
+    var AFAIRE = { "À rédiger": 1, "Inviter le client": 1 }, INTERNES = { facturation: 1, notes: 1 };
+    return el("nav", { class: "sommaire", "aria-label": "Rubriques de " + e.nom }, [
+      el("div", { class: "som-unes" }, [calendrier, publications, planning, mediatheque].filter(Boolean)),
+      el("div", { class: "som-dossier" }, [
+        el("h2", {}, [el("span", { text: "Le dossier" }), el("small", { text: e.nom })]),
+        el("ol", {}, dossier.map(function (x, i) {
+          var resume = St.resumes && St.resumes[x.id] ? St.resumes[x.id](e) : "";
+          return el("li", {}, [el("a", { href: base + x.id }, [
+            el("i", { class: "som-no", text: (i < 9 ? "0" : "") + (i + 1) }),
+            el("b", {}, [x.nom.replace(/ \(.*\)$/, ""), INTERNES[x.id] ? St.icone("cadenas", "som-cadenas") : null]),
+            el("span", { class: "som-points", "aria-hidden": "true" }),
+            el("small", { class: AFAIRE[resume] ? "a-faire" : "", text: resume }),
+            St.icone("fleche", "som-fleche")])]);
+        }))
+      ])
+    ]);
+  }
+
   // ---------- Page d'un client : présentation (#slug) et rubriques (#slug/calendrier …) ----------
   V.client = function (r, e) {
     if (r.rubrique) {
@@ -133,12 +187,7 @@
         el("div", { class: "entete-actions" }, [el("button", { type: "button", class: "btn-texte", onclick: function () { St.editerEspace(e); } }, [St.icone("reglages"), "Fiche"]),
           el("button", { type: "button", class: "btn-plein", onclick: function () { St.nouvellePublication(e.id); } }, [St.icone("plus"), "Nouvelle publication"])])]),
       el("div", { class: "chiffres" }, chiffres.map(function (c) { return el("div", { class: "chiffre " + (c[3] || "") }, [el("span", { text: c[0] }), el("b", { text: String(c[1]) }), el("small", { text: c[2] })]); })),
-      el("nav", { class: "tuiles", "aria-label": "Rubriques de " + e.nom }, St.rubriquesClient().map(function (x) {
-        var resume = x.id === "calendrier" ? (prochaines[0] ? "Prochaine : " + (prochaines[0].titre || "Sans titre") + " · " + St.quand(prochaines[0].date_prevue) : "Rien de prévu")
-          : x.id === "publications" ? pubs.length + " publication" + (pubs.length > 1 ? "s" : "") : x.id === "mediatheque" ? S.medias.filter(function (m) { return m.espace_id === e.id && !m.corbeille_le; }).length + " fichiers"
-          : St.resumes && St.resumes[x.id] ? St.resumes[x.id](e) : "";
-        return el("a", { class: "tuile", href: "#" + e.slug + "/" + x.id }, [St.icone(x.icone, "tuile-ic"), el("span", {}, [el("b", { text: x.nom }), el("small", { text: resume })]), St.icone("fleche", "tuile-fleche")]);
-      })),
+      sommaire(e, pubs, prochaines),
       prochaines.length ? el("section", { class: "a-venir" }, [el("h2", { text: "À venir" }), el("div", { class: "grille-cartes" }, prochaines.map(function (p) { return St.cartePublication(p, { sansClient: true }); }))]) : null
     ]);
   };
