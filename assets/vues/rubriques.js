@@ -706,7 +706,8 @@
   // Le brief du jour (Aujourd'hui) : préparé à 6 h par la fonction serveur, ou à la demande
   // ======================================================================
   function briefLocal() {
-    var pubs = St.publicationsVisibles(), auj = new Date();
+    var actifs = St.espacesActifs().map(function (e) { return e.id; });
+    var pubs = St.publicationsVisibles().filter(function (p) { return actifs.indexOf(p.espace_id) >= 0; }), auj = new Date();
     var duJour = pubs.filter(function (p) { return p.date_prevue && St.memeJour(p.date_prevue, auj); });
     var modifs = pubs.filter(function (p) { return p.statut === "modifs-demandees"; }), attente = pubs.filter(function (p) { return p.statut === "a-valider"; });
     var courts = St.espacesActifs().filter(function (e) { var a = St.avance(e.id); return a.jours != null && a.jours <= 2; });

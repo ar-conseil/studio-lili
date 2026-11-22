@@ -26,7 +26,8 @@ Deno.serve(async (req) => {
   ]);
   const { data: personnes } = await db.from("personnes").select("id, nom, role");
   const nomE = (id: string) => (espaces ?? []).find((e: any) => e.id === id)?.nom ?? "";
-  const P = pubs ?? [];
+  const actifs = new Set((espaces ?? []).map((e: any) => e.id));
+  const P = (pubs ?? []).filter((p: any) => actifs.has(p.espace_id));   // les espaces archivés ne comptent plus
   const duJour = P.filter((p: any) => p.date_prevue && isoParis(new Date(p.date_prevue)) === jour);
   const attente = P.filter((p: any) => p.statut === "a-valider");
   const modifs = P.filter((p: any) => p.statut === "modifs-demandees");
