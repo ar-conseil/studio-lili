@@ -932,3 +932,37 @@ a.cote-titre:hover, a.cote-titre[aria-current="page"] { color: var(--encre); }
   .rech-fenetre { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; border: 0; }
   .rech-pied { display: none; }
 }
+
+/* Rendez-vous : calendrier et bloc « Agenda » d'Aujourd'hui */
+.cal-rdv { display: block; width: 100%; text-align: left; border: 0; border-left: 3px solid var(--c, var(--terre)); border-radius: 6px; padding: 3px 6px; margin-bottom: 3px;
+  background: color-mix(in srgb, var(--c, var(--terre)) 12%, var(--blanc)); color: var(--encre); font: 12px/1.3 inherit; font-size: 12px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-rdv b { font: 500 11px var(--mono); }
+.cal-rdv-liste { display: grid; gap: 4px; margin-bottom: 8px; }
+.cal-rdv-liste .cal-rdv { white-space: normal; padding: 6px 10px; font-size: 13.5px; }
+.agenda { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.agenda button { width: 100%; display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; align-items: center; padding: 7px 4px; border: 0; border-radius: 8px; background: none; color: inherit; text-align: left; font: inherit; cursor: pointer; }
+.agenda button:hover { background: var(--survol); }
+.agenda-quand, .agenda-quoi { display: grid; gap: 1px; min-width: 0; }
+.agenda-quand b { font-size: 13px; font-weight: 600; } .agenda-quand small { font: 12px var(--mono); color: var(--encre-3); }
+.agenda-quoi b { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .agenda-quoi small { color: var(--encre-3); font-size: 12px; }
+
+/* Assistant dans la fenêtre de recherche */
+.rech-mode { display: inline-flex; align-items: center; gap: 6px; flex: none; height: 30px; padding: 0 10px; border: 0; border-radius: 999px; cursor: pointer;
+  background: color-mix(in srgb, var(--terre) 16%, var(--blanc)); color: color-mix(in srgb, var(--terre) 80%, var(--encre)); font: 600 13px inherit; font-size: 13px; }
+.rech-mode svg { width: 15px; height: 15px; }
+.rech-ico-tete { display: inline-grid; color: var(--encre-3); } .rech-ico-tete svg { width: 20px; height: 20px; }
+.rech-micro.actif { color: var(--terre); background: color-mix(in srgb, var(--terre) 14%, transparent); }
+.rech-icone.ia { background: color-mix(in srgb, var(--terre) 16%, var(--creme)); color: color-mix(in srgb, var(--terre) 80%, var(--encre)); }
+.rech-demande b { white-space: normal; }
+.rech-message { margin: 10px 8px; max-width: 88%; padding: 10px 14px; border-radius: 14px; background: var(--blanc); border: 1px solid var(--filet); }
+.rech-message small { display: block; font-size: 11.5px; font-weight: 600; color: var(--encre-3); margin-bottom: 3px; }
+.rech-message p { margin: 0; white-space: pre-wrap; line-height: 1.5; }
+.rech-message.moi { margin-left: auto; background: color-mix(in srgb, var(--terre) 10%, var(--blanc)); border-color: transparent; }
+.rech-message.erreur { border-color: color-mix(in srgb, var(--rouge, #B4412E) 50%, transparent); }
+.rech-message.attente p { color: var(--encre-3); font-style: italic; }
+.rech-crees { display: grid; gap: 4px; margin-top: 8px; }
+.rech-cree { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--filet); border-radius: 10px; background: var(--papier); color: inherit; text-align: left; font: inherit; font-size: 13.5px; cursor: pointer; }
+.rech-cree:hover { border-color: var(--encre-3); } .rech-cree svg { width: 15px; height: 15px; color: var(--terre); flex: none; }
+.rech-pied { flex-wrap: wrap; align-items: center; }
+.rech-pied-note { margin-left: auto; }
+.en-assistant .rech-resultats { min-height: 220px; }

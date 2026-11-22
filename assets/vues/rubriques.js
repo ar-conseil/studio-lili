@@ -761,6 +761,35 @@
       }, function (id, statut) { St.maj("taches", id, { statut: statut, fait_le: statut === "fait" ? maintenant() : null }).then(function () { St.dessiner(false); }); })
     ]);
   };
+  // ======================================================================
+  // Rendez-vous de Lili (réunion client, shooting, appel…) : créés ici, depuis le calendrier ou par l'assistant
+  // ======================================================================
+  var deuxChiffres = function (n) { return String(n).padStart(2, "0"); };
+  var heureDe = function (d) { d = new Date(d); return deuxChiffres(d.getHours()) + ":" + deuxChiffres(d.getMinutes()); };
+  St.rdvDu = function (jour) { return (S.rdv || []).filter(function (r) { return St.memeJour(r.debut, jour); }).sort(function (a, b) { return String(a.debut).localeCompare(String(b.debut)); }); };
+  St.libelleRdv = function (r) { return heureDe(r.debut) + (r.fin ? "–" + heureDe(r.fin) : ""); };
+  St.editerRdv = function (r, depart) {
+    r = r || {};
+    var d0 = r.debut ? new Date(r.debut) : (function () { var x = depart ? new Date(depart) : new Date(); x.setHours(depart ? 10 : Math.min(18, new Date().getHours() + 1), 0, 0, 0); return x; })();
+    var f0 = r.fin ? new Date(r.fin) : new Date(d0.getTime() + 3600000);
+    var titre = texte(r.titre, { aide: "Point mensuel, shooting, appel…" }), lieu = texte(r.lieu, { aide: "Adresse, visio, téléphone" }), notes = texte(r.notes, { lignes: 3 });
+    var date = el("input", { type: "date", value: St.iso(d0), "aria-label": "Date" }), debut = el("input", { type: "time", value: heureDe(d0), "aria-label": "Début" }), fin = el("input", { type: "time", value: heureDe(f0), "aria-label": "Fin" });
+    var cl = choix([["", "Aucun client"]].concat(St.espacesActifs().map(function (e) { return [e.id, e.nom]; })), r.espace_id || "", { nom: "Client" });
+    St.fenetre({ titre: r.id ? "Rendez-vous" : "Nouveau rendez-vous", sous: "Dans votre agenda seulement : jamais visible d'un client.", corps: [champ("Titre", titre),
+      el("div", { class: "deux-colonnes" }, [champ("Date", date), champ("Client", cl)]),
+      el("div", { class: "deux-colonnes" }, [champ("Début", debut), champ("Fin", fin)]), champ("Lieu", lieu), champ("Notes", notes)],
+      actions: [r.id ? { texte: "Supprimer", danger: true, action: function (fermer) { fermer(); confirmer("Supprimer « " + r.titre + " » ?", "Le rendez-vous sera définitivement effacé de l'agenda.", "Supprimer", function () { St.supprimer("rendez_vous", { id: r.id }).then(function () { St.dessiner(false); }); }); } } : null,
+        { texte: "Annuler" }, { texte: "Enregistrer", principal: true, action: function (fermer) {
+          if (!titre.value.trim()) { titre.focus(); return; }
+          if (!date.value || !debut.value) { date.focus(); return; }
+          var dd = new Date(date.value + "T" + debut.value), ff = fin.value ? new Date(date.value + "T" + fin.value) : null;
+          if (ff && ff < dd) ff = new Date(dd.getTime() + 3600000);
+          var champs = { titre: titre.value.trim(), debut: dd.toISOString(), fin: ff ? ff.toISOString() : null, lieu: lieu.value.trim() || null, notes: notes.value.trim() || null, espace_id: cl.value || null };
+          (r.id ? St.maj("rendez_vous", r.id, champs) : St.creer("rendez_vous", champs)).then(function () { fermer(); St.signaler("Rendez-vous enregistré"); St.dessiner(false); }, function () {});
+        } }].filter(Boolean) });
+    setTimeout(function () { titre.focus(); }, 50);
+  };
+
   St.editerTache = function (x) { return editerTache(x); };
   function editerTache(t) {
     t = t || {};
@@ -826,59 +855,7 @@
   }
 
 
-  // ======================================================================
-  // L'assistant : une conversation (touche /), dictée possible au micro
-  // ======================================================================
-  var conversation = [];
-  V.assistant = function () {
-    var nomA = MARQUE.assistant || "l'assistant", r = S.route;
-    var e = r.nom === "client" ? St.espaceSlug(r.param) : r.nom === "p" && St.publication(r.param) ? St.espace(St.publication(r.param).espace_id) : null;
-    var fil = el("div", { class: "fil-assistant", role: "log", "aria-live": "polite" });
-    var rendre = function () {
-      fil.textContent = "";
-      if (!conversation.length) fil.appendChild(el("div", { class: "suggestions" }, [el("p", { class: "aide", text: "Par exemple :" })].concat([
-        e ? "Trois idées de posts pour " + e.nom + " la semaine prochaine" : "Trois idées de posts pour la semaine prochaine, client par client",
-        e ? "Fais le bilan du mois dernier pour " + e.nom : "Qu'est-ce qui attend une validation depuis plus de trois jours ?",
-        "Réécris cette légende en plus court : …"
-      ].map(function (s) { return el("button", { type: "button", class: "puce", text: s, onclick: function () { saisie.value = s; saisie.focus(); } }); }))));
-      conversation.forEach(function (m) {
-        fil.appendChild(el("div", { class: "message" + (m.qui === "moi" ? " moi" : "") + (m.erreur ? " erreur" : "") }, [
-          el("div", {}, [el("small", { text: m.qui === "moi" ? "Vous" : nomA }), el("p", { text: m.texte }),
-            (m.brouillons || []).length ? el("ul", { class: "brouillons" }, m.brouillons.map(function (b) { return el("li", {}, [el("a", { href: "#p/" + b.id, onclick: function () { d.close(); } }, [St.icone("publications"), b.titre || "Brouillon"])]); })) : null])
-        ]));
-      });
-      if (attente) fil.appendChild(el("div", { class: "message attente" }, [el("p", { text: nomA + " réfléchit…" })]));
-      fil.scrollTop = fil.scrollHeight;
-    };
-    var attente = false;
-    var saisie = el("textarea", { rows: 2, placeholder: "Demander à " + nomA + "…", "aria-label": "Votre demande" });
-    var envoyer = function () {
-      var t = saisie.value.trim(); if (!t || attente) return;
-      saisie.value = ""; conversation.push({ qui: "moi", texte: t }); attente = true; rendre();
-      var fin = function (m) { attente = false; conversation.push(m); rendre(); };
-      if (St.X.demo) { setTimeout(function () { fin({ qui: "assistant", texte: "En démonstration, " + nomA + " ne répond pas : il travaille sur les vraies données du studio, avec sa clé. En ligne, il lit les briefs, les publications et les rapports, et crée des brouillons que vous relisez." }); }, 500); return; }
-      St.appel("assistant", { texte: t, client: e ? e.slug : null, nom_assistant: MARQUE.assistant || null, historique: conversation.slice(0, -1).filter(function (m) { return !m.erreur; }).slice(-8).map(function (m) { return { qui: m.qui, texte: m.texte }; }) })
-        .then(function (res) {
-          fin({ qui: "assistant", texte: res.texte, brouillons: res.brouillons });
-          if ((res.brouillons || []).length) St.charger().then(function () { St.dessiner(false); });
-        }, function (x) { fin({ qui: "assistant", texte: x.message, erreur: true }); });
-    };
-    saisie.addEventListener("keydown", function (ev) { if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); envoyer(); } });
-    var Reco = window.SpeechRecognition || window.webkitSpeechRecognition, reco = null;
-    var micro = Reco ? el("button", { type: "button", class: "btn-icone micro", "aria-label": "Dicter", title: "Dicter", onclick: function () {
-      if (reco) { reco.stop(); return; }
-      reco = new Reco(); reco.lang = "fr-FR"; reco.interimResults = true; var avant = saisie.value ? saisie.value + " " : "";
-      reco.onresult = function (ev) { saisie.value = avant + Array.from(ev.results).map(function (x) { return x[0].transcript; }).join(""); };
-      reco.onend = function () { reco = null; micro.classList.remove("actif"); saisie.focus(); };
-      reco.onerror = function () { St.signaler("Le micro n'est pas disponible", true); };
-      micro.classList.add("actif"); reco.start();
-    } }, [St.icone("micro")]) : null;
-    var d = St.fenetre({ titre: nomA.charAt(0).toUpperCase() + nomA.slice(1), sous: (e ? "Sur " + e.nom + ". " : "") + "Il crée des brouillons ; rien ne part sans vous.", classe: "large assistant",
-      corps: [fil, el("div", { class: "saisie-message" }, [saisie, micro, el("button", { type: "button", class: "btn-plein", onclick: envoyer, text: "Envoyer" })])],
-      actions: [conversation.length ? { texte: "Nouvelle conversation", action: function () { conversation = []; rendre(); } } : null, { texte: "Fermer" }].filter(Boolean) });
-    d.addEventListener("close", function () { if (reco) reco.stop(); });
-    rendre();
-  };
+  // L'assistant vit dans la fenêtre de recherche du haut (assets/vues/recherche.js, touche / ou ⌘K).
 
   // ======================================================================
   // Le brief du jour (Aujourd'hui) : préparé à 6 h par la fonction serveur, ou à la demande

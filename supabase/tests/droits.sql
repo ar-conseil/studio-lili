@@ -129,6 +129,9 @@ select essais.verifier(exists (select 1 from public.espaces where slug = 'essai-
 update public.espaces set metier = 'Fleuriste', heures_defaut = '{"instagram": "11:15"}', ordre = 3 where id = '10000000-0000-4000-a000-00000000000a';
 insert into public.comptes (espace_id, reseau, nom_affiche, identifiant) values ('10000000-0000-4000-a000-00000000000a', 'instagram', 'Marque A', 'marque.a');
 select essais.verifier((select metier from public.espaces where id = '10000000-0000-4000-a000-00000000000a') = 'Fleuriste' and exists (select 1 from public.comptes where identifiant = 'marque.a'), 'Lili modifie la fiche et les comptes d''un client');
+-- Rendez-vous : Lili seule
+insert into public.rendez_vous (espace_id, titre, debut, fin, lieu) values ('10000000-0000-4000-a000-00000000000a', 'Point mensuel avec A', now() + interval '2 days', now() + interval '2 days 1 hour', 'Visio');
+select essais.verifier(exists (select 1 from public.rendez_vous where titre = 'Point mensuel avec A'), 'Lili note un rendez-vous');
 reset role;
 -- La signature d'un devis n'est écrite que par la fonction serveur (rôle service)
 insert into public.devis_signatures (devis_id, personne_id, nom_signataire, signature, empreinte)
@@ -151,6 +154,8 @@ select essais.verifier(not exists (select 1 from public.espaces where slug = 'es
 select essais.verifier(exists (select 1 from public.comptes where identifiant = 'marque.a'), 'A voit les comptes de sa marque (aperçus)');
 update public.espaces set metier = 'Pirate', nom = 'Pirate' where id = '10000000-0000-4000-a000-00000000000a';   -- sans effet : aucune ligne modifiable
 select essais.doit_echouer($q$insert into public.comptes (espace_id, reseau, nom_affiche) values ('10000000-0000-4000-a000-00000000000a', 'instagram', 'Faux compte')$q$, 'A ajoute un compte à sa fiche');
+select essais.verifier((select count(*) from public.rendez_vous) = 0, 'A ne voit pas les rendez-vous de Lili, même ceux de sa marque');
+select essais.doit_echouer($q$insert into public.rendez_vous (espace_id, titre, debut) values ('10000000-0000-4000-a000-00000000000a', 'Rendez-vous imposé', now())$q$, 'A ajoute un rendez-vous dans l''agenda de Lili');
 select essais.verifier((select count(*) from public.personnes where email like 'a_@essai.invalid') = 2, 'A voit sa collègue de la même marque');
 select essais.doit_echouer($q$select public.devis_prendre_essai('10000000-0000-4000-a000-00000000000a', '00000000-0000-4000-a000-0000000000a1')$q$, 'A compte lui-même ses essais de code');
 select essais.doit_echouer($q$insert into public.espaces (slug, nom) values ('essai-pirate', 'Pirate')$q$, 'un client crée un espace');
@@ -271,6 +276,7 @@ select essais.verifier((select count(*) from public.publications) = 1, 'l''invit
 select essais.verifier((select count(*) from public.messages) = 0, 'l''invité ne lit pas les messages du client');
 select essais.verifier((select count(*) from public.briefs) = 0, 'l''invité ne lit pas le brief');
 select essais.verifier((select count(*) from public.medias) = 0, 'l''invité ne voit pas la médiathèque');
+select essais.verifier((select count(*) from public.rendez_vous) = 0, 'l''invité ne voit pas l''agenda de Lili');
 select essais.doit_echouer($q$insert into public.espaces (slug, nom) values ('essai-invite', 'Invité')$q$, 'un invité crée un espace');
 select essais.verifier((select count(*) from public.personnes where email like 'a_@essai.invalid') = 0, 'l''invité ne voit ni le nom ni l''adresse des clients');
 select essais.verifier(exists (select 1 from public.personnes where role = 'proprietaire'), 'l''invité voit Lili');

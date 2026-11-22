@@ -144,14 +144,15 @@
       var d0 = St.debutJour(ref); titre = "À partir du " + St.fmt(d0, { day: "numeric", month: "long" });
       precedent = St.ajouterJours(ref, -14); suivant = St.ajouterJours(ref, 14);
       var jours = [];
-      for (var n = 0; n < 45; n++) { var jj = St.ajouterJours(d0, n), ps = parJour[St.iso(jj)] || [], rep = reperesJour(jj, eId); if (ps.length || rep.ferie || rep.forts.length || n === 0) jours.push([jj, ps, rep]); }
+      for (var n = 0; n < 45; n++) { var jj = St.ajouterJours(d0, n), ps = parJour[St.iso(jj)] || [], rep = reperesJour(jj, eId); var rv = rdvJour(jj, eId); if (ps.length || rv.length || rep.ferie || rep.forts.length || n === 0) jours.push([jj, ps, rep, rv]); }
       corps = el("div", { class: "cal-liste" }, jours.map(function (x) {
         var aujour = St.memeJour(x[0], new Date());
         return el("section", { class: "cal-liste-jour" + (aujour ? " aujourdhui" : ""), "data-jour": St.iso(x[0]) }, [
           el("header", {}, [el("b", { text: aujour ? "Aujourd'hui" : St.fmt(x[0], { weekday: "long", day: "numeric", month: "long" }) }),
             x[2].ferie ? el("span", { class: "ferie", text: x[2].ferie }) : null, x[2].forts.length ? el("span", { class: "temps-fort", text: x[2].forts.join(" · ") }) : null,
             St.estLili() ? el("button", { type: "button", class: "btn-ajout-jour", "aria-label": "Nouvelle publication ce jour", onclick: function () { St.nouvellePublication(eId || null, x[0]); } }, [St.icone("plus")]) : null]),
-          x[1].length ? el("div", { class: "grille-cartes compacte" }, x[1].map(function (p) { var c = St.cartePublication(p, { compacte: true, sansClient: !!eId }); activerGlisser(c, p); return c; })) : el("p", { class: "vide", text: "Rien de prévu." })
+          x[3] && x[3].length ? el("div", { class: "cal-rdv-liste" }, x[3]) : null,
+          x[1].length ? el("div", { class: "grille-cartes compacte" }, x[1].map(function (p) { var c = St.cartePublication(p, { compacte: true, sansClient: !!eId }); activerGlisser(c, p); return c; })) : (x[3] && x[3].length ? null : el("p", { class: "vide", text: "Rien de prévu." }))
         ]);
       }));
     }
@@ -165,6 +166,7 @@
         el("h2", { class: "cal-titre", text: titre })
       ]),
       el("div", { class: "cal-choix" }, [
+        St.estLili() ? el("button", { type: "button", class: "btn-texte", onclick: function () { St.editerRdv({ espace_id: eId || null }, ref); } }, [St.icone("plus"), "Rendez-vous"]) : null,
         St.estLili() && !eForce ? el("select", { class: "choix-client", "aria-label": "Client", onchange: function (ev) { St.aller(lien({ client: ev.target.value })); } },
           [el("option", { value: "", text: "Tous les clients" })].concat(St.espacesActifs().map(function (e) { return el("option", { value: e.id, selected: e.id === eId, text: e.nom }); }))) : null,
         el("nav", { class: "vues", "aria-label": "Affichage" }, [["mois", "Mois"], ["semaine", "Semaine"], ["liste", "Liste"]].map(function (x) {
@@ -180,6 +182,15 @@
         el("div", { class: "sans-date-liste" }, sansDate.map(function (p) { return puceCal(p, !eId); }))]) : null
     ]);
   };
+  // Rendez-vous de Lili dans une case du calendrier (filtrés par client si un client est choisi)
+  function rdvJour(j, eId) {
+    if (!St.estLili()) return [];
+    return St.rdvDu(j).filter(function (r) { return !eId || r.espace_id === eId; }).map(function (r) {
+      var e = St.espace(r.espace_id);
+      return el("button", { type: "button", class: "cal-rdv", style: e ? { "--c": e.couleur } : null, title: [r.titre, St.libelleRdv(r), r.lieu, e && e.nom].filter(Boolean).join(" · "),
+        onclick: function () { St.editerRdv(r); } }, [el("b", { text: St.libelleRdv(r).split("–")[0] }), " " + r.titre]);
+    });
+  }
   function caseJour(j, ps, horsMois, eId, max, grand) {
     var rep = reperesJour(j, eId), aujour = St.memeJour(j, new Date()), k = St.iso(j), week = j.getDay() === 0 || j.getDay() === 6;
     var visibles = ps.slice(0, max), reste = ps.length - visibles.length;
@@ -188,7 +199,7 @@
         rep.ferie ? el("span", { class: "ferie", text: rep.ferie, title: rep.ferie }) : rep.forts.length ? el("span", { class: "temps-fort", text: rep.forts[0], title: rep.forts.join(" · ") }) : null,
         St.estLili() ? el("button", { type: "button", class: "btn-ajout-jour", "aria-label": "Nouvelle publication le " + St.fmt(j, { day: "numeric", month: "long" }), onclick: function () { St.nouvellePublication(eId || null, j); } }, [St.icone("plus")]) : null]),
       rep.bandes.length ? el("div", { class: "cal-bandes" }, rep.bandes.slice(0, 2).map(function (b) { return el("span", { class: "bande b-" + b.type, style: b.c ? { "--c": b.c } : null, text: b.libelle, title: b.libelle }); })) : null,
-      el("div", { class: "cal-pubs" }, visibles.map(function (p) { return puceCal(p, !eId); }).concat(reste > 0 ? [el("a", { class: "cal-plus", href: "#calendrier?vue=liste&jour=" + k, text: "+ " + reste })] : []))
+      el("div", { class: "cal-pubs" }, rdvJour(j, eId).concat(visibles.map(function (p) { return puceCal(p, !eId); })).concat(reste > 0 ? [el("a", { class: "cal-plus", href: "#calendrier?vue=liste&jour=" + k, text: "+ " + reste })] : []))
     ]);
   }
   // ← → et T dans le calendrier

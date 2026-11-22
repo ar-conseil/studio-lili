@@ -8,7 +8,7 @@ window.Studio = (function () {
   var S = {
     moi: null, role: "proprietaire", espaces: [], prives: [], comptes: [], membres: [], personnes: [], medias: [], publications: [],
     pubMedias: [], commentaires: [], versions: [], operations: [], tempsForts: [], taches: [], journal: [], notes: [], notifications: [], boitesMail: [],
-    briefs: [], messages: [], rapports: [], signaturesDevis: [], mailsNonLus: 0, alertesSecurite: [], veille: [], partenaires: [], temps: [], devis: [], factures: [], prospects: [], reglages: [], briefsJour: [],
+    briefs: [], messages: [], rapports: [], signaturesDevis: [], mailsNonLus: 0, alertesSecurite: [], veille: [], partenaires: [], temps: [], devis: [], factures: [], prospects: [], reglages: [], briefsJour: [], rdv: [],
     urls: {}, route: { nom: "", param: "", rubrique: "", query: {} }, voirCommeEspace: null
   };
   var X = { db: null, demo: false, quitter: null, verrouiller: null, coquille: null, page: null, demarre: false };
@@ -169,7 +169,7 @@ window.Studio = (function () {
     ["devis", "devis"], ["devis_signatures", "signaturesDevis"]];
   var TABLES_LILI = [["espaces_prive", "prives"], ["taches", "taches"], ["notes_internes", "notes"],
     ["comptes_mail", "boitesMail", "id, email, droits, derniere_erreur, cree_le"],
-    ["securite_alertes", "alertesSecurite"], ["temps", "temps"], ["factures", "factures"], ["prospects", "prospects"], ["reglages", "reglages"], ["briefs_jour", "briefsJour"]];
+    ["securite_alertes", "alertesSecurite"], ["rendez_vous", "rdv"], ["temps", "temps"], ["factures", "factures"], ["prospects", "prospects"], ["reglages", "reglages"], ["briefs_jour", "briefsJour"]];
   function charger(seules) {
     if (X.demo) {
       if (!X.donneesDemo) {
@@ -179,6 +179,7 @@ window.Studio = (function () {
         S.medias = d.medias; S.publications = d.publications; S.pubMedias = d.publication_medias; S.commentaires = d.commentaires;
         S.versions = d.versions; S.operations = d.operations; S.tempsForts = d.temps_forts; S.taches = d.taches; S.journal = d.journal; S.notes = d.notes_internes;
         ["briefs", "messages", "rapports", "veille", "partenaires", "temps", "devis", "factures", "prospects", "reglages"].forEach(function (k) { S[k] = d[k] || []; });
+        S.rdv = d.rendez_vous || [];
         S.signaturesDevis = d.devis_signatures || [];
         S.notifications = d.journal.map(function (j, i) { return { id: i + 1, personne_id: d.lili, journal_id: j.id, lue_le: null, cree_le: j.cree_le }; });
         S.medias.forEach(function (m) { S.urls[m.chemin] = m.url; if (m.apercu_url) S.urls[m.chemin + "#apercu"] = m.apercu_url; });
@@ -253,7 +254,7 @@ window.Studio = (function () {
   var LOCALE = { publications: "publications", medias: "medias", commentaires: "commentaires", taches: "taches", espaces: "espaces", espaces_prive: "prives",
     notes_internes: "notes", operations: "operations", temps_forts: "tempsForts", comptes: "comptes", publication_medias: "pubMedias", versions: "versions",
     briefs: "briefs", messages: "messages", rapports: "rapports", veille: "veille", partenaires: "partenaires", temps: "temps", devis: "devis", factures: "factures",
-    prospects: "prospects", reglages: "reglages", briefs_jour: "briefsJour", devis_signatures: "signaturesDevis", securite_alertes: "alertesSecurite", membres: "membres", personnes: "personnes" };
+    prospects: "prospects", reglages: "reglages", briefs_jour: "briefsJour", devis_signatures: "signaturesDevis", securite_alertes: "alertesSecurite", rendez_vous: "rdv", membres: "membres", personnes: "personnes" };
   // Tables sans colonne « cree_le » (la base refuserait une colonne inconnue)
   var SANS_DATE = ["espaces_prive", "comptes", "operations", "temps_forts", "publication_medias", "briefs", "rapports", "temps", "reglages"];
   function maj(table, id, champs) {
@@ -474,7 +475,6 @@ window.Studio = (function () {
     var cote = el("aside", { class: "cote", id: "cote", "aria-label": "Menu" }, [
       el("div", { class: "cote-haut" }, [tete, el("button", { type: "button", class: "btn-icone fermer-menu", "aria-label": "Fermer le menu", onclick: function () { menu(false); } }, [icone("fermer")])]),
       lili ? el("button", { type: "button", class: "cote-nouveau", title: "Nouvelle publication (touche N)", onclick: function () { nouvellePublication(); } }, [icone("plus"), el("span", { text: "Nouvelle publication" }), el("kbd", { text: "N" })]) : null,
-      lili ? el("button", { type: "button", class: "cote-assistant", title: "Demander à " + (MARQUE.assistant || "l'assistant") + " (touche /)", onclick: function () { if (V.assistant) V.assistant(); } }, [icone("etincelle"), el("span", { text: "Demander à " + (MARQUE.assistant || "l'assistant") }), el("kbd", { text: "/" })]) : null,
       nav
     ].concat(clients).concat([bas]));
     var fil = el("nav", { class: "fil", "aria-label": "Fil d'Ariane" }, filAriane());
@@ -685,7 +685,7 @@ window.Studio = (function () {
     if (X.demo || X.canal) return;
     X.canal = X.db.channel("studio");
     ["publications", "publication_medias", "commentaires", "medias", "versions", "espaces", "taches", "journal", "operations", "notifications", "comptes_mail",
-      "briefs", "messages", "rapports", "veille", "partenaires", "temps", "devis", "factures", "prospects", "membres", "briefs_jour", "devis_signatures", "temps_forts", "reglages", "securite_alertes"].forEach(function (t) {
+      "briefs", "messages", "rapports", "veille", "partenaires", "temps", "devis", "factures", "prospects", "membres", "briefs_jour", "devis_signatures", "temps_forts", "reglages", "securite_alertes", "rendez_vous"].forEach(function (t) {
       // Les suppressions ne passent pas par les règles de la base (Supabase envoie l'identifiant de toute ligne
       // effacée) : seule Lili les écoute ; chez un client, la corbeille est une modification, et le reste se voit
       // au retour sur l'onglet.

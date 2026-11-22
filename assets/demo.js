@@ -143,6 +143,12 @@ window.DEMO_DONNEES = function () {
     { id: "t-4", titre: "Monter le reel de l'équipe", espace_id: E.ecrin, statut: "en-cours", echeance: null, priorite: "moyenne", categorie: "Créations" },
     { id: "t-5", titre: "Payer la CFE", espace_id: null, statut: "a-faire", echeance: jour(5).slice(0, 10), priorite: "haute", categorie: "Autre" }
   ];
+  // Rendez-vous de Lili (démonstration)
+  var rendezVous = [
+    { id: "rdv-1", espace_id: E.ondine, titre: "Point mensuel avec Inès", debut: jour(0, 15), fin: jour(0, 16), lieu: "Visio", notes: "Bilan de novembre, idées pour les fêtes." },
+    { id: "rdv-2", espace_id: E.lumiere, titre: "Shooting latte art", debut: jour(1, 9), fin: jour(1, 11), lieu: "Café Lumière, Lille", notes: "" },
+    { id: "rdv-3", espace_id: null, titre: "Rendez-vous comptable", debut: jour(3, 14), fin: jour(3, 15), lieu: "Hem", notes: "" }
+  ];
   var journal = [
     { id: 1, espace_id: E.lumiere, acteur_id: P.claire, action: "publication.statut", objet_id: pubs[8].id, details: { de: "a-valider", vers: "modifs-demandees", titre: "Reel latte art" }, visibilite: "partage", cree_le: jour(-1, 17) },
     { id: 2, espace_id: E.ondine, acteur_id: P.ines, action: "commentaire.ajoute", objet_id: pubs[1].id, details: { titre: pubs[1].titre }, visibilite: "partage", cree_le: jour(-1, 19) },
@@ -208,6 +214,6 @@ window.DEMO_DONNEES = function () {
 
   return { lili: LILI, personnesDemo: P, espaces: espaces, espaces_prive: prives, comptes: comptes, personnes: personnes, membres: membres,
     medias: medias, publications: pubs, publication_medias: pm, commentaires: commentaires, versions: versions, operations: operations,
-    temps_forts: tempsForts, taches: taches, journal: journal, notes_internes: [{ id: "n1", espace_id: E.ondine, publication_id: pubs[0].id, contenu: "Inès préfère les visuels sans texte." }],
+    temps_forts: tempsForts, taches: taches, rendez_vous: rendezVous, journal: journal, notes_internes: [{ id: "n1", espace_id: E.ondine, publication_id: pubs[0].id, contenu: "Inès préfère les visuels sans texte." }],
     briefs: briefs, messages: messages, rapports: rapports, veille: veille, partenaires: partenaires, temps: temps, factures: factures, devis: devis, prospects: prospects, reglages: reglages };
 };

@@ -55,6 +55,13 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   base : un client ne cherche que dans son espace), sans accents, tous les mots requis, titres devant ; ouvre
   `#p/<id>`, la fiche d'un média (`St.ouvrirMedia`), `#<slug>/mediatheque?dossier=…`, une tâche ou un prospect
   (`St.editerTache`, `St.editerProspect`), `#mails?q=…` (recherche Gmail).
+  **Assistant fusionné dans cette fenêtre** (22/11/2026 ; bouton de la barre latérale retiré) : une phrase qui
+  ressemble à une demande met « Demander à l'assistant » en tête ; Tab / Maj+Tab basculent, ⌘Entrée envoie, / ouvre
+  directement en mode assistant (`St.V.assistant`), micro ; conversation gardée jusqu'à « Nouvelle conversation ».
+  Fonction `assistant` : outils `creer_tache`, `creer_rdv` (heure de Paris, `parisVersIso`), `creer_note`,
+  `lire_agenda`, en plus de brief, publications, rapports, `creer_brouillon` ; renvoie `crees` (liens). Toujours
+  interne : rien n'est envoyé, validé ou publié. **Rendez-vous** : table `rendez_vous` (Lili seule, migration
+  `20261122170000_rendez_vous.sql`, testée), `St.editerRdv`, `St.rdvDu`, bloc « Agenda » d'Aujourd'hui, calendrier.
   Clavier : / assistant, N nouvelle publication, 0 accueil, C calendrier, P publications, M médiathèque, 1-9 clients, Échap retour,
   ← → rubriques ou période du calendrier, T aujourd'hui.
 - Étape 5, en direct et notifications : `assets/vues/direct.js` (présence Realtime sur `#p/<id>` : avatars de qui

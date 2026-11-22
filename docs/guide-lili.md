@@ -22,7 +22,7 @@ Ce guide suit une semaine de travail. Les touches du clavier sont rappelées en 
 gauche la met dans ton Dock ou ta barre des tâches. Sur iPhone : dans Safari, Partager › Sur l'écran d'accueil.
 Sur un Mac avec Safari : Fichier › Ajouter au Dock.
 
-## Tout retrouver en deux secondes
+## Tout retrouver, tout demander, au même endroit
 
 Le champ **Rechercher**, en haut de chaque page (ou **⌘K** sur Mac, **Ctrl K** sur PC, ou la touche **F**), cherche
 dans tout le studio en même temps : clients, publications (titre et légende), images et vidéos (nom, dossier,
@@ -32,6 +32,17 @@ pages du studio. Pas besoin d'accents ni de majuscules (« noel » trouve « No�
 (« palomano reel »). Flèches pour choisir, Entrée pour ouvrir : une image s'ouvre dans sa fiche, un dossier dans la
 médiathèque du client. En dernière ligne, « Chercher dans les mails » lance la même recherche dans Gmail.
 Tes clients ont la même barre, limitée à leur espace et à ce que tu partages.
+
+**L'assistant est dans la même barre.** Tape une demande comme tu la dirais : « Ajoute un rendez-vous avec Palomano
+jeudi à 10 h en visio », « Ajoute une tâche : reporting de novembre pour vendredi », « Qu'est-ce que j'ai cette
+semaine ? », « Trois idées de posts pour Myosotis ». Une phrase qui ressemble à une demande passe en tête
+(« Demander à l'assistant ») : Entrée, et il s'en occupe dans la même fenêtre. Tab y bascule à tout moment, Maj + Tab
+revient à la recherche, la touche / ouvre directement l'assistant, le micro permet de dicter. Il ajoute des tâches,
+des rendez-vous, des notes internes et des brouillons de publication, lit ton agenda, tes briefs et tes chiffres ;
+ce qu'il crée s'affiche en liens cliquables. Il n'envoie jamais rien à un client et ne valide ni ne publie rien.
+
+**Rendez-vous** : bloc « Agenda » sur Aujourd'hui (les 7 prochains jours), dans le calendrier (bouton « Rendez-vous »,
+et chaque rendez-vous s'ouvre d'un clic pour le modifier ou le supprimer). Ils ne sont visibles que de toi.
 
 ## 2. Ta journée : la page Aujourd'hui
 

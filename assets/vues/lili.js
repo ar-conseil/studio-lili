@@ -48,7 +48,17 @@
         return St.lignePublication(p, el("span", { class: "retard", text: St.quand(p.date_prevue) }));
       }))) : null
     ]);
+    // Agenda : les rendez-vous d'aujourd'hui et des 7 prochains jours
+    var dans7 = St.ajouterJours(St.debutJour(maintenant), 8);
+    var rdvs = (S.rdv || []).filter(function (r) { return new Date(r.fin || r.debut) >= maintenant && new Date(r.debut) < dans7; }).sort(function (a, b) { return String(a.debut).localeCompare(String(b.debut)); });
+    var blocAgenda = St.bloc("Agenda", rdvs.length, rdvs.length ? el("ul", { class: "agenda" }, rdvs.slice(0, 6).map(function (r) {
+      var e = r.espace_id && St.espace(r.espace_id);
+      return el("li", {}, [el("button", { type: "button", onclick: function () { St.editerRdv(r); } }, [
+        el("span", { class: "agenda-quand" }, [el("b", { text: St.memeJour(r.debut, maintenant) ? "Aujourd'hui" : St.fmt(r.debut, { weekday: "short", day: "numeric" }) }), el("small", { text: St.libelleRdv(r) })]),
+        el("span", { class: "agenda-quoi" }, [el("b", { text: r.titre }), el("small", { text: [e && e.nom, r.lieu].filter(Boolean).join(" · ") })])])]);
+    })) : el("p", { class: "vide" }, ["Aucun rendez-vous cette semaine. ", el("button", { type: "button", class: "btn-texte petit", text: "En ajouter un", onclick: function () { St.editerRdv(); } })]));
     var colDroite = el("div", { class: "pile" }, [
+      blocAgenda,
       St.bloc("En attente des clients", aValider.length, aValider.length ? el("ul", { class: "attente" }, aValider.map(function (p) {
         var e = St.espace(p.espace_id) || {};
         return el("li", {}, [el("a", { href: "#p/" + p.id }, [St.logoEspace(e, "petit"), el("span", {}, [el("b", { text: p.titre || "Sans titre" }), el("small", { text: e.nom + " · envoyé " + (p.envoye_le ? St.ilya(p.envoye_le) : "") })])])]);
