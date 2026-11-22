@@ -92,7 +92,8 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   de l'expéditeur, rédaction mise en forme (`St.editeurRiche`) avec signature et réponses types, pièces jointes
   glissées, brouillon auto (Gmail), annulation d'envoi (délai réglable), envoi programmé (table `mails_programmes`,
   cron « mails-programmes » chaque minute -> `messagerie` {action: programmes}), « Créer une tâche », raccourcis
-  façon Gmail (`V.toucheMails`, prioritaire sur la page Mails ; ? pour la liste). HTML des mails dans un iframe isolé,
+  façon Gmail (`V.toucheMails`, prioritaire sur la page Mails ; ? pour la liste) ; bouton « Actualiser » (flèche qui
+  tourne) au bout du champ de recherche, comme Evoalys. HTML des mails dans un iframe isolé,
   images distantes bloquées jusqu'au clic ; le HTML envoyé est nettoyé côté serveur (`nettoyerHtml`).
 - **Ma signature** (22/11/2026, comme Evoalys) : `assets/vues/signature.js`, en tête de Réglages › Signatures de mail.
   Photo (recadrée au carré dans le navigateur, anneau terre cuite dessiné en canvas ; initiales sans photo),
@@ -109,6 +110,8 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
 - En vacances (`St.vacances`) : réponse automatique Gmail (droit `gmail.settings.basic`, demandé à la liaison de la
   boîte), bandeau chez les clients (temps fort « absence » sans espace, lisible par tous les clients), pause des
   notifications de Lili dans `notifier` (marquées traitées, gardées dans la cloche).
+  Case « Ajouter ma signature » : la carte de Ma signature (`St.signatureCarteHtml()`, grisée tant qu'elle n'est pas
+  enregistrée) part sous le message de la réponse automatique, nettoyée côté serveur (`messagerie`, champ `signature`).
 - Devis signés en ligne, comme Evoalys : `assets/vues/devis.js` (#devis côté client, pavé de signature, puis code à 6
   chiffres reçu par e-mail), fonction `signer-devis` ({action: code} envoie le code depuis le Gmail de Lili, 10 min,
   5 essais, empreinte seule dans `devis_codes` illisible du navigateur ; {action: signer} vérifie) ; preuve : nom,
