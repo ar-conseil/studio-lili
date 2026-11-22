@@ -27,10 +27,13 @@
   // ---------- Petites aides ----------
   function lire(cle) { try { return localStorage.getItem(cle); } catch (e) { return null; } }
   function ecrire(cle, v) { try { localStorage.setItem(cle, v); } catch (e) { /* stockage indisponible : le code sera redemandé */ } }
+  var messageRetour = null;
   function dire(texte, erreur) { message.textContent = texte || ""; message.classList.toggle("erreur", !!erreur); }
   function vue(id) {
     ["vue-connexion", "vue-lien", "vue-code", "vue-enrolement", "vue-nouveau"].forEach(function (v) { $(v).hidden = v !== id; });
-    entree.hidden = false; coquille.hidden = true; etat.ouvert = false; dire("");
+    entree.hidden = false; coquille.hidden = true; etat.ouvert = false;
+    // Un message laissé par le retour de Google (compte non invité…) survit au premier affichage de l'écran
+    if (messageRetour) { dire(messageRetour[0], messageRetour[1]); messageRetour = null; } else dire("");
     var premier = $(id).querySelector("input:not([type=hidden])");
     if (premier) setTimeout(function () { premier.focus(); }, 60);
   }
@@ -241,7 +244,10 @@
   (function () {
     var p = new URLSearchParams(location.hash.slice(1) || location.search);
     if (p.get("error")) {
-      dire(/signup|not allowed|disabled/i.test(p.get("error_description") || "") ? "Ce compte n'a pas encore accès : demandez une invitation à Lili." : "Connexion refusée : " + (p.get("error_description") || p.get("error")), true);
+      var texte = /signup|not allowed|disabled/i.test((p.get("error_description") || "") + (p.get("error_code") || ""))
+        ? "Ce compte Google n'a pas accès au studio. Utilisez l'adresse à laquelle Lili vous a invité, ou demandez-lui une invitation."
+        : "Connexion refusée : " + (p.get("error_description") || p.get("error"));
+      messageRetour = [texte, true]; dire(texte, true); setTimeout(function () { messageRetour = null; }, 5000);
       history.replaceState(null, "", location.pathname);
     }
   })();
