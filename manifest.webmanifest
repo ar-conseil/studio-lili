@@ -2,7 +2,7 @@
   "name": "Studio Lili",
   "short_name": "Studio Lili",
   "description": "Le studio de Lili Rouzier, community manager : calendriers, publications, validations et clients.",
-  "id": "./",
+  "id": "/studio-lili/",
   "lang": "fr",
   "dir": "ltr",
   "start_url": "./",

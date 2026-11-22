@@ -108,6 +108,8 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
 - Application installable (`manifest.webmanifest`, `sw.js` sans cache) : bouton « Installer l'application » (Chrome,
   Edge : bureau du Mac ou du PC), astuce affichée sur iPhone (Partager › Sur l'écran d'accueil) et Safari Mac
   (Fichier › Ajouter au Dock).
+  Le manifeste garde `"id": "/studio-lili/"` : avec `"./"`, Chrome le résout à la racine du domaine ar-conseil.github.io,
+  le même que l'appli AR CONSEIL (/cockpit/), et les deux applis se confondaient (22 novembre 2026).
 - Logo (piste « Didone » choisie le 21/11/2026, LR en Bodoni Moda, filet terre cuite) : `assets/marque/` ;
   `outils/logo/dessiner.py <polices>` vectorise les lettres (fonttools + uharfbuzz, dans un environnement Python à
   part), `outils/logo/icones.sh` rend les PNG avec Chrome sans écran. Les deux autres pistes restent dans
