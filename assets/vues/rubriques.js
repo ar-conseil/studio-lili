@@ -531,6 +531,7 @@
     var nom = texte(e.nom), metier = texte(e.metier || "", { aide: "Fleuriste, café, cabinet d'avocats…" });
     var couleur = el("input", { type: "color", value: e.couleur || "#1E1A17", "aria-label": "Couleur" });
     var statut = choix([["actif", "Actif"], ["pause", "En pause"], ["archive", "Archivé (masqué du studio)"]], e.statut || "actif", { nom: "État" });
+    var vueClient = choix([["classique", "Accueil classique (validation, calendrier)"], ["planning", "Planning façon Notion (tableau, Kanban, galerie)"]], e.vue_client || "classique", { nom: "Espace du client" });
     var logo = el("input", { type: "file", accept: "image/png,image/jpeg,image/webp,image/svg+xml", "aria-label": "Logo" });
     var couv = el("input", { type: "file", accept: "image/png,image/jpeg,image/webp", "aria-label": "Photo de couverture" });
     var oterLogo = false, oterCouv = false;
@@ -578,6 +579,7 @@
       el("h3", { class: "titre-fiche", text: "Identité" }),
       el("div", { class: "deux-colonnes" }, [champ("Nom", nom), champ("Métier", metier)]),
       el("div", { class: "deux-colonnes" }, [champ("État", statut, "« Archivé » le retire du studio ; il reste dans la page Clients"), champ("Couleur de la marque", couleur)]),
+      champ("Ce que le client voit en arrivant", vueClient, "« Planning façon Notion » : pour les clients habitués à Notion. Aperçu : rubrique « Planning (vue client) »."),
       el("div", { class: "deux-colonnes" }, [champ("Logo", zoneLogo, "PNG ou JPG carré"), champ("Photo de couverture", zoneCouv, "Paysage, sur les cartes et en tête de son espace")]),
       el("h3", { class: "titre-fiche", text: "Réseaux et heures de publication" }),
       el("p", { class: "aide", text: "Cochez les réseaux suivis. L'heure sert de proposition pour chaque nouvelle publication (vide : heure habituelle)." }),
@@ -593,7 +595,7 @@
         if (!nom.value.trim()) { nom.focus(); return; }
         var cochés = lignesReseaux.filter(function (x) { return x.coche.checked; });
         var h = {}; cochés.forEach(function (x) { if (x.heure.value) h[x.k] = x.heure.value; });
-        var champs = { nom: nom.value.trim(), metier: metier.value.trim() || null, couleur: couleur.value, statut: statut.value,
+        var champs = { nom: nom.value.trim(), metier: metier.value.trim() || null, couleur: couleur.value, statut: statut.value, vue_client: vueClient.value,
           reseaux: cochés.map(function (x) { return x.k; }), heures_defaut: h, modifie_le: new Date().toISOString() };
         if (oterLogo) { champs.logo_path = null; e.logo_url = null; }
         if (oterCouv) { champs.couverture_path = null; e.couverture_url = null; }

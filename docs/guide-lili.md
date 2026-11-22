@@ -124,6 +124,12 @@ sien peut aussi cliquer « Mot de passe oublié » sur la page d'entrée : l'e-m
 reliée, voir 10), comme les liens de connexion. Joins-lui le guide « Comment valider vos publications » :
 https://ar-conseil.github.io/studio-lili/guide.html
 
+**Un client habitué à Notion** (Nhood, par exemple) : dans sa fiche, « Ce que le client voit en arrivant » ›
+« Planning façon Notion ». Il arrive alors sur sa base de publications : vues Tableau (groupé par mois), Kanban,
+Calendrier et Galerie, recherche, filtre par statut, et chaque ligne s'ouvre sur le côté comme une page Notion, avec
+« Valider » et « Demander une modification » juste là, les visuels et les commentaires. Ce qu'il voit exactement :
+rubrique « Planning (vue client) » de son espace. Tous les clients ont aussi « Planning » dans leur menu.
+
 **Modifier un client** : page **Clients** (clique sur « Clients » dans la barre latérale, ou « Tous les clients » sur
 Aujourd'hui), puis « Fiche » ; ou le bouton « Fiche » en haut de son espace. Tout s'y change : nom, métier, état
 (actif, en pause, archivé), couleur, logo, photo de couverture, réseaux suivis et heure de publication par défaut de

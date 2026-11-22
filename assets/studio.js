@@ -78,7 +78,7 @@ window.Studio = (function () {
     publications: '<rect x="2.5" y="2.5" width="11" height="11" rx="2"/><path d="M5 10.5l2-2.5 1.7 2 1.8-2 1.5 2.5"/>',
     mediatheque: '<path d="M2 4.5h4l1.2 1.5H14v6.5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>',
     valider: '<path d="m3.5 8.5 3 3 6-7"/>',
-    plus: '<path d="M8 3v10M3 8h10"/>', recherche: '<circle cx="7" cy="7" r="4.5"/><path d="m10.4 10.4 3.6 3.6"/>', haut: '<path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/>', bas: '<path d="M8 3v10M3.5 8.5 8 13l4.5-4.5"/>', fleche: '<path d="M6 3.5 10.5 8 6 12.5"/>', retour: '<path d="M10 3.5 5.5 8 10 12.5"/>',
+    plus: '<path d="M8 3v10M3 8h10"/>', colonnes: '<rect x="2" y="2.5" width="3.2" height="11" rx="1"/><rect x="6.4" y="2.5" width="3.2" height="7" rx="1"/><rect x="10.8" y="2.5" width="3.2" height="9" rx="1"/>', agrandir: '<path d="M9.5 2.5h4v4M13.5 2.5 9 7M6.5 13.5h-4v-4M2.5 13.5 7 9"/>', recherche: '<circle cx="7" cy="7" r="4.5"/><path d="m10.4 10.4 3.6 3.6"/>', haut: '<path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/>', bas: '<path d="M8 3v10M3.5 8.5 8 13l4.5-4.5"/>', fleche: '<path d="M6 3.5 10.5 8 6 12.5"/>', retour: '<path d="M10 3.5 5.5 8 10 12.5"/>',
     fermer: '<path d="M4 4l8 8M12 4l-8 8"/>', menu: '<path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/>',
     taches: '<rect x="2.5" y="2.5" width="11" height="11" rx="3"/><path d="m5.5 8 1.8 1.8L10.8 6"/>',
     commentaire: '<path d="M13.5 7.5a5.5 5.5 0 0 1-8 4.9L2.5 13.5l1-2.9a5.5 5.5 0 1 1 10-3.1z"/>',
@@ -441,8 +441,9 @@ window.Studio = (function () {
       lienCote("#taches", "Tâches", "taches", r.nom === "taches", S.taches.filter(function (t) { return t.statut !== "fait" && t.echeance && t.echeance <= iso(new Date()); }).length || null),
       lienCote("#prospects", "Prospects", "prospects", r.nom === "prospects")
     ] : [
-      lienCote("#", "Accueil", "aujourdhui", r.nom === ""),
+      (espacesClient()[0] || {}).vue_client === "planning" ? lienCote("#", "Planning", "liste", r.nom === "" || r.nom === "planning") : lienCote("#", "Accueil", "aujourdhui", r.nom === ""),
       lienCote("#valider", "À valider", "valider", r.nom === "valider", aValider.length || null),
+      (espacesClient()[0] || {}).vue_client === "planning" ? null : lienCote("#planning", "Planning", "liste", r.nom === "planning"),
       lienCote("#calendrier", "Calendrier", "calendrier", r.nom === "calendrier"),
       lienCote("#publications", "Publications", "publications", r.nom === "publications"),
       lienCote("#mediatheque", "Médiathèque", "mediatheque", r.nom === "mediatheque"),
@@ -500,7 +501,7 @@ window.Studio = (function () {
   function filAriane() {
     var r = S.route, morceaux = [];
     var noms = { "": estLili() ? "Aujourd'hui" : "Accueil", calendrier: "Calendrier", publications: "Publications", mediatheque: "Médiathèque", valider: "À valider", mails: "Mails",
-      taches: "Tâches", prospects: "Prospects", reglages: "Réglages", clients: "Clients", devis: "Devis", compte: "Mon compte", brief: "Brief et ligne éditoriale", rapports: "Rapports", messages: "Messages" };
+      taches: "Tâches", prospects: "Prospects", reglages: "Réglages", clients: "Clients", planning: "Planning", devis: "Devis", compte: "Mon compte", brief: "Brief et ligne éditoriale", rapports: "Rapports", messages: "Messages" };
     if (r.nom === "client" && !estLili()) morceaux.push(el("span", { text: "Page introuvable" }));
     else if (r.nom === "client") {
       var e = espaceSlug(r.param);
@@ -527,7 +528,7 @@ window.Studio = (function () {
     return S.devis.filter(function (d) { return d.espace_id === e && ["envoye", "accepte", "refuse"].indexOf(d.statut) >= 0; });
   }
   function rubriquesClient() {
-    return [{ id: "calendrier", nom: "Calendrier", icone: "calendrier" }, { id: "publications", nom: "Publications", icone: "publications" }, { id: "mediatheque", nom: "Médiathèque", icone: "mediatheque" },
+    return [{ id: "calendrier", nom: "Calendrier", icone: "calendrier" }, { id: "publications", nom: "Publications", icone: "publications" }, { id: "planning", nom: "Planning (vue client)", icone: "liste" }, { id: "mediatheque", nom: "Médiathèque", icone: "mediatheque" },
       { id: "brief", nom: "Brief", icone: "brief" }, { id: "messages", nom: "Messages", icone: "commentaire" }, { id: "rapports", nom: "Rapports", icone: "rapports" },
       { id: "veille", nom: "Veille", icone: "oeil" }, { id: "partenariats", nom: "Partenariats", icone: "lien" }, { id: "facturation", nom: "Temps et facturation", icone: "euro" },
       { id: "notes", nom: "Notes internes", icone: "cadenas" }, { id: "equipe", nom: "Équipe", icone: "personnes" }];
@@ -560,7 +561,7 @@ window.Studio = (function () {
   // ======================================================================
   // Routeur et rendu
   // ======================================================================
-  var RESERVES = ["", "calendrier", "publications", "mediatheque", "valider", "p", "mails", "taches", "prospects", "reglages", "clients", "brief", "rapports", "messages", "devis", "compte"];
+  var RESERVES = ["", "calendrier", "publications", "mediatheque", "valider", "p", "mails", "taches", "prospects", "reglages", "clients", "planning", "brief", "rapports", "messages", "devis", "compte"];
   function lireRoute() {
     var h = decodeURIComponent(location.hash.replace(/^#/, "")), q = {}, i = h.indexOf("?");
     if (i >= 0) { new URLSearchParams(h.slice(i + 1)).forEach(function (v, k) { q[k] = v; }); h = h.slice(0, i); }
@@ -577,8 +578,9 @@ window.Studio = (function () {
   }
   function vueCourante() {
     var r = S.route;
-    if (r.nom === "") return estLili() ? V.aujourdhui(r) : V.accueilClient(r);
+    if (r.nom === "") return estLili() ? V.aujourdhui(r) : ((espacesClient()[0] || {}).vue_client === "planning" && V.planning ? V.planning(r) : V.accueilClient(r));
     if (r.nom === "valider") return V.valider(r);
+    if (r.nom === "planning") return V.planning ? V.planning(r) : introuvable();
     if (r.nom === "calendrier") return V.calendrier(r);
     if (r.nom === "publications") return V.publications(r);
     if (r.nom === "mediatheque") return V.mediatheque(r);

@@ -137,6 +137,12 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   Fiche complète (`St.editerEspace`) : nom, métier (colonne `espaces.metier`, migration `20261122160000_fiche_client.sql`),
   état, couleur, logo et couverture (retirables), réseaux et `heures_defaut` par réseau, comptes des aperçus (table
   `comptes` : ajout, modification, retrait, rang), facturation interne avec contrat et note. Droits testés.
+- Planning façon Notion (22/11/2026, pour les clients habitués à Notion comme Nhood / Aushopping Noyelles) :
+  `assets/vues/planning.js`, `V.planning` (`#planning?vue=tableau|kanban|calendrier|galerie&mois&statut&q&client&ouvrir`,
+  rubrique Lili `#<slug>/planning` = vue client exacte, sans rien d'interne), page latérale `St.ouvrirCote(p)`
+  (propriétés, valider / demander une modification, visuels, légende, commentaires). `espaces.vue_client`
+  (`classique` | `planning`, migration `20261122180000_vue_client.sql`, réglé dans la fiche) : `planning` = l'accueil
+  du client est le planning. Aushopping Noyelles réglé sur `planning` le 22/11/2026.
 - Couleur de marque lisible : `Studio.foncee(couleur)` fonce une couleur trop claire jusqu'au contraste AA sous du texte
   blanc (variable CSS `--cf`, utilisée pour les boutons et pastilles ; `--c` reste la couleur d'origine pour les teintes).
 - `outils/notion-analyse.mjs` : lit l'export Notion (`~/.lili/notion-export/`) et décrit sa STRUCTURE (bases, colonnes,
