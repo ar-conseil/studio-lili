@@ -101,7 +101,15 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   du bucket livrables), `St.ouvrirFichier`, `St.envoyerParMail`, `St.vignette` (carte pour un document),
   `St.trierFichiers`, `St.pdfDemo` (PDF fabriqué pour la démonstration). Documents déposés : « Lili seule » par défaut.
   Médiathèque : tri (`?tri=recents|anciens|nom|type|taille`, gardé dans `studio.tri-medias`), genre (`?type=`),
-  et « Par client » (une carte par client) dans la vue Tous les clients. `St.televerser(f, espace, dossier, {visibilite})`. HTML des mails dans un iframe isolé,
+  et « Par client » (une carte par client) dans la vue Tous les clients. `St.televerser(f, espace, dossier, {visibilite})`.
+- **PDF des devis et factures** (22/11/2026) : `assets/vues/pdf.js`, fabriqués dans le navigateur sans bibliothèque
+  (Helvetica et Times des lecteurs PDF, WinAnsi, largeurs mesurées sur Arial et Times New Roman, logo et signature en
+  JPEG). `St.pdfPiece(table, f)` -> Blob ; `St.ouvrirPdfPiece`, `St.nomPdfPiece`, `St.envoyerPieceParMail` (documents.js).
+  Mise en page tirée de la vraie facture de Lili (mentions de retard, SIREN, NAF, TVA du client, référence / bon de
+  commande) à l'identité Papier. Champs : `reglages.entreprise.nom_legal`, `.naf` ; `espaces_prive.tva_intra`,
+  `factures.reference`, `devis.reference` (migration `20261122200000_factures_mentions.sql`). Les factures importées
+  de Notion gardent leur PDF d'origine (`pdf_path`). Vérifier un rendu : node + `sips` (voir l'historique du 22/11).
+- Espace « Lili Rouzier » (`#lili-rouzier`, 22/11/2026) : sa propre marque ; ses portraits (dossier Portraits, internes). HTML des mails dans un iframe isolé,
   images distantes bloquées jusqu'au clic ; le HTML envoyé est nettoyé côté serveur (`nettoyerHtml`).
 - **Ma signature** (22/11/2026, comme Evoalys) : `assets/vues/signature.js`, en tête de Réglages › Signatures de mail.
   Photo (recadrée au carré dans le navigateur, anneau terre cuite dessiné en canvas ; initiales sans photo),

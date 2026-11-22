@@ -407,7 +407,8 @@
         } }));
         if (!fact && f.statut === "envoye") { actions.push(el("button", { type: "button", class: "btn-texte", text: "Accepté", onclick: function () { St.maj("devis", f.id, { statut: "accepte" }).then(function () { St.dessiner(false); }); } })); actions.push(el("button", { type: "button", class: "btn-texte", text: "Refusé", onclick: function () { St.maj("devis", f.id, { statut: "refuse" }).then(function () { St.dessiner(false); }); } })); }
         actions.push(f.pdf_path ? el("button", { type: "button", class: "btn-texte", onclick: function () { ouvrirPdf(f.pdf_path); } }, [St.icone("imprimer"), "PDF"])
-          : el("button", { type: "button", class: "btn-texte", onclick: function () { imprimerPiece(table, f); } }, [St.icone("imprimer"), "PDF"]));
+          : el("button", { type: "button", class: "btn-texte", title: "Le PDF, prêt à envoyer ou à imprimer", onclick: function () { if (St.ouvrirPdfPiece) St.ouvrirPdfPiece(table, f); else imprimerPiece(table, f); } }, [St.icone("imprimer"), "PDF"]));
+        if (f.statut !== "brouillon" && St.envoyerPieceParMail) actions.push(el("button", { type: "button", class: "btn-icone petit", title: "Envoyer par mail, PDF joint", "aria-label": "Envoyer par mail", onclick: function () { St.envoyerPieceParMail(table, f); } }, [St.icone("mail")]));
         var d = fact ? f.date_facture : f.date_devis, sg = !fact && S.signaturesDevis.filter(function (x) { return x.devis_id === f.id; })[0];
         return el("tr", {}, [el("td", { class: "mono", text: f.numero ? String(f.numero) : "—" }), el("td", { text: [f.objet, f.periode].filter(Boolean).join(" · ") || "Sans objet" }),
           el("td", { class: "mono", text: d ? St.fmt(d + "T12:00:00", { day: "numeric", month: "short", year: "numeric" }) : "—" }), el("td", { class: "n", text: euros(f.total_ttc) }),
@@ -438,6 +439,7 @@
     var objet = texte(f.objet, { aide: fact ? "Community management" : "Proposition d'accompagnement" });
     var mois = St.fmt(new Date(), { month: "long", year: "numeric" });
     var periode = texte(f.periode || (fact ? mois.charAt(0).toUpperCase() + mois.slice(1) : ""), { aide: "Novembre 2026" });
+    var reference = texte(f.reference, { aide: "Bon de commande, n° de dossier… (facultatif)" });
     var jours = +(((S.reglages.filter(function (x) { return x.cle === "devis"; })[0] || {}).valeur || {}).validite) || 30;
     var valable = el("input", { type: "date", value: f.valable_jusque || St.iso(St.ajouterJours(new Date(), jours)), "aria-label": "Valable jusqu'au" });
     var zone = el("div", { class: "lignes-piece" }), tot = el("div", { class: "totaux-piece" });
@@ -460,11 +462,12 @@
     rendre();
     St.fenetre({ titre: f.id ? (fact ? "Modifier la facture" : "Modifier le devis") : (fact ? "Nouvelle facture" : "Nouveau devis"), classe: "large",
       sous: fact ? "Enregistrée en brouillon : le numéro est attribué à l'émission." : "Le numéro (D" + new Date().getFullYear() + "-…) est attribué quand il est envoyé.",
-      corps: [el("div", { class: "deux-colonnes" }, [champ("Client", client), champ("Objet", objet)]), fact ? champ("Période", periode) : champ("Valable jusqu'au", valable), zone, tot],
+      corps: [el("div", { class: "deux-colonnes" }, [champ("Client", client), champ("Objet", objet)]), el("div", { class: "deux-colonnes" }, [fact ? champ("Période", periode) : champ("Valable jusqu'au", valable), champ("Référence du client", reference)]), zone, tot],
       actions: [f.id ? { texte: "Supprimer le brouillon", danger: true, action: function (fermer) { fermer(); confirmer("Supprimer ce brouillon ?", "Il n'a pas de numéro : rien ne se perd dans la suite des factures.", "Supprimer", function () { St.supprimer(table, { id: f.id }).then(function () { St.dessiner(false); }); }); } } : null,
         { texte: "Annuler" }, { texte: "Enregistrer", principal: true, action: function (fermer) {
           var champs = Object.assign({ espace_id: client.value || null, objet: objet.value.trim() || (fact ? "Community management" : "Proposition"), lignes: lignes.filter(function (l) { return l.libelle || l.prix_ht; }) }, totaux(lignes));
           if (fact) champs.periode = periode.value.trim() || null; else champs.valable_jusque = valable.value || null;
+          champs.reference = reference.value.trim() || null;
           if (!champs.espace_id && !f.prospect_id) { client.focus(); return; }
           (f.id ? St.maj(table, f.id, champs) : St.creer(table, Object.assign({ statut: "brouillon", prospect_id: f.prospect_id || null }, champs))).then(function () { fermer(); St.signaler(fact ? "Facture enregistrée en brouillon" : "Devis enregistré"); St.dessiner(false); });
         } }].filter(Boolean) });
@@ -570,7 +573,7 @@
       comptes.push({ id: St.uuid(), nouveau: true, espace_id: e.id, reseau: r0 ? r0.k : "instagram", nom_affiche: e.nom, identifiant: "", rang: comptes.length }); peindreComptes();
     } }, [St.icone("plus"), "Ajouter un compte"]);
 
-    var p = { raison_sociale: texte(pr.raison_sociale), adresse: texte(pr.adresse, { lignes: 2 }), siret: texte(pr.siret), email_facturation: texte(pr.email_facturation, { type: "email" }),
+    var p = { raison_sociale: texte(pr.raison_sociale), adresse: texte(pr.adresse, { lignes: 2 }), siret: texte(pr.siret), tva_intra: texte(pr.tva_intra, { aide: "FR…" }), email_facturation: texte(pr.email_facturation, { type: "email" }),
       type_contrat: texte(pr.type_contrat, { aide: "Forfait mensuel, ponctuel, à la prestation…" }),
       forfait_mensuel_ht: texte(pr.forfait_mensuel_ht, { type: "number", attrs: { min: 0, step: "10" } }), heures_forfait: texte(pr.heures_forfait, { type: "number", attrs: { min: 0, step: "0.5" } }),
       note_interne: texte(pr.note_interne, { lignes: 3, aide: "Ce qu'il faut savoir sur ce client (jamais visible de lui)" }) };
@@ -587,7 +590,8 @@
       el("h3", { class: "titre-fiche", text: "Comptes affichés dans les aperçus" }),
       listeComptes, ajouterCompte,
       el("h3", { class: "titre-fiche", text: "Facturation (interne)" }),
-      el("div", { class: "deux-colonnes" }, [champ("Raison sociale", p.raison_sociale), champ("SIRET", p.siret)]), champ("Adresse", p.adresse),
+      el("div", { class: "deux-colonnes" }, [champ("Raison sociale", p.raison_sociale), champ("SIRET", p.siret)]),
+      el("div", { class: "deux-colonnes" }, [champ("Adresse", p.adresse), champ("TVA intracommunautaire", p.tva_intra)]),
       el("div", { class: "deux-colonnes" }, [champ("E-mail de facturation", p.email_facturation), champ("Type de contrat", p.type_contrat)]),
       el("div", { class: "deux-colonnes" }, [champ("Forfait mensuel HT (€)", p.forfait_mensuel_ht), champ("Heures prévues par mois", p.heures_forfait)]),
       champ("Note interne", p.note_interne)],

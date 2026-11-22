@@ -45,7 +45,7 @@
     return el("div", { class: "rubrique-etroite" }, [
       el("a", { class: "retour-client", href: "#devis" }, [St.icone("retour"), el("span", { text: "Tous les devis" })]),
       St.entete((d.numero || "Devis") + " · " + (MARQUE.proprietaire || ""), d.objet || "Devis", d.valable_jusque && et[0] === "a-signer" ? "Valable jusqu'au " + St.fmt(d.valable_jusque + "T12:00:00", { weekday: "long", day: "numeric", month: "long" }) + "." : null,
-        [el("button", { type: "button", class: "btn-texte", onclick: function () { A.imprimerPiece("devis", d); } }, [St.icone("imprimer"), "PDF"])]),
+        [el("button", { type: "button", class: "btn-texte", onclick: function () { if (St.ouvrirPdfPiece) St.ouvrirPdfPiece("devis", d); else A.imprimerPiece("devis", d); } }, [St.icone("imprimer"), "PDF"])]),
       el("section", { class: "bloc" }, [lignes, totaux]),
       bas]);
   }

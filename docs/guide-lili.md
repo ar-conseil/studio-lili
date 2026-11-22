@@ -102,7 +102,7 @@ Ses rubriques (les flèches **← →** passent de l'une à l'autre, **Échap** 
 | Rubrique | Ce que tu y fais | Le client le voit ? |
 |---|---|---|
 | Calendrier, Publications, Médiathèque | son travail | ce qui est partagé |
-| Documents | contrats, chartes, PDF reçus par mail, devis et factures ; « Envoyer par mail » sur chaque fichier | les fichiers que tu partages, jamais les devis et factures d'ici |
+| Documents | contrats, chartes, PDF reçus par mail, devis et factures (bouton « PDF » : le vrai PDF, à tes couleurs ; enveloppe : l'envoyer au client, PDF joint) ; « Envoyer par mail » sur chaque fichier | les fichiers que tu partages, jamais les devis et factures d'ici |
 | Brief | cible, ton, piliers, mots à utiliser et à éviter, objectifs | quand tu le partages |
 | Messages | la conversation avec lui | oui |
 | Rapports | les chiffres du mois par réseau, ton commentaire | quand tu partages le mois |

@@ -44,6 +44,7 @@
       if (!u) return Promise.reject(new Error("fichier introuvable"));
       return fetch(u).then(function (r) { if (!r.ok) throw new Error("fichier illisible (" + r.status + ")"); return r.blob(); });
     }
+    if (src.piece) return St.pdfPiece(src.piece.table, src.piece.f);
     if (St.X.demo) return Promise.resolve(St.pdfDemo(src.nom || "Document", ["Document de demonstration.", "Rien n'est envoye."]));
     return St.X.db.storage.from(src.bucket).download(src.chemin).then(function (r) { if (r.error) throw r.error; return r.data; });
   };
@@ -68,6 +69,18 @@
       St.ecrireMail({ objet: nomMedia(m).replace(/\.[a-z0-9]+$/i, ""), fichiers: [f], a: e ? adresseClient(e) : "" });
     }).catch(function (x) { St.signaler(x.message, true); });
   };
+  // Une facture ou un devis par mail : le PDF joint, l'adresse de facturation du client proposée
+  St.envoyerPieceParMail = function (table, f) {
+    if (!St.ecrireMail) return;
+    var e = f.espace_id && St.espace(f.espace_id), pr = e && St.prive ? (St.prive(e.id) || {}) : {}, ent = St.aides.entreprise();
+    var fact = table === "factures", titre = (fact ? "Facture" : "Devis") + (f.numero ? " n° " + f.numero : "");
+    St.signaler("Préparation du PDF…");
+    var src = f.pdf_path ? { bucket: "livrables", chemin: f.pdf_path } : { piece: { table: table, f: f } };
+    St.fichierFile(src, St.nomPdfPiece(table, f)).then(function (fichier) {
+      St.ecrireMail({ a: pr.email_facturation || (e ? adresseClient(e) : ""), objet: titre + (ent.nom ? " · " + ent.nom : "") + (f.periode ? " · " + f.periode : ""), fichiers: [fichier],
+        html: "<p>Bonjour,</p><p>Veuillez trouver ci-joint " + (fact ? "la facture" : "le devis") + (f.numero ? " n° " + St.aides.echapper(String(f.numero)) : "") + (f.objet ? " (" + St.aides.echapper(f.objet) + ")" : "") + ".</p><p>Belle journée,</p>" });
+    }).catch(function (x) { St.signaler("PDF impossible : " + x.message, true); });
+  };
   function adresseClient(e) {
     var p = S.membres.filter(function (m) { return m.espace_id === e.id && m.role === "client"; }).map(function (m) { return St.personne(m.personne_id); }).filter(function (p) { return p && p.email; })[0];
     return p ? p.email : "";
@@ -90,9 +103,9 @@
         });
         [["factures", "Facture"], ["devis", "Devis"]].forEach(function (t) {
           S[t[0]].filter(function (f) { return (!eId || f.espace_id === eId) && f.statut !== "brouillon"; }).forEach(function (f) {
-            var nom = t[1] + (f.numero ? " " + f.numero : "") + (f.objet ? " - " + f.objet : "") + ".pdf";
+            var nom = f.pdf_path || !St.nomPdfPiece ? t[1] + (f.numero ? " " + f.numero : "") + (f.objet ? " - " + f.objet : "") + ".pdf" : St.nomPdfPiece(t[0], f);
             l.push({ cle: t[0] + f.id, nom: nom, genre: "piece", taille: null, date: f.date_facture || f.date_devis || f.cree_le, espace: f.espace_id,
-              src: f.pdf_path ? { bucket: "livrables", chemin: f.pdf_path, nom: nom } : null });
+              src: f.pdf_path ? { bucket: "livrables", chemin: f.pdf_path, nom: nom } : St.pdfPiece ? { piece: { table: t[0], f: f }, nom: nom } : null });
           });
         });
         return l.sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); });

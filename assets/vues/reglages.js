@@ -31,10 +31,10 @@
   }
 
   // ---------- Entreprise : la fiche qui remplit l'en-tête des factures et devis ----------
-  var SECTIONS = [["Identité", [["nom", "Nom commercial", "Lili Rouzier"], ["activite", "Activité", "Community manager"]]],
+  var SECTIONS = [["Identité", [["nom", "Nom commercial", "Lili Rouzier"], ["activite", "Activité", "Community manager"], ["nom_legal", "Nom légal (en tête des factures)", "Entreprise individuelle ROUZIER ALISON"]]],
     ["Coordonnées", [["adresse", "Adresse", "", 2], ["email", "E-mail de facturation", ""], ["telephone", "Téléphone", ""], ["site", "Site ou Instagram", "https://…"]]],
-    ["Immatriculation", [["siret", "SIRET", ""], ["tva_intra", "TVA intracommunautaire", "FR…"]]],
-    ["Paiement", [["iban_affiche", "IBAN affiché sur les factures", "FR76 …"], ["conditions", "Conditions de paiement", "Paiement à 30 jours par virement.", 2]]]];
+    ["Immatriculation", [["siret", "SIRET", ""], ["tva_intra", "TVA intracommunautaire", "FR…"], ["naf", "Code NAF", "7021Z"]]],
+    ["Paiement", [["iban_affiche", "IBAN affiché sur les factures", "FR76 …"], ["conditions", "Règlement", "À réception", 2]]]];
   function ongletEntreprise() {
     var ent = reglage("entreprise"), saisies = {};
     var tous = SECTIONS.reduce(function (l, s) { return l.concat(s[1]); }, []);
