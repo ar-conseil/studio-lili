@@ -161,6 +161,11 @@ en PDF.
    et devis. Les autres onglets : Signatures de mail, Réponses types, Mails et vacances, Devis et signature
    (validité par défaut), Assistant IA (consommation du mois), Sécurité (code, mot de passe, appareils),
    Apparence (clair, sombre ou comme l'appareil).
+   **Ta signature de mail** (Réglages > Signatures de mail, en haut) : ajoute ta photo (recadrée au carré), vérifie
+   tes informations, coche « Laisser un avis Google » et colle le lien de ta fiche Google, puis « Enregistrer ».
+   « Copier pour Gmail » et colle-la dans Gmail > Paramètres > Voir tous les paramètres > Signature ; la « version
+   image » a exactement le même rendu partout (Outlook, téléphones). « Utiliser pour les mails écrits dans le studio »
+   la met au bas de tes nouveaux messages de la page Mails.
 2. **Temps** : dans la rubrique du client, date, durée (« 1h30 », « 45 ») et ce que tu as fait. La jauge compare au
    forfait d'heures du mois (réglé dans la Fiche).
 3. **Facture** : « Nouvelle facture » propose ton forfait du mois, TVA 20 %. Elle reste un **brouillon** modifiable.

@@ -94,6 +94,14 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   cron « mails-programmes » chaque minute -> `messagerie` {action: programmes}), « Créer une tâche », raccourcis
   façon Gmail (`V.toucheMails`, prioritaire sur la page Mails ; ? pour la liste). HTML des mails dans un iframe isolé,
   images distantes bloquées jusqu'au clic ; le HTML envoyé est nettoyé côté serveur (`nettoyerHtml`).
+- **Ma signature** (22/11/2026, comme Evoalys) : `assets/vues/signature.js`, en tête de Réglages › Signatures de mail.
+  Photo (recadrée au carré dans le navigateur, anneau terre cuite dessiné en canvas ; initiales sans photo),
+  informations (proposées depuis Entreprise), aperçu, « Copier pour Gmail » (HTML), « version image » (carte + bande
+  d'avis en JPEG), « Télécharger en JPEG », « Utiliser pour les mails écrits dans le studio » (signature `s-carte-<id>`).
+  Une par propriétaire : `reglages.signature_carte = {<id>: {...}}`. Images dans la table `signature_images` (privée,
+  propriétaire avec code ; migration `20261122190000_signature.sql`, testée) servies sans connexion par la fonction
+  `signature` (GET ?k=<clé de 64 hex>, une ligne par clé, nouvelle clé à chaque version) : Gmail les affiche, le
+  stockage reste privé. Logo : `assets/marque/signature-lr.png` (adresse publique du site).
 - Réglages (`#reglages?onglet=…`) : `assets/vues/reglages.js`, en onglets comme Evoalys (Entreprise avec fiche de
   complétude, Signatures de mail, Réponses types, Mails et vacances, Devis et signature, Assistant IA, Sécurité,
   Apparence). Clés de `reglages` : entreprise, signatures {liste, nouveau, reponse}, modeles_mail {liste},

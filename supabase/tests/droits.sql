@@ -89,6 +89,7 @@ set local role authenticated;
 select essais.verifier((select count(*) from public.publications) = 0, 'Lili sans code ne voit aucune publication');
 select essais.verifier((select count(*) from public.factures) = 0, 'Lili sans code ne voit aucune facture');
 select essais.doit_echouer($q$insert into public.espaces (slug, nom) values ('essai-sans-code', 'Sans code')$q$, 'Lili sans code crée un client');
+select essais.doit_echouer($q$insert into public.signature_images (type, contenu) values ('image/png', 'iVBORw0KGgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')$q$, 'Lili sans code dépose une image de signature');
 reset role;
 
 -- ---------- Lili avec son code : tout ----------
@@ -108,6 +109,9 @@ select essais.verifier((select visibilite from public.publications where id = '2
 insert into public.factures (espace_id, objet, statut) values ('10000000-0000-4000-a000-00000000000a', 'Novembre', 'emise');
 select essais.verifier((select numero from public.factures where objet = 'Novembre') = (select max(numero) from public.factures where objet <> 'Novembre') + 1, 'la facture émise prend le numéro suivant (92 sur une base vide)');
 select essais.verifier(exists (select 1 from public.comptes_mail where email = 'lili-gmail@essai.invalid'), 'Lili voit sa boîte Gmail reliée');
+insert into public.signature_images (type, contenu) values ('image/png', 'iVBORw0KGgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
+select essais.verifier((select count(*) from public.signature_images) = 1, 'Lili dépose et relit une image de sa signature');
+select essais.doit_echouer($q$insert into public.signature_images (type, contenu) values ('text/html', 'iVBORw0KGgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')$q$, 'Lili dépose autre chose qu''une image dans la signature');
 select essais.verifier(exists (select 1 from public.reglages where cle = 'entreprise') and exists (select 1 from public.briefs_jour where jour = current_date) and exists (select 1 from public.assistant_journal where demande = 'Idées pour Noël'), 'Lili voit ses réglages, son brief et son assistant');
 insert into public.devis (espace_id, objet, statut) values ('10000000-0000-4000-a000-00000000000a', 'Forfait 2027', 'envoye');
 select essais.verifier((select numero from public.devis where objet = 'Forfait 2027') like 'D' || to_char(current_date, 'YYYY') || '-___', 'le devis envoyé prend un numéro D<année>-<n°>');
@@ -180,6 +184,8 @@ select essais.verifier((select count(*) from public.versions) = 1, 'A voit la ve
 select essais.verifier((select count(*) from public.notifications) >= 1 and not exists (select 1 from public.notifications where personne_id <> '00000000-0000-4000-a000-0000000000a1'), 'A ne voit que ses propres notifications');
 select essais.verifier((select count(*) from public.comptes_mail) = 0, 'A ne voit pas la boîte Gmail de Lili');
 select essais.verifier((select count(*) from public.reglages) = 0, 'A ne voit pas les réglages de Lili (SIRET, IBAN…)');
+select essais.verifier((select count(*) from public.signature_images) = 0, 'A ne voit pas les images de signature de Lili');
+select essais.doit_echouer($q$insert into public.signature_images (type, contenu) values ('image/png', 'iVBORw0KGgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')$q$, 'A dépose une image de signature');
 select essais.verifier((select count(*) from public.briefs_jour) = 0, 'A ne voit pas le brief du jour de Lili');
 select essais.verifier((select count(*) from public.assistant_journal) = 0, 'A ne voit pas ce que Lili demande à son assistant');
 select essais.verifier((select count(*) from public.devis) = 1 and exists (select 1 from public.devis where objet = 'Forfait 2027'), 'A ne voit que le devis envoyé de son espace (ni brouillon, ni celui de B)');

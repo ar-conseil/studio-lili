@@ -1,5 +1,6 @@
 /* Réglages de Lili, en onglets comme Evoalys : Entreprise (fiche et complétude), Signatures de mail, Réponses types,
    Mails et vacances, Devis et signature, Assistant IA, Sécurité, Apparence. Et la fenêtre « En vacances ».
+   L'onglet Signatures commence par « Ma signature » façon Evoalys (assets/vues/signature.js).
    Adresse : #reglages?onglet=entreprise|signatures|modeles|mails|devis|ia|securite|apparence
    Tout est rangé dans la table « reglages » (Lili seule, jamais lisible par un client). */
 (function (St) {
@@ -85,7 +86,7 @@
             enreg(sg.liste.filter(function (x) { return x.id !== s.id; }), sg.nouveau === s.id ? null : sg.nouveau, sg.reponse === s.id ? null : sg.reponse);
           }); } })])]);
     })) : St.vide("Aucune signature pour l'instant.");
-    return el("div", { class: "pile" }, [
+    return el("div", { class: "pile" }, [St.carteSignature ? St.carteSignature(carte) : null,
       carte("plume", "Signatures de mail", "Ajoutées toutes seules au bas des messages écrits depuis le studio. Une pour les nouveaux messages, une plus courte pour les réponses si vous voulez.", [
         el("div", { class: "barre-outils" }, [el("button", { type: "button", class: "btn-plein", onclick: function () { editerSignature(); } }, [St.icone("plus"), "Nouvelle signature"])]),
         liste,

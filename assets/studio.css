@@ -1221,3 +1221,28 @@ a.pl-ligne:hover .pl-ouvrir, a.pl-ligne:focus-visible .pl-ouvrir { opacity: 1; }
 .pl-ouvrir { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); margin: 0; }
 .pl-c-nom { padding-right: 70px !important; }
 @media (max-width: 640px) { .pl-outils .pl-recherche { width: 100%; flex: 1 1 100%; } .pl-c-nom { padding-right: 8px !important; } }
+
+/* ---------- Ma signature de mail (Réglages › Signatures), façon Evoalys ---------- */
+.btn-ligne { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 16px; border: 1px solid var(--filet-fort, #D9CFC2); background: var(--blanc); color: var(--encre); border-radius: 10px; font: 500 14px var(--sans); cursor: pointer; transition: background-color .15s, border-color .15s; }
+.btn-ligne:hover { background: var(--creme); border-color: var(--encre-3); }
+.btn-ligne:disabled, .sig-actions .btn-plein:disabled { opacity: .6; cursor: progress; }
+.sig-photo-ligne { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.sig-photo-ligne .aide { margin: 0; flex: 1 1 240px; }
+.sig-photo { width: 92px; height: 92px; border-radius: 50%; flex: none; background: var(--creme); display: grid; place-items: center; }
+.sig-photo img { width: 92px; height: 92px; display: block; }
+.sig-deux { display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); gap: 18px; align-items: start; }
+.sig-deux > .bloc { margin: 0; }
+.sig-deux .carte-reglage-corps { display: grid; gap: 12px; }
+.case-ligne { display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; }
+.case-ligne input { width: 18px; height: 18px; margin: 0; accent-color: var(--terre); }
+.sig-cadre { border: 1px solid var(--filet); border-radius: 14px; background: #fff; padding: 22px; overflow-x: auto; }
+.sig-apercu { width: max-content; }
+.sig-actions { justify-content: flex-start; flex-wrap: wrap; gap: 10px; }
+.sig-note { min-height: 1.4em; margin: 0; }
+@media (max-width: 980px) { .sig-deux { grid-template-columns: 1fr; } }
+@media (max-width: 400px) { .sig-cadre .sig-apercu { zoom: .47; } }
+@media (max-width: 640px) {
+  .sig-cadre { padding: 12px; }
+  .sig-apercu { zoom: .56; }
+  .sig-actions > * { flex: 1 1 100%; }
+}
