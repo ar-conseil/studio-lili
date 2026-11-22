@@ -517,6 +517,8 @@ window.Studio = (function () {
   function espacesClient() { return S.espaces.filter(function (e) { return S.membres.some(function (m) { return m.espace_id === e.id && m.personne_id === S.moi.id; }); }); }
   function dessinerCoquille() {
     var c = X.coquille, r = S.route, lili = estLili(), aValider = publicationsVisibles().filter(function (p) { return p.statut === "a-valider"; });
+    // La barre latérale est redessinée à chaque page : on garde sa position de défilement (sinon elle remonte en haut)
+    var ancienne = c.querySelector(".cote"); if (ancienne && ancienne.scrollTop) X.defilCote = ancienne.scrollTop;
     c.textContent = "";
     var tete = lili
       ? el("a", { class: "cote-tete", href: "#" }, [el("img", { src: MARQUE.icone || "assets/marque/icone.svg", alt: "", width: 32, height: 32 }), el("span", {}, [el("b", { text: MARQUE.outil || "Studio" }), el("small", { text: MARQUE.proprietaire || "" })])])
@@ -598,7 +600,15 @@ window.Studio = (function () {
     ]).map(function (x) { return el("a", { href: x[0], "aria-current": x[3] ? "page" : null }, [icone(x[1]), el("span", { text: x[2] })]); })
       .concat([el("button", { type: "button", onclick: function () { menu(true); } }, [icone("menu"), el("span", { text: "Plus" })])]));
     X.page = el("main", { class: "page", id: "page" });
-    c.appendChild(cote); c.appendChild(el("div", { class: "voile", onclick: function () { menu(false); } })); c.appendChild(barre); c.appendChild(X.page); c.appendChild(basTel);
+    requestAnimationFrame(function () {
+      var cote = c.querySelector(".cote"); if (!cote) return;
+      cote.scrollTop = X.defilCote || 0;
+      if (!cote.dataset.suivi) { cote.dataset.suivi = "1"; cote.addEventListener("scroll", function () { X.defilCote = cote.scrollTop; }, { passive: true }); }
+      // Le client ouvert reste visible : si ses rubriques dépassent en bas, on fait juste la place nécessaire
+      var actif = cote.querySelector('.cote-clients a[aria-current="page"], .cote-clients a[aria-expanded]');
+      if (actif) { var a = actif.getBoundingClientRect(), b = cote.getBoundingClientRect(); if (a.top < b.top || a.bottom > b.bottom) actif.scrollIntoView({ block: "nearest" }); }
+    });
+    c.appendChild(cote); cote.scrollTop = X.defilCote || 0; c.appendChild(el("div", { class: "voile", onclick: function () { menu(false); } })); c.appendChild(barre); c.appendChild(X.page); c.appendChild(basTel);
   }
   function menu(ouvert) { document.documentElement.classList.toggle("menu-ouvert", ouvert); }
   function filAriane() {
