@@ -412,10 +412,33 @@
         var d = fact ? f.date_facture : f.date_devis, sg = !fact && S.signaturesDevis.filter(function (x) { return x.devis_id === f.id; })[0];
         return el("tr", {}, [el("td", { class: "mono", text: f.numero ? String(f.numero) : "—" }), el("td", { text: [f.objet, f.periode].filter(Boolean).join(" · ") || "Sans objet" }),
           el("td", { class: "mono", text: d ? St.fmt(d + "T12:00:00", { day: "numeric", month: "short", year: "numeric" }) : "—" }), el("td", { class: "n", text: euros(f.total_ttc) }),
-          el("td", {}, [el("span", { class: "etat-piece e-" + f.statut, text: sg ? "Signé" : STATUTS_FACT[f.statut] || f.statut }),
+          el("td", {}, [fact && (f.statut === "emise" || f.statut === "payee")
+            ? el("button", { type: "button", class: "etat-piece e-" + f.statut + " etat-modifiable", title: "Changer l'état (si vous vous êtes trompée)", onclick: function () { changerEtatFacture(f); } },
+                [STATUTS_FACT[f.statut] || f.statut, f.statut === "payee" && f.payee_le ? el("small", { text: " le " + St.fmt(f.payee_le + "T12:00:00", { day: "numeric", month: "short" }) }) : null])
+            : el("span", { class: "etat-piece e-" + f.statut, text: sg ? "Signé" : STATUTS_FACT[f.statut] || f.statut }),
             sg ? el("small", { class: "aide", text: " " + St.fmt(sg.signe_le, { day: "numeric", month: "short" }) + " par " + sg.nom_signataire }) : null]), el("td", { class: "actions-ligne" }, actions)]);
       }))
     ])]);
+  }
+  // Corriger l'état d'une facture émise : payée (et quand) ou en attente de paiement. Le numéro reste : une facture
+  // émise ne redevient jamais un brouillon (pour l'annuler, il faut un avoir).
+  function changerEtatFacture(f) {
+    var payee = el("input", { type: "radio", name: "etat-facture", checked: f.statut === "payee" }), attente = el("input", { type: "radio", name: "etat-facture", checked: f.statut !== "payee" });
+    var jour = el("input", { type: "date", value: f.payee_le || St.iso(new Date()), "aria-label": "Payée le" });
+    var majJour = function () { jour.disabled = !payee.checked; }; payee.onchange = attente.onchange = majJour; majJour();
+    var ops = (S.banqueOps || []).filter(function (o) { return o.facture_id === f.id; });
+    St.fenetre({ titre: "État de la facture " + (f.numero || ""), sous: (f.objet || "") + " · " + euros(f.total_ttc) + ". Le numéro ne change pas.", corps: [
+      el("label", { class: "case-option" }, [attente, el("span", {}, [el("b", { text: "Émise, en attente de paiement" }), el("small", { text: "Elle revient dans « À encaisser » (Comptabilité) et sort du chiffre encaissé." + (ops.length ? " Le virement rapproché est détaché." : "") })])]),
+      el("label", { class: "case-option" }, [payee, el("span", {}, [el("b", { text: "Payée" }), el("small", { text: "La date compte pour la déclaration URSSAF et la TVA du mois." })])]),
+      champ("Payée le", jour)],
+      actions: [{ texte: "Annuler" }, { texte: "Enregistrer", principal: true, action: function (fermer) {
+        if (payee.checked && !jour.value) { jour.focus(); return; }
+        var champs = payee.checked ? { statut: "payee", payee_le: jour.value } : { statut: "emise", payee_le: null, viree: false };
+        St.maj("factures", f.id, champs).then(function () {
+          if (payee.checked || !ops.length) return;
+          return Promise.all(ops.map(function (o) { return St.maj("banque_operations", o.id, { facture_id: null }); }));
+        }).then(function () { fermer(); St.signaler(payee.checked ? "Facture " + (f.numero || "") + " payée le " + St.fmt(jour.value + "T12:00:00", { day: "numeric", month: "long" }) : "Facture " + (f.numero || "") + " remise en attente de paiement"); St.dessiner(false); });
+      } }] });
   }
   function ouvrirPdf(chemin) {
     if (St.X.demo) { St.signaler("Démonstration : pas de PDF", true); return; }

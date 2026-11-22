@@ -192,6 +192,8 @@ Lien **Comptabilité** dans la barre de gauche (une pastille quand des factures 
   forfait). Le dernier jour du mois, les brouillons sont prêts ; tu relis, puis « Émettre et envoyer » : numéro, PDF
   et mail depuis ta boîte Gmail, en un clic.
 - **À encaisser** : factures envoyées, en retard, « Relancer » (mail avec le PDF), « Payée ».
+- **Erreur d'état** : clique sur l'état d'une facture émise (« Payée » ou « Émise ») pour la remettre en attente de
+  paiement ou corriger la date de paiement. Le numéro ne change jamais.
 - **Compte bancaire** : « Importer un relevé Revolut ». Dans l'application Revolut : Compte › … › Relevé › Excel
   (CSV), choisis la période, puis dépose le fichier. À refaire chaque mois ; rien n'est importé deux fois. Les
   virements de tes clients se rapprochent de tes factures en un clic. (Un compte Revolut Business pourrait être relié

@@ -1328,3 +1328,8 @@ a.pl-ligne:hover .pl-ouvrir, a.pl-ligne:focus-visible .pl-ouvrir { opacity: 1; }
 tr.en-retard td { background: color-mix(in srgb, var(--terre) 5%, transparent); }
 .etapes-liaison { display: grid; gap: 14px; padding-left: 20px; margin: 0; } .etapes-liaison li { display: grid; gap: 6px; } .etapes-liaison textarea { font-size: 11px; }
 @media (max-width: 700px) { .compta-valeur { font-size: 26px; } .liste-compta.banque select { display: none; } }
+/* État d'une facture émise : cliquable pour le corriger */
+button.etat-modifiable { border: 0; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: box-shadow .15s; }
+button.etat-modifiable:hover, button.etat-modifiable:focus-visible { box-shadow: 0 0 0 2px color-mix(in srgb, currentColor 30%, transparent); }
+button.etat-modifiable::after { content: "▾"; font-size: 10px; opacity: .6; }
+button.etat-modifiable small { font-weight: 500; opacity: .8; }
