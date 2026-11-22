@@ -132,6 +132,8 @@ select essais.verifier((select count(*) from public.banque_operations) = 1 and (
 select essais.doit_echouer('select cle_api from public.banque_liaisons', 'le navigateur de Lili lit la clé API Revolut');
 select essais.doit_echouer($$update public.banque_operations set montant = 1$$, 'Lili change le montant d''une opération bancaire');
 update public.banque_operations set categorie = 'client' where id = 'op-essai-1';
+insert into public.banque_operations (id, date, montant, libelle) values ('csv:essai', now(), -50, 'Import du relevé');
+select essais.verifier(exists (select 1 from public.banque_operations where id = 'csv:essai'), 'Lili importe une opération de son relevé');
 select essais.verifier((select categorie from public.banque_operations where id = 'op-essai-1') = 'client', 'Lili classe une opération');
 select essais.verifier(public.preparer_factures_du_mois() = 1, 'Lili prépare la facture du mois du client au forfait');
 select essais.verifier(public.preparer_factures_du_mois() = 0, 'une seule facture automatique par client et par mois');
@@ -203,6 +205,7 @@ select essais.verifier((select count(*) from public.reglages) = 0, 'A ne voit pa
 select essais.verifier((select count(*) from public.signature_images) = 0, 'A ne voit pas les images de signature de Lili');
 select essais.verifier((select count(*) from public.banque_operations) = 0 and (select count(*) from public.banque_liaisons) = 0, 'A ne voit pas le compte pro de Lili');
 select essais.doit_echouer('select cle_api from public.banque_liaisons', 'A lit la clé API Revolut');
+select essais.doit_echouer($$insert into public.banque_operations (id, date, montant) values ('csv:pirate', now(), 1)$$, 'A ajoute une opération au compte de Lili');
 select essais.doit_echouer('select public.preparer_factures_du_mois()', 'A prépare des factures');
 select essais.doit_echouer($q$insert into public.signature_images (type, contenu) values ('image/png', 'iVBORw0KGgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')$q$, 'A dépose une image de signature');
 select essais.verifier((select count(*) from public.briefs_jour) = 0, 'A ne voit pas le brief du jour de Lili');

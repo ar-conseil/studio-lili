@@ -213,11 +213,15 @@
 
   // ---------- Compte pro (Revolut Business) ----------
   function blocBanque(m) {
-    var li = S.banqueLiaisons[0];
-    if (!li || !li.nom) return el("section", { class: "bloc compta-banque" }, [
-      el("header", {}, [el("h2", { text: "Compte pro" })]),
-      el("p", { class: "phrase", text: "Reliez votre compte Revolut Business (lecture seule) : les virements de vos clients se rapprochent de vos factures, vos paiements URSSAF et TVA sont repérés." }),
-      el("div", {}, [el("button", { type: "button", class: "btn-plein", onclick: relierRevolut }, [St.icone("lien"), "Relier Revolut Business"])])]);
+    var li = S.banqueLiaisons[0], relie = !!(li && li.nom);
+    var entree = el("input", { type: "file", accept: ".csv,text/csv", hidden: true, onchange: function () { importer(entree.files[0]); entree.value = ""; } });
+    var boutonImport = el("button", { type: "button", class: relie || S.banqueOps.length ? "btn-texte bloc-lien" : "btn-plein", onclick: function () { entree.click(); } }, [St.icone("deposer"), "Importer un relevé Revolut"]);
+    if (!relie && !S.banqueOps.length) return el("section", { class: "bloc compta-banque" }, [
+      el("header", {}, [el("h2", { text: "Compte bancaire" })]),
+      el("p", { class: "phrase", text: "Importez le relevé de votre compte Revolut : les virements de vos clients se rapprochent de vos factures, vos paiements URSSAF et impôts sont repérés." }),
+      el("p", { class: "aide", text: "Dans l'application Revolut : Compte › … › Relevé › Excel (CSV), choisissez la période, puis glissez le fichier ici. À refaire chaque mois ; les opérations déjà importées ne sont pas doublées." }),
+      el("div", { class: "actions-ligne", style: { "justify-content": "flex-start" } }, [boutonImport, entree,
+        el("button", { type: "button", class: "btn-texte", onclick: relierRevolut }, [St.icone("lien"), "J'ai un compte Revolut Business"])])]);
     var ops = S.banqueOps.filter(function (o) { return moisDe(o.date) === m; });
     var entrees = arrondi(ops.filter(function (o) { return +o.montant > 0; }).reduce(function (s, o) { return s + (+o.montant); }, 0));
     var sorties = arrondi(ops.filter(function (o) { return +o.montant < 0; }).reduce(function (s, o) { return s - (+o.montant); }, 0));
@@ -233,10 +237,11 @@
     };
     var NOMS = { client: "Client", urssaf: "URSSAF", tva: "TVA", impots: "Impôts", depense: "Dépense", perso: "Perso", virement: "Virement interne", autre: "Autre" };
     return el("section", { class: "bloc compta-banque" }, [
-      el("header", {}, [el("h2", { text: li.nom || "Compte pro" }), el("span", { class: "compte", text: li.derniere_synchro ? "à jour " + St.ilya(li.derniere_synchro) : "" }),
-        el("button", { type: "button", class: "btn-texte bloc-lien", onclick: synchroniser }, [St.icone("rafraichir"), "Actualiser"]),
-        St.X.demo ? null : el("button", { type: "button", class: "btn-icone petit", title: "Délier le compte", "aria-label": "Délier le compte", onclick: delier }, [St.icone("fermer")])]),
-      li.derniere_erreur ? el("p", { class: "alerte-texte", text: "Dernière erreur : " + li.derniere_erreur }) : null,
+      el("header", {}, [el("h2", { text: relie ? li.nom : "Compte bancaire" }), el("span", { class: "compte", text: relie && li.derniere_synchro ? "à jour " + St.ilya(li.derniere_synchro) : derniereOp() }),
+        boutonImport, entree,
+        relie ? el("button", { type: "button", class: "btn-texte bloc-lien", onclick: synchroniser }, [St.icone("rafraichir"), "Actualiser"]) : null,
+        relie && !St.X.demo ? el("button", { type: "button", class: "btn-icone petit", title: "Délier le compte", "aria-label": "Délier le compte", onclick: delier }, [St.icone("fermer")]) : null]),
+      relie && li.derniere_erreur ? el("p", { class: "alerte-texte", text: "Dernière erreur : " + li.derniere_erreur }) : null,
       el("p", { class: "aide", text: "En " + nomMois(m, true) + " : " + euros(entrees) + " reçus, " + euros(sorties) + " dépensés." }),
       ops.length ? el("ul", { class: "liste-compta banque" }, ops.slice(0, 60).map(function (o) {
         var s = sugg(o), f = o.facture_id && S.factures.filter(function (x) { return x.id === o.facture_id; })[0], c = cat(o);
@@ -248,6 +253,60 @@
           f ? el("small", { class: "etiquette-partage", text: "Facture " + (f.numero || "") }) : s ? el("button", { type: "button", class: "btn-texte petit", onclick: function () { payee(s, String(o.date).slice(0, 10), o); } }, [St.icone("valider"), "Facture " + (s.numero || "") + " · " + espaceNom(s)]) : el("span")]);
       })) : St.vide("Aucune opération ce mois-ci.")
     ]);
+  }
+  function derniereOp() { var d = S.banqueOps.map(function (o) { return o.date; }).sort().pop(); return d ? "jusqu'au " + St.fmt(d, { day: "numeric", month: "short" }) : ""; }
+
+  // ---------- Import du relevé Revolut (CSV de l'application, en français ou en anglais) ----------
+  function lireCsv(texte) {
+    var lignes = [], champ = "", ligne = [], q = false;
+    texte = texte.replace(/^\ufeff/, "");
+    var sep = (texte.split("\n")[0].match(/;/g) || []).length > (texte.split("\n")[0].match(/,/g) || []).length ? ";" : ",";
+    for (var i = 0; i < texte.length; i++) {
+      var c = texte[i];
+      if (q) { if (c === '"' && texte[i + 1] === '"') { champ += '"'; i++; } else if (c === '"') q = false; else champ += c; }
+      else if (c === '"') q = true;
+      else if (c === sep) { ligne.push(champ); champ = ""; }
+      else if (c === "\n" || c === "\r") { if (c === "\r" && texte[i + 1] === "\n") i++; ligne.push(champ); champ = ""; if (ligne.some(function (x) { return x.trim(); })) lignes.push(ligne); ligne = []; }
+      else champ += c;
+    }
+    ligne.push(champ); if (ligne.some(function (x) { return x.trim(); })) lignes.push(ligne);
+    return lignes;
+  }
+  function nombre(x) { x = String(x || "").replace(/\s|\u00a0|\u202f/g, ""); if (/,\d{1,2}$/.test(x)) x = x.replace(/\./g, "").replace(",", "."); return parseFloat(x) || 0; }
+  function empreinte(t) { return crypto.subtle.digest("SHA-1", new TextEncoder().encode(t)).then(function (h) { return Array.from(new Uint8Array(h)).map(function (b) { return b.toString(16).padStart(2, "0"); }).join(""); }); }
+  function importer(fichier) {
+    if (!fichier) return;
+    var r = new FileReader();
+    r.onload = function () {
+      var t = lireCsv(String(r.result)); if (t.length < 2) return St.signaler("Fichier vide ou illisible", true);
+      var tete = t[0].map(function (x) { return x.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); });
+      var col = function () { for (var i = 0; i < arguments.length; i++) { var k = tete.indexOf(arguments[i]); if (k >= 0) return k; } return -1; };
+      var c = { type: col("type"), debut: col("started date", "date de debut"), fin: col("completed date", "date de fin", "date de realisation"), desc: col("description"),
+        montant: col("amount", "montant"), frais: col("fee", "frais"), devise: col("currency", "devise"), etat: col("state", "etat"), solde: col("balance", "solde") };
+      if (c.montant < 0 || (c.fin < 0 && c.debut < 0)) return St.signaler("Ce fichier ne ressemble pas à un relevé Revolut (colonnes Date et Montant introuvables)", true);
+      var lignes = t.slice(1).filter(function (l) { var e = c.etat >= 0 ? (l[c.etat] || "").toLowerCase() : ""; return !/revert|declin|fail|annul|refus|echou|échou/.test(e); });
+      Promise.all(lignes.map(function (l) {
+        var quand = (l[c.fin] || l[c.debut] || "").trim(), d = new Date(quand.replace(" ", "T"));
+        if (isNaN(d)) return null;
+        var montant = arrondi(nombre(l[c.montant]) - (c.frais >= 0 ? nombre(l[c.frais]) : 0)), desc = (l[c.desc] || "").trim();
+        var cle = [quand, montant, desc, c.solde >= 0 ? l[c.solde] : ""].join("|");
+        return empreinte(cle).then(function (h) {
+          return { id: "csv:" + h, date: d.toISOString(), montant: montant, devise: (c.devise >= 0 && l[c.devise]) || "EUR", libelle: desc, contrepartie: desc,
+            type: c.type >= 0 ? (l[c.type] || "").toLowerCase() : null, etat: c.etat >= 0 ? (l[c.etat] || "").toLowerCase() : null, solde_apres: c.solde >= 0 && l[c.solde] ? nombre(l[c.solde]) : null };
+        });
+      })).then(function (ops) {
+        ops = ops.filter(Boolean);
+        var deja = {}; S.banqueOps.forEach(function (o) { deja[o.id] = true; });
+        var nouvelles = ops.filter(function (o) { if (deja[o.id]) return false; deja[o.id] = true; return true; });
+        if (!nouvelles.length) return St.signaler("Rien de nouveau : ces " + ops.length + " opérations sont déjà importées");
+        if (St.X.demo) { S.banqueOps = nouvelles.concat(S.banqueOps); St.signaler(nouvelles.length + " opérations importées (démonstration)"); St.dessiner(false); return; }
+        var lots = []; for (var i = 0; i < nouvelles.length; i += 500) lots.push(nouvelles.slice(i, i + 500));
+        lots.reduce(function (p, lot) { return p.then(function () { return St.X.db.from("banque_operations").upsert(lot, { onConflict: "id", ignoreDuplicates: true }).then(function (x) { if (x.error) throw x.error; }); }); }, Promise.resolve())
+          .then(function () { St.signaler(nouvelles.length + " opération" + (nouvelles.length > 1 ? "s" : "") + " importée" + (nouvelles.length > 1 ? "s" : "")); return St.charger(["banque_operations"]); })
+          .then(function () { St.dessiner(false); }, function (e) { St.signaler("Import impossible : " + e.message, true); });
+      });
+    };
+    r.readAsText(fichier);
   }
   function synchroniser() {
     if (St.X.demo) return St.signaler("Démonstration : rien à actualiser");

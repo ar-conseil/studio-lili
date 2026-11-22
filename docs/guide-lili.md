@@ -192,8 +192,10 @@ Lien **Comptabilité** dans la barre de gauche (une pastille quand des factures 
   forfait). Le dernier jour du mois, les brouillons sont prêts ; tu relis, puis « Émettre et envoyer » : numéro, PDF
   et mail depuis ta boîte Gmail, en un clic.
 - **À encaisser** : factures envoyées, en retard, « Relancer » (mail avec le PDF), « Payée ».
-- **Compte pro** : « Relier Revolut Business » ; crée dans Revolut une clé API avec seulement « Accounts : Read » et
-  « Transactions : Read », colle-la. Les virements de tes clients se rapprochent de tes factures en un clic.
+- **Compte bancaire** : « Importer un relevé Revolut ». Dans l'application Revolut : Compte › … › Relevé › Excel
+  (CSV), choisis la période, puis dépose le fichier. À refaire chaque mois ; rien n'est importé deux fois. Les
+  virements de tes clients se rapprochent de tes factures en un clic. (Un compte Revolut Business pourrait être relié
+  directement, par clé API en lecture seule : bouton « J'ai un compte Revolut Business ».)
 - **Taux et régime** : vérifie les taux chaque année (2026 : 25,6 % + 0,2 % de formation).
 
 ## 9. Tâches et prospects
