@@ -8,7 +8,7 @@ window.Studio = (function () {
   var S = {
     moi: null, role: "proprietaire", espaces: [], prives: [], comptes: [], membres: [], personnes: [], medias: [], publications: [],
     pubMedias: [], commentaires: [], versions: [], operations: [], tempsForts: [], taches: [], journal: [], notes: [], notifications: [], boitesMail: [],
-    briefs: [], messages: [], rapports: [], signaturesDevis: [], mailsNonLus: 0, alertesSecurite: [], veille: [], partenaires: [], temps: [], devis: [], factures: [], prospects: [], reglages: [], briefsJour: [], rdv: [], banqueOps: [], banqueLiaisons: [], metaLiaison: [], metaComptes: [], diffusions: [],
+    briefs: [], messages: [], rapports: [], signaturesDevis: [], mailsNonLus: 0, alertesSecurite: [], veille: [], partenaires: [], temps: [], devis: [], factures: [], prospects: [], reglages: [], briefsJour: [], rdv: [], banqueOps: [], banqueLiaisons: [], metaLiaison: [], metaComptes: [], diffusions: [], metaApplication: [],
     urls: {}, route: { nom: "", param: "", rubrique: "", query: {} }, voirCommeEspace: null
   };
   var X = { db: null, demo: false, quitter: null, verrouiller: null, coquille: null, page: null, demarre: false };
@@ -177,7 +177,7 @@ window.Studio = (function () {
     ["securite_alertes", "alertesSecurite"], ["rendez_vous", "rdv"], ["temps", "temps"], ["prospects", "prospects"], ["reglages", "reglages"], ["briefs_jour", "briefsJour"],
     ["banque_liaisons", "banqueLiaisons", "id, fournisseur, nom, derniere_synchro, derniere_erreur, cree_le"], ["banque_operations", "banqueOps"],
     ["meta_liaison", "metaLiaison", "id, personne_id, meta_user_id, nom, expire_le, derniere_erreur, cree_le, modifie_le"],
-    ["meta_comptes", "metaComptes", "id, liaison_id, reseau, meta_id, page_id, nom, identifiant, photo_url, espace_id, cree_le, modifie_le"], ["diffusions", "diffusions"]];
+    ["meta_comptes", "metaComptes", "id, liaison_id, reseau, meta_id, page_id, nom, identifiant, photo_url, espace_id, cree_le, modifie_le"], ["diffusions", "diffusions"], ["meta_application", "metaApplication", "id, app_id, config_id, modifie_le"]];
   function charger(seules) {
     if (X.demo) {
       if (!X.donneesDemo) {

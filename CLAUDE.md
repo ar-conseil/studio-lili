@@ -141,6 +141,10 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   bloc « Publication en ligne » de la fiche : visuels convertis en JPEG au format Instagram, carrousel au format du
   premier visuel, déposés dans `<espace>/diffusion/`). Toutes publiées : statut « publiée » et `lien_en_ligne`.
   Migration `20261122240000_meta.sql`, testée.
+  Identifiants de l'appli (App ID, clé secrète vérifiée auprès de Meta, identifiant de configuration) collés par Lili
+  dans Réglages › Réseaux sociaux : table `meta_application` (clé secrète jamais lisible du navigateur, migration
+  `20261122250000_meta_application.sql`, testée) ; à défaut, secrets META_*. **À faire (23/11/2026)** : créer
+  l'appli Meta depuis le Chrome de Lili, connecté à SON Facebook (étapes affichées dans l'onglet), puis la relier.
 - Espace « Lili Rouzier » (`#lili-rouzier`, 22/11/2026) : sa propre marque ; ses portraits (dossier Portraits, internes). HTML des mails dans un iframe isolé,
   images distantes bloquées jusqu'au clic ; le HTML envoyé est nettoyé côté serveur (`nettoyerHtml`).
 - **Ma signature** (22/11/2026, comme Evoalys) : `assets/vues/signature.js`, en tête de Réglages › Signatures de mail.

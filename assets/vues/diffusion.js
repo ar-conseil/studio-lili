@@ -51,13 +51,34 @@
         return el("li", {}, [c.photo_url ? el("img", { src: c.photo_url, alt: "", class: "meta-avatar" }) : el("span", { class: "meta-avatar vide" }),
           el("span", { class: "meta-nom" }, [el("b", { text: c.nom || c.identifiant || c.meta_id }), el("small", { text: (c.reseau === "instagram" ? "Instagram" : "Page Facebook") + (c.identifiant ? " · @" + c.identifiant : "") })]), choix]);
       }))]));
-    blocs.push(carte("La première fois : déclarer l'application chez Meta", "Une seule fois, par Antonin ou Lili, sur ordinateur (environ 15 minutes). Le studio a besoin de son « App ID » et de sa clé secrète.", [
-      el("ol", { class: "etapes-liaison" }, [
-        el("li", {}, ["Sur ", el("a", { href: "https://developers.facebook.com/apps/", target: "_blank", rel: "noopener", text: "developers.facebook.com" }), ", avec le compte Facebook de Lili : « Créer une application », type « Entreprise »."]),
-        el("li", {}, ["Ajouter les produits « Facebook Login for Business » et « Instagram (API avec connexion Facebook) »."]),
-        el("li", {}, ["Dans Facebook Login › Paramètres, adresse de redirection OAuth valide : ", el("code", { text: (St.X.config && St.X.config.url ? St.X.config.url : (window.STUDIO_CONFIG || {}).url || "") + "/functions/v1/meta" })]),
-        el("li", {}, ["Donner à Antonin l'App ID et la clé secrète (Paramètres › Général) : il les pose côté serveur, jamais dans le site."]),
-        el("li", {}, ["Revenir ici et cliquer « Relier Facebook et Instagram »."])])]));
+    // Les identifiants de l'application, collés par Lili (la clé secrète part au serveur et n'en revient jamais)
+    var ap = (S.metaApplication || [])[0] || null, retour = (window.STUDIO_CONFIG || {}).url ? (window.STUDIO_CONFIG || {}).url + "/functions/v1/meta" : "https://<projet>.supabase.co/functions/v1/meta";
+    var champId = el("input", { type: "text", inputmode: "numeric", value: ap ? ap.app_id || "" : "", placeholder: "App ID (que des chiffres)", "aria-label": "App ID" });
+    var champSecret = el("input", { type: "password", autocomplete: "off", placeholder: ap ? "Clé secrète déjà enregistrée (laisser vide pour la garder)" : "Clé secrète de l'application", "aria-label": "Clé secrète" });
+    var champConfig = el("input", { type: "text", inputmode: "numeric", value: ap ? ap.config_id || "" : "", placeholder: "Identifiant de la configuration", "aria-label": "Identifiant de configuration" });
+    var enregistrer = function () {
+      if (St.X.demo) return St.signaler("Démonstration : rien n'est enregistré", true);
+      St.signaler("Vérification auprès de Meta…");
+      St.appel("meta", { action: "identifiants", app_id: champId.value.trim(), app_secret: champSecret.value.trim(), config_id: champConfig.value.trim() })
+        .then(function () { St.signaler("Application Meta enregistrée : vous pouvez relier Facebook et Instagram"); return St.charger(["meta_application"]); })
+        .then(function () { St.dessiner(false); }, function (e) { St.signaler(e.message, true); });
+    };
+    var copier = function (t) { return el("button", { type: "button", class: "btn-texte petit", onclick: function () { navigator.clipboard.writeText(t).then(function () { St.signaler("Copié"); }); } }, [St.icone("copier"), "Copier"]); };
+    var b = function (t) { return el("b", { text: t }); };
+    blocs.push(carte(ap ? "Application Meta" : "La première fois : créer l'application Meta", ap ? "Enregistrée (App ID " + ap.app_id + "). Vous pouvez la modifier ici." : "Une seule fois, sur ordinateur, connectée à votre compte Facebook (environ 15 minutes). Elle n'a pas besoin d'être validée par Meta : vous êtes la seule à l'utiliser.", [
+      ap ? null : el("ol", { class: "etapes-liaison" }, [
+        el("li", {}, ["Ouvrez ", el("a", { href: "https://developers.facebook.com/apps/", target: "_blank", rel: "noopener", text: "developers.facebook.com/apps" }), " avec votre compte Facebook. La première fois, Meta vous inscrit comme développeuse : acceptez."]),
+        el("li", {}, ["« Créer une app ». Nom : ", b("Studio Lili"), ", votre e-mail. Cas d'utilisation : cochez ", b("Gérer tout sur votre Page"), " et ", b("Gérer les messages et le contenu sur Instagram"), ". Portefeuille business : le vôtre, ou « pas maintenant ». Puis « Créer l'app »."]),
+        el("li", {}, ["Dans le cas d'utilisation Instagram, choisissez la configuration ", b("avec Facebook Login"), " (pas « Instagram Login »)."]),
+        el("li", {}, ["Menu ", b("Facebook Login for Business › Paramètres"), " : dans « URI de redirection OAuth valides », collez :", el("code", { text: retour }), copier(retour), " puis Enregistrer."]),
+        el("li", {}, ["Menu ", b("Facebook Login for Business › Configurations › Créer"), " : nom « Studio Lili », type de jeton ", b("Jeton d'accès utilisateur"), ", et cochez les autorisations : ",
+          el("code", { text: "pages_show_list, pages_read_engagement, pages_manage_posts, business_management, instagram_basic, instagram_content_publish, instagram_manage_insights, read_insights, publish_video, ads_read" }),
+          ". Notez l'", b("identifiant de configuration"), " affiché."]),
+        el("li", {}, ["Menu ", b("Paramètres de l'app › Général"), " : copiez l'", b("ID de l'app"), " et la ", b("Clé secrète"), " (« Afficher »)."]),
+        el("li", {}, ["Collez les trois ci-dessous, « Enregistrer », puis « Relier Facebook et Instagram » plus haut."])]),
+      el("div", { class: "pile-serree" }, [champId, champSecret, champConfig]),
+      el("div", { class: "actions-ligne", style: { "justify-content": "flex-start" } }, [el("button", { type: "button", class: ap ? "btn-texte" : "btn-plein", onclick: enregistrer }, [St.icone("valider"), "Enregistrer"])]),
+      el("p", { class: "aide", text: "La clé secrète est vérifiée auprès de Meta puis gardée sur le serveur : elle ne s'affiche plus jamais ici." })]));
     return el("div", { class: "pile" }, blocs);
   };
 

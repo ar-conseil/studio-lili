@@ -18,6 +18,15 @@ const PERMISSIONS = ["pages_show_list", "pages_read_engagement", "pages_manage_p
 const retourSite = (m: string) => Response.redirect(`${SITE}#reglages?onglet=reseaux&meta=${encodeURIComponent(m)}`, 302);
 const attendre = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+// Identifiants de l'application : collés par Lili dans les Réglages (table meta_application), ou secrets Supabase
+let appli: { id: string; secret: string; config: string } | null = null;
+async function application(db: any) {
+  if (appli) return appli;
+  const { data } = await db.from("meta_application").select("app_id, app_secret, config_id").maybeSingle();
+  appli = { id: data?.app_id || Deno.env.get("META_APP_ID") || "", secret: data?.app_secret || Deno.env.get("META_APP_SECRET") || "", config: data?.config_id || Deno.env.get("META_CONFIG_ID") || "" };
+  return appli;
+}
+
 async function graph(chemin: string, o: { method?: string; params?: Record<string, string>; jeton?: string } = {}) {
   const p = new URLSearchParams(o.params ?? {});
   if (o.jeton) p.set("access_token", o.jeton);
@@ -169,8 +178,9 @@ Deno.serve(async (req) => {
     const etat = await lireEtat(q.get("state") ?? ""), code = q.get("code");
     if (!etat || !code) return retourSite("lien expiré : recommencez");
     try {
-      const court = await graph("/oauth/access_token", { params: { client_id: Deno.env.get("META_APP_ID")!, client_secret: Deno.env.get("META_APP_SECRET")!, redirect_uri: RETOUR, code } });
-      const long = await graph("/oauth/access_token", { params: { grant_type: "fb_exchange_token", client_id: Deno.env.get("META_APP_ID")!, client_secret: Deno.env.get("META_APP_SECRET")!, fb_exchange_token: court.access_token } });
+      const ap = await application(db);
+      const court = await graph("/oauth/access_token", { params: { client_id: ap.id, client_secret: ap.secret, redirect_uri: RETOUR, code } });
+      const long = await graph("/oauth/access_token", { params: { grant_type: "fb_exchange_token", client_id: ap.id, client_secret: ap.secret, fb_exchange_token: court.access_token } });
       const moi = await graph("/me", { params: { fields: "id,name" }, jeton: long.access_token });
       const expire = long.expires_in ? new Date(Date.now() + long.expires_in * 1000).toISOString() : null;
       const { data: avant } = await db.from("meta_liaison").select("id").eq("personne_id", etat.p).maybeSingle();
@@ -194,10 +204,25 @@ Deno.serve(async (req) => {
   if (!estLili(a)) return json({ erreur: "réservé à Lili, avec son code à 6 chiffres" }, 403);
   try {
     switch (b.action) {
+      case "identifiants": {
+        const id = String(b.app_id ?? "").trim(), secret = String(b.app_secret ?? "").trim(), config = String(b.config_id ?? "").trim();
+        if (!/^\d{6,20}$/.test(id)) return json({ erreur: "App ID invalide (que des chiffres)" }, 400);
+        if (secret && !/^[0-9a-f]{20,64}$/i.test(secret)) return json({ erreur: "clé secrète invalide" }, 400);
+        if (config && !/^\d{6,20}$/.test(config)) return json({ erreur: "identifiant de configuration invalide (que des chiffres)" }, 400);
+        const { data: avant } = await db.from("meta_application").select("app_secret").maybeSingle();
+        if (!secret && !avant?.app_secret) return json({ erreur: "collez la clé secrète" }, 400);
+        // Vérifie le couple App ID / clé secrète auprès de Meta avant de le garder
+        await graph(`/${id}`, { params: { fields: "id,name", access_token: `${id}|${secret || avant!.app_secret}` } });
+        const { error } = await db.from("meta_application").upsert({ id: true, app_id: id, app_secret: secret || avant!.app_secret, config_id: config || null, modifie_le: new Date().toISOString() });
+        if (error) throw new Error(error.message);
+        appli = null;
+        return json({ ok: true });
+      }
       case "connecter": {
-        if (!Deno.env.get("META_APP_ID")) return json({ erreur: "l'application Meta n'est pas encore déclarée (étapes dans Réglages › Réseaux sociaux)" }, 400);
-        const p = new URLSearchParams({ client_id: Deno.env.get("META_APP_ID")!, redirect_uri: RETOUR, state: await signerEtat(a!.id), response_type: "code" });
-        if (Deno.env.get("META_CONFIG_ID")) p.set("config_id", Deno.env.get("META_CONFIG_ID")!); else p.set("scope", PERMISSIONS.join(","));
+        const ap = await application(db);
+        if (!ap.id || !ap.secret) return json({ erreur: "collez d'abord les identifiants de l'application Meta (Réglages › Réseaux sociaux)" }, 400);
+        const p = new URLSearchParams({ client_id: ap.id, redirect_uri: RETOUR, state: await signerEtat(a!.id), response_type: "code" });
+        if (ap.config) p.set("config_id", ap.config); else p.set("scope", PERMISSIONS.join(","));
         return json({ url: `https://www.facebook.com/${V}/dialog/oauth?${p}` });
       }
       case "actualiser": {
