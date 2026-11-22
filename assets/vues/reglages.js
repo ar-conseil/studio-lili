@@ -203,7 +203,7 @@
         if (!(r.data || []).length) appareils.appendChild(el("li", {}, [el("span", { class: "aide", text: "Aucun appareil ne reçoit les notifications (la cloche > « Recevoir les notifications sur cet appareil »)." })]));
       });
     } else code.textContent = "Démonstration : le code à 6 chiffres est demandé à l'entrée.";
-    return el("div", { class: "pile" }, [
+    return el("div", { class: "pile" }, [carteVigie(),
       carte("cadenas", "Code à 6 chiffres", null, [code, el("div", { class: "actions-ligne", style: { "justify-content": "flex-start" } }, [el("button", { type: "button", class: "btn-texte", text: "Verrouiller maintenant", onclick: function () { if (St.X.verrouiller) St.X.verrouiller(); } })])]),
       carte("cadenas", "Mot de passe", "Changez-le quand vous voulez ; les autres appareils restent connectés jusqu'à leur prochain code.", [el("div", { class: "champ-mdp" }, [mdp]),
         el("div", {}, [el("button", { type: "button", class: "btn-plein", onclick: function () {
@@ -220,6 +220,30 @@
       carte("cloche", "Appareils qui reçoivent les notifications", null, [appareils])]);
   }
 
+  // ---------- La vigie : l'agent de sécurité qui fait sa ronde toutes les 10 minutes ----------
+  function carteVigie() {
+    var v = reglage("vigie"), alertes = S.alertesSecurite || [], nonVues = alertes.filter(function (a) { return !a.vu_le && a.niveau !== "info"; });
+    var etatV = !v.derniere_ronde ? ["attente", "Première ronde dans quelques minutes."] : (Date.now() - Date.parse(v.derniere_ronde) > 40 * 60000) ? ["muette", "La vigie ne s'est pas manifestée depuis " + St.ilya(v.derniere_ronde) + " : prévenez Antonin."]
+      : v.statut === "critique" ? ["critique", "Alerte critique à la dernière ronde (" + St.ilya(v.derniere_ronde) + ")."] : v.statut === "alerte" ? ["alerte", "Point d'attention à la dernière ronde (" + St.ilya(v.derniere_ronde) + ")."] : ["ok", "Tout est en ordre. Dernière ronde " + St.ilya(v.derniere_ronde) + "."];
+    var ronde = el("button", { type: "button", class: "btn-texte", text: "Lancer une ronde maintenant", onclick: function () {
+      if (St.X.demo) return St.signaler("Démonstration : la vigie veille en ligne seulement");
+      ronde.disabled = true; ronde.textContent = "Ronde en cours…";
+      St.appel("vigie", { ronde: true }).then(function (x) { St.signaler(x.statut === "ok" ? "Ronde terminée : tout est en ordre" : "Ronde terminée : " + x.constats + " point" + (x.constats > 1 ? "s" : "") + " à regarder", x.statut !== "ok"); return St.charger(); })
+        .then(function () { St.dessiner(false); }, function (e) { St.signaler(e.message, true); ronde.disabled = false; ronde.textContent = "Lancer une ronde maintenant"; });
+    } });
+    var NIV = { info: "Info", alerte: "Alerte", critique: "Critique" };
+    var journal = alertes.length ? el("ul", { class: "journal-securite" }, alertes.slice(0, 30).map(function (a) {
+      return el("li", { class: "n-" + a.niveau + (a.vu_le ? " vue" : "") }, [el("span", { class: "niveau", text: NIV[a.niveau] || a.niveau }),
+        el("span", { class: "texte" }, [el("b", { text: a.titre }), el("small", { text: St.fmt(a.cree_le, { weekday: "short", day: "numeric", month: "short" }) + " à " + St.hm(a.cree_le) + (a.details && a.details.conseil ? " · " + a.details.conseil : "") })]),
+        !a.vu_le ? el("button", { type: "button", class: "btn-texte petit", text: "Vu", onclick: function () { St.maj("securite_alertes", a.id, { vu_le: maintenant() }).then(function () { St.dessiner(false); }); } }) : null]);
+    })) : el("p", { class: "aide", text: "Aucune alerte : la vigie n'a rien trouvé d'anormal." });
+    return carte("bouclier", "La vigie veille, jour et nuit", "Toutes les 10 minutes : tentatives de connexion et robots à l'entrée, connexions à votre compte depuis une adresse inconnue, protections de la base et du site, suppressions en masse. En cas d'alerte, vous êtes prévenue sur vos appareils et par e-mail, même en vacances.", [
+      el("div", { class: "etat-vigie e-" + etatV[0] }, [el("span", { class: "voyant" }), el("b", { text: etatV[1] }), nonVues.length ? el("span", { class: "etiquette", text: nonVues.length + " à regarder" }) : null]),
+      el("div", { class: "actions-ligne", style: { "justify-content": "flex-start" } }, [ronde]),
+      el("h3", { class: "titre-fiche", text: "Journal de sécurité" }), journal,
+      el("p", { class: "aide", text: "Protections à l'entrée : piège à robots, refus des navigateurs pilotés par un automate (agents d'IA compris), attente qui s'allonge après plusieurs mots de passe faux, mots de passe déjà fuités refusés, code à 6 chiffres exigé par la base elle-même." })]);
+  }
+
   // ---------- Apparence ----------
   function ongletApparence() {
     var actuel = document.documentElement.getAttribute("data-theme") || "auto";
@@ -232,6 +256,60 @@
       return el("button", { type: "button", class: "theme-carte t-" + t[0] + (actuel === t[0] ? " actif" : ""), "aria-pressed": actuel === t[0] ? "true" : "false", onclick: function () { choisir(t[0]); } }, [el("span", { class: "theme-apercu" }), el("b", { text: t[1] })]);
     }))]);
   }
+
+  // ======================================================================
+  // Mon compte (clients et invités) : nom, mot de passe, double authentification facultative
+  // ======================================================================
+  V.compte = function () {
+    var moi = S.moi || {}, zone2fa = el("div", { class: "pile-serree" }, [el("p", { class: "aide", text: "…" })]);
+    var mdp = el("input", { type: "password", autocomplete: "new-password", minlength: 10, placeholder: "10 caractères au moins", "aria-label": "Nouveau mot de passe" });
+    var dessiner2fa = function () {
+      zone2fa.textContent = "";
+      if (St.X.demo) { zone2fa.appendChild(el("p", { class: "aide", text: "Démonstration : en ligne, vous activez ici un code à 6 chiffres, demandé à chaque connexion." })); return; }
+      St.X.db.auth.mfa.listFactors().then(function (r) {
+        var tous = (r.data && r.data.totp) || [], actif = tous.filter(function (f) { return f.status === "verified"; })[0];
+        if (actif) {
+          zone2fa.appendChild(el("p", { class: "phrase" }, [St.icone("valider"), " Activée depuis le " + St.fmt(actif.created_at, { day: "numeric", month: "long", year: "numeric" }) + " : votre code vous est demandé à chaque connexion. Sans lui, personne n'entre dans votre espace, même avec votre mot de passe."]));
+          zone2fa.appendChild(el("div", {}, [el("button", { type: "button", class: "btn-texte danger", text: "Désactiver la double authentification", onclick: function () {
+            A.confirmer("Désactiver la double authentification ?", "Votre mot de passe suffira de nouveau pour entrer.", "Désactiver", function () {
+              St.X.db.auth.mfa.unenroll({ factorId: actif.id }).then(function (x) { St.signaler(x.error ? x.error.message : "Double authentification désactivée", !!x.error); dessiner2fa(); });
+            });
+          } })]));
+          return;
+        }
+        zone2fa.appendChild(el("p", { class: "phrase", text: "Facultative et recommandée : en plus du mot de passe, un code à 6 chiffres affiché par une application de votre téléphone (celle de l'iPhone dans Réglages > Mots de passe, Google Authenticator, 1Password…)." }));
+        zone2fa.appendChild(el("div", {}, [el("button", { type: "button", class: "btn-plein", onclick: function () {
+          Promise.all(tous.filter(function (f) { return f.status !== "verified"; }).map(function (f) { return St.X.db.auth.mfa.unenroll({ factorId: f.id }); }))
+            .then(function () { return St.X.db.auth.mfa.enroll({ factorType: "totp", friendlyName: "Studio " + Date.now() }); })
+            .then(function (e) {
+              if (e.error) return St.signaler(e.error.message, true);
+              var champ = el("input", { type: "text", inputmode: "numeric", autocomplete: "one-time-code", maxlength: 6, class: "code-signature", placeholder: "6 chiffres", "aria-label": "Code à 6 chiffres" });
+              var qr = el("div", { class: "qr-compte", html: e.data.totp.qr_code ? '<img alt="QR code à scanner" src="' + e.data.totp.qr_code + '">' : "" });
+              St.fenetre({ titre: "Activer la double authentification", sous: "1. Scannez ce code avec l'application d'authentification de votre téléphone. 2. Tapez les 6 chiffres qu'elle affiche.", corps: [qr,
+                el("details", { class: "secret" }, [el("summary", { text: "Saisir la clé à la main" }), el("code", { text: e.data.totp.secret })]), A.champ("Code à 6 chiffres", champ)],
+                actions: [{ texte: "Annuler" }, { texte: "Activer", principal: true, action: function (fermer) {
+                  St.X.db.auth.mfa.challengeAndVerify({ factorId: e.data.id, code: champ.value.replace(/\D/g, "") }).then(function (v) {
+                    if (v.error) { champ.value = ""; champ.focus(); return St.signaler("Code incorrect : prenez le plus récent (il change toutes les 30 secondes).", true); }
+                    fermer(); St.signaler("Double authentification activée. Gardez votre téléphone à portée à chaque connexion."); dessiner2fa();
+                  });
+                } }] });
+            });
+        } }, [St.icone("cadenas"), "Activer la double authentification"])]));
+      });
+    };
+    dessiner2fa();
+    return el("div", { class: "rubrique-etroite" }, [St.entete(null, "Mon compte", (moi.nom || "") + (moi.email ? " · " + moi.email : "")),
+      carte("cadenas", "Double authentification", null, [zone2fa]),
+      carte("cadenas", "Mot de passe", null, [el("div", { class: "champ-mdp" }, [mdp]), el("div", {}, [el("button", { type: "button", class: "btn-plein", onclick: function () {
+        if (mdp.value.length < 10) { mdp.focus(); return St.signaler("10 caractères au moins", true); }
+        if (St.X.demo) { mdp.value = ""; return St.signaler("Démonstration : rien n'est changé"); }
+        St.X.db.auth.updateUser({ password: mdp.value }).then(function (x) { mdp.value = ""; St.signaler(x.error ? "Non changé : " + (/pwned|leaked|weak/i.test(x.error.message) ? "ce mot de passe circule déjà sur internet, choisissez-en un autre" : x.error.message) : "Mot de passe changé", !!x.error); });
+      } }, ["Changer le mot de passe"])])]),
+      carte("sortir", "Appareils", null, [el("button", { type: "button", class: "btn-texte", text: "Déconnecter mes autres appareils", onclick: function () {
+        if (St.X.demo) return St.signaler("Démonstration : rien n'est changé");
+        St.X.db.auth.signOut({ scope: "others" }).then(function (x) { St.signaler(x.error ? x.error.message : "Vos autres appareils sont déconnectés", !!x.error); });
+      } })])]);
+  };
 
   // ======================================================================
   // En vacances : réponse automatique Gmail, bandeau chez les clients, pause des notifications

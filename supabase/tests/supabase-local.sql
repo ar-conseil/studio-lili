@@ -12,6 +12,8 @@ create table auth.users (
   raw_user_meta_data jsonb not null default '{}'
 );
 -- Comme Supabase : l'identité vient du jeton, rangé dans request.jwt.claims
+-- Facteurs de double authentification (comme Supabase : auth.mfa_factors)
+create table auth.mfa_factors (id uuid primary key default gen_random_uuid(), user_id uuid not null, factor_type text default 'totp', status text not null default 'verified', created_at timestamptz default now(), updated_at timestamptz default now());
 create function auth.jwt() returns jsonb language sql stable as $$
   select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb $$;
 create function auth.uid() returns uuid language sql stable as $$

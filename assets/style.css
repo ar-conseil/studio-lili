@@ -150,3 +150,5 @@ input:focus { outline: none; border-color: var(--encre); box-shadow: 0 0 0 3px c
 .champ-mdp input { padding-right: 92px; }
 .voir-mdp { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); border: 0; background: none; color: var(--encre-2); font: 500 13px var(--sans); padding: 8px 10px; border-radius: 8px; cursor: pointer; }
 .voir-mdp:hover { background: var(--survol); color: var(--encre); }
+/* Piège à robots : invisible et inaccessible pour les humains */
+.piege { position: absolute !important; left: -10000px !important; top: auto !important; width: 1px !important; height: 1px !important; overflow: hidden !important; }

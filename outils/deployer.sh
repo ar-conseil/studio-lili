@@ -47,6 +47,8 @@ c = {
   "password_min_length": 10,
   "mfa_totp_enroll_enabled": True, "mfa_totp_verify_enabled": True, "mfa_max_enrolled_factors": 10,
   "mailer_otp_exp": 86400,                     # liens valables 24 h (invitation, connexion)
+  "password_hibp_enabled": True,               # mots de passe déjà fuités sur internet refusés (Have I Been Pwned)
+  "rate_limit_verify": 15, "rate_limit_otp": 10,   # tentatives de vérification et de code resserrées (par 5 min / heure)
   # Modèles de Supabase (inutilisés tant que le crochet envoi-auth est actif : c'est lui qui rédige et envoie)
   "mailer_subjects_invite": "Votre espace avec Lili Rouzier",
   "mailer_templates_invite_content": "<p>Bonjour,</p><p>Lili Rouzier vous ouvre votre espace : calendrier, publications à valider, médiathèque et messages.</p><p><a href=\"{{ .ConfirmationURL }}\">Entrer dans mon espace</a></p><p>Vous choisirez votre mot de passe en arrivant.</p>",
@@ -114,6 +116,12 @@ select cron.schedule('mails-programmes', '* * * * *', \$\$ select net.http_post(
     headers := jsonb_build_object('Content-Type', 'application/json',
       'x-cle-synchro', (select decrypted_secret from vault.decrypted_secrets where name = 'cle_synchro')),
     body := '{"action": "programmes"}'::jsonb, timeout_milliseconds := 60000) \$\$);
+-- La vigie : ronde de sécurité toutes les 10 minutes, jour et nuit
+select cron.unschedule('vigie') where exists (select 1 from cron.job where jobname = 'vigie');
+select cron.schedule('vigie', '*/10 * * * *', \$\$ select net.http_post(url := 'https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/vigie',
+    headers := jsonb_build_object('Content-Type', 'application/json',
+      'x-cle-synchro', (select decrypted_secret from vault.decrypted_secrets where name = 'cle_synchro')),
+    body := '{}'::jsonb, timeout_milliseconds := 120000) \$\$);
 -- Brief du jour : chaque matin à 5 h UTC (6 h à Paris l'hiver, 7 h l'été), 7 jours sur 7
 select cron.unschedule('brief-du-jour') where exists (select 1 from cron.job where jobname = 'brief-du-jour');
 select cron.schedule('brief-du-jour', '0 5 * * *', \$\$ select net.http_post(url := 'https://$SUPABASE_PROJECT_REF.supabase.co/functions/v1/brief-du-jour',
@@ -121,7 +129,7 @@ select cron.schedule('brief-du-jour', '0 5 * * *', \$\$ select net.http_post(url
       'x-cle-synchro', (select decrypted_secret from vault.decrypted_secrets where name = 'cle_synchro')),
     body := '{}'::jsonb, timeout_milliseconds := 120000) \$\$);
 SQL
-sql "$PRIVE/cron.sql" && echo "   tâches « notifier » (5 min), « mails-programmes » (1 min), « brief-du-jour » (chaque matin) et « menage »"
+sql "$PRIVE/cron.sql" && echo "   tâches « notifier » (5 min), « mails-programmes » (1 min), « vigie » (10 min), « brief-du-jour » (chaque matin) et « menage »"
 
 echo "6. Clé publique du site (assets/config.js)"
 curl -s "$API/api-keys" -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" > "$PRIVE/cles.json"

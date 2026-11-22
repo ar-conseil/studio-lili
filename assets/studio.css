@@ -818,3 +818,16 @@ kbd { font: 12px var(--mono); padding: 2px 7px; border-radius: 6px; border: 1px 
 /* La rédaction d'un mail se fait sur fond blanc, comme le message reçu (la signature, en encre, reste lisible en mode sombre) */
 .mx-redaction .editeur-zone { background: #FFFFFF; color: #1E1A17; }
 .mx-redaction .editeur-zone:empty::before { color: #8B8178; }
+/* Vigie et journal de sécurité */
+.etat-vigie { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 14px; border-radius: 12px; background: var(--creme); }
+.voyant { width: 12px; height: 12px; border-radius: 50%; background: #2F7A4F; box-shadow: 0 0 0 4px color-mix(in srgb, #2F7A4F 22%, transparent); animation: veille 2.4s ease-in-out infinite; }
+.e-alerte .voyant { background: #C99A2E; box-shadow: 0 0 0 4px color-mix(in srgb, #C99A2E 25%, transparent); } .e-critique .voyant, .e-muette .voyant { background: var(--rouge); box-shadow: 0 0 0 4px color-mix(in srgb, var(--rouge) 25%, transparent); }
+.e-attente .voyant { background: var(--encre-3); animation: none; }
+@keyframes veille { 50% { box-shadow: 0 0 0 7px transparent; } }
+@media (prefers-reduced-motion: reduce) { .voyant { animation: none; } }
+.journal-securite { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.journal-securite li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--filet); border-radius: 10px; }
+.journal-securite li.vue { opacity: .62; } .journal-securite .texte { display: grid; flex: 1; min-width: 0; } .journal-securite small { color: var(--encre-3); }
+.journal-securite .niveau { flex: none; font: 600 11px var(--sans); letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--creme); color: var(--encre-2); }
+.n-alerte .niveau { background: color-mix(in srgb, #C99A2E 18%, var(--blanc)); color: #7A5512; } .n-critique .niveau { background: color-mix(in srgb, var(--rouge) 16%, var(--blanc)); color: var(--rouge); }
+.qr-compte { display: grid; place-items: center; } .qr-compte img { width: 200px; height: 200px; background: #fff; padding: 8px; border-radius: 12px; }

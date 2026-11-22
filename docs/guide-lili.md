@@ -188,6 +188,16 @@ Il lit les briefs, les publications et les rapports. Quand il propose des idées
 **brouillons** (statut Idée, invisibles du client) : des liens t'y mènent. Il ne valide, ne programme et n'envoie
 jamais rien. Plus le brief d'un client est rempli, plus ses propositions lui ressemblent.
 
+## 11 bis. La sécurité
+
+- **La vigie** veille jour et nuit (ronde toutes les 10 minutes) : tentatives de connexion et robots, connexion à ton
+  compte depuis une adresse inconnue, protections du studio, suppressions en masse. Une alerte t'arrive sur tes
+  appareils et par e-mail, même en vacances. Tout est dans Réglages > Sécurité (voyant vert = tout va bien, journal,
+  « Lancer une ronde »).
+- **À l'entrée** : piège à robots, navigateurs automatisés refusés, attente qui s'allonge après des mots de passe
+  faux, mots de passe déjà fuités sur internet refusés.
+- **Tes clients** peuvent activer leur propre double authentification dans « Mon compte » (facultatif).
+
 ## 12. Les touches du clavier
 
 | Touche | Action |

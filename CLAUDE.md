@@ -139,6 +139,22 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
 - Connexion par Google ou Microsoft : boutons sur l'écran d'entrée ; seuls les comptes déjà invités entrent (même
   adresse e-mail), le code à 6 chiffres est demandé ensuite comme pour le mot de passe.
 
+## Sécurité (21-22/11/2026)
+- Double authentification vérifiée par la BASE : `role_dans()` ne renvoie rien à un invité sans code (aal2), ni à un
+  client qui a activé son code sans l'avoir saisi ; `partage_avec_moi()` exige aal2. Clients : code facultatif (page
+  `#compte`, `V.compte` dans reglages.js) ; Lili et invités : obligatoire. Migration `20261122120000_securite.sql`.
+- Porte d'entrée (app.js) : champ piège invisible, refus de `navigator.webdriver` (navigateurs pilotés, agents d'IA),
+  refus d'un envoi sans geste humain en moins de 1,5 s, attente croissante après 3 mots de passe faux ; chaque
+  tentative suspecte est signalée à la fonction `garde` (table `securite_evenements`, adresse masquée + empreinte).
+- La vigie (`vigie`, cron toutes les 10 min) : rafales d'échecs (IP, compte, codes), robots, connexion de Lili depuis
+  une IP jamais vue en 60 jours, tables sans RLS / règles ouvertes à anon / stockage public (`vigie_controles()`),
+  inscriptions ouvertes, fonctions sensibles qui répondraient sans connexion, suppressions en masse. Alertes dans
+  `securite_alertes` (sans doublon 6 h), push + e-mail à Lili (même en vacances) ; état dans `reglages.vigie`.
+  Affichage : Réglages > Sécurité (voyant, journal, « Lancer une ronde »), pastille sur le lien Réglages.
+- Supabase : mots de passe fuités refusés (HIBP), `rate_limit_verify` 15, `rate_limit_otp` 10 (dans le déploiement).
+- Anti-IA : balises robots (noindex, noarchive, noai, noimageai) sur toutes les pages, `robots.txt` refusant les robots
+  d'IA connus ; la vraie barrière reste la connexion avec code (rien de privé n'est lisible sans compte).
+
 ## Secrets et données (règles absolues)
 - Secrets dans `~/.lili/` (dossier en 700, jamais dans le dépôt) : `supabase.env` (SUPABASE_ACCESS_TOKEN,
   SUPABASE_PROJECT_REF), export Notion, notes. Seule la clé anon va dans `assets/config.js`.

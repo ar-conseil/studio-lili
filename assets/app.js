@@ -108,6 +108,7 @@
       fin();
       if (r.error) {
         etat.essais++;
+        db.auth.getUser().then(function (u) { signaler("echec_code", u.data && u.data.user && u.data.user.email); });
         code.erreur(); code.vider();
         if (etat.essais >= ESSAIS_MAX) { dire("Trop d'essais : reconnectez-vous.", true); return db.auth.signOut(); }
         dire("Code incorrect. Il change toutes les 30 secondes : prenez le plus récent.", true);
@@ -172,6 +173,26 @@
   document.addEventListener("visibilitychange", function () { if (!document.hidden && etat.ouvert && absentDepuis() > VERROU_MS) verrouiller(); });
   $("btn-autre-compte").addEventListener("click", quitter);
 
+  // ---------- La garde : anti-robot et anti-IA maison ----------
+  // Un champ piège invisible (un humain ne le remplit jamais), le refus des navigateurs pilotés par un automate (agents
+  // d'IA compris), le refus d'un envoi instantané sans aucune frappe ni clic, et une attente qui s'allonge après
+  // plusieurs mots de passe faux. Chaque tentative suspecte est signalée à la garde (fonction serveur), que la vigie surveille.
+  var humain = { gestes: 0, depuis: Date.now() };
+  ["keydown", "pointerdown", "touchstart"].forEach(function (t) { document.addEventListener(t, function () { humain.gestes++; }, { passive: true, capture: true }); });
+  function signaler(type, email) {
+    if (APERCU || !CFG) return;
+    try { fetch(CFG.url + "/functions/v1/garde", { method: "POST", headers: { apikey: CFG.cle, "Content-Type": "application/json" }, body: JSON.stringify({ type: type, email: email || null }), keepalive: true }).catch(function () {}); } catch (e) { /* la garde est injoignable : la connexion reste protégée par le serveur */ }
+  }
+  var CLE_ECHECS = "studio-echecs";
+  function attenteRestante() { var x = (lire(CLE_ECHECS) || "0|0").split("|"), n = +x[0], t = +x[1]; if (n < 3) return 0; return Math.max(0, t + Math.min(300, 5 * Math.pow(2, n - 3)) * 1000 - Date.now()); }
+  function noterEchec() { var n = +((lire(CLE_ECHECS) || "0|0").split("|")[0]) + 1; ecrire(CLE_ECHECS, n + "|" + Date.now()); }
+  function suspect(email) {
+    if ($("site-web") && $("site-web").value) { signaler("piege", email); return "Connexion impossible pour le moment."; }
+    if (navigator.webdriver) { signaler("automate", email); return "Connexion refusée : ce navigateur est piloté par un automate."; }
+    if (!humain.gestes && Date.now() - humain.depuis < 1500) { signaler("trop_rapide", email); return "Un instant, puis réessayez."; }
+    return null;
+  }
+
   // ---------- Connexion ----------
   var formConnexion = $("vue-connexion");
   formConnexion.addEventListener("submit", function (ev) {
@@ -179,10 +200,13 @@
     var email = $("email").value.trim(), mdp = $("mot-de-passe").value;
     if (!email || !mdp) return dire("E-mail et mot de passe, s'il vous plaît.", true);
     if (APERCU) return preparerEnrolement();
+    var refus = suspect(email); if (refus) return dire(refus, true);
+    var reste = attenteRestante(); if (reste) return dire("Trop d'essais : patientez " + Math.ceil(reste / 1000) + " secondes avant de réessayer.", true);
     occupe(formConnexion, true); dire("Connexion…");
     db.auth.signInWithPassword({ email: email, password: mdp }).then(function (r) {
       occupe(formConnexion, false);
-      if (r.error) return dire("E-mail ou mot de passe incorrect.", true);
+      if (r.error) { noterEchec(); signaler("echec_connexion", email); return dire("E-mail ou mot de passe incorrect.", true); }
+      ecrire(CLE_ECHECS, "0|0");
       $("mot-de-passe").value = ""; etat.essais = 0; // la suite vient de l'événement SIGNED_IN
     });
   });

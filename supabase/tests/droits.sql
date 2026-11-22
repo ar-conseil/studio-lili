@@ -72,6 +72,10 @@ insert into public.briefs_jour (jour, contenu) values (current_date, 'Brief de L
 insert into public.assistant_journal (personne_id, demande) values ('00000000-0000-4000-a000-000000000001', 'Idées pour Noël');
 insert into public.messages (espace_id, auteur_id, contenu) values ('10000000-0000-4000-a000-00000000000b', '00000000-0000-4000-a000-0000000000b1', 'Message B');
 insert into public.comptes_mail (personne_id, email, refresh_token, jeton_acces) values ('00000000-0000-4000-a000-000000000001', 'lili-gmail@essai.invalid', 'jeton-secret', 'acces-secret');
+-- La seconde personne de A a activé la double authentification ; un robot s'est fait prendre au piège
+insert into auth.mfa_factors (id, user_id, factor_type, status, created_at, updated_at) values (gen_random_uuid(), '00000000-0000-4000-a000-0000000000a2', 'totp', 'verified', now(), now());
+insert into public.securite_evenements (type, compte, ip) values ('piege', 'r•••@robot.invalid', '203.0.113.7');
+insert into public.securite_alertes (cle, niveau, titre) values ('essai', 'alerte', 'Alerte d''essai');
 
 -- ---------- Personne non connectée : rien ----------
 set local role anon;
@@ -203,6 +207,26 @@ select essais.verifier((select count(*) from public.devis) = 1 and exists (selec
 select essais.verifier((select count(*) from public.journal where espace_id = '10000000-0000-4000-a000-00000000000a') = 0, 'B ne voit pas le journal de A');
 select essais.verifier((select count(*) from public.personnes where email like 'a_@essai.invalid') = 0, 'B ne voit pas les personnes de A');
 select essais.verifier((select count(*) from storage.objects where name like '10000000-0000-4000-a000-00000000000a/%') = 0, 'B ne lit aucun fichier de A');
+reset role;
+
+-- ---------- Double authentification vérifiée par la base ----------
+select essais.devenir('00000000-0000-4000-a000-0000000000a2', 'aal1');
+set local role authenticated;
+select essais.verifier((select count(*) from public.espaces) = 0 and (select count(*) from public.publications) = 0, 'un client qui a activé son code ne voit rien sans l''avoir saisi');
+reset role;
+select essais.devenir('00000000-0000-4000-a000-0000000000a2', 'aal2');
+set local role authenticated;
+select essais.verifier((select count(*) from public.espaces) = 1, 'avec son code, il retrouve son espace');
+select essais.verifier((select count(*) from public.securite_evenements) = 0 and (select count(*) from public.securite_alertes) = 0, 'un client ne lit pas le journal de sécurité');
+select essais.doit_echouer('select public.vigie_controles()', 'un client lance les contrôles de la vigie');
+reset role;
+select essais.devenir('00000000-0000-4000-a000-0000000000c1', 'aal1');
+set local role authenticated;
+select essais.verifier((select count(*) from public.publications) = 0 and (select count(*) from public.espaces) = 0, 'un invité sans son code ne voit rien');
+reset role;
+select essais.devenir('00000000-0000-4000-a000-000000000001', 'aal2');
+set local role authenticated;
+select essais.verifier(exists (select 1 from public.securite_evenements where type = 'piege') and exists (select 1 from public.securite_alertes where cle = 'essai'), 'Lili lit son journal de sécurité');
 reset role;
 
 -- ---------- Photographe invité chez A : seulement ce qu'on lui a partagé ----------
