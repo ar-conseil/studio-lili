@@ -24,6 +24,8 @@ const norme = (t) => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").re
 // le 21/11/2026, jamais dans le dépôt : ~/.lili/import-espaces.json (une entrée par espace : slug, nom, metier, couleur,
 // reseaux, logo, notion [noms vus dans Notion], facture [noms vus sur les factures], client [nom de la base Clients], comptes).
 const ESPACES = JSON.parse(readFileSync(join(LILI, "import-espaces.json"), "utf8"));
+// Notes écartées après l'import (copies d'une même note, notes qui répétaient la légende) : jamais recréées
+const NOTES_IGNOREES = new Set(existsSync(join(LILI, "import-notes-ignorees.json")) ? JSON.parse(readFileSync(join(LILI, "import-notes-ignorees.json"), "utf8")) : []);
 ESPACES.forEach((e, i) => { e.id = uuidDe("espace:" + e.slug); e.ordre = i + 1; });
 const parNomNotion = (t) => { const n = norme(t); return ESPACES.find((e) => e.notion.some((x) => n === norme(x) || n.startsWith(norme(x) + " "))) || null; };
 const parFacture = (t) => ESPACES.find((e) => e.facture.some((x) => norme(t) === norme(x))) || null;
@@ -229,7 +231,8 @@ for (const r of fFact ? lireCsv(fFact) : []) {
 plan.medias = [...mediasParChemin.values()];
 for (const p of plan.publications) {
   p._visuels.forEach((m, i) => { if (!plan.liens.some((l) => l.publication_id === p.id && l.media_id === m.id)) plan.liens.push({ publication_id: p.id, media_id: m.id, rang: i }); });
-  if (p._note) plan.notes.push({ id: uuidDe("note:" + p.id), espace_id: p.espace_id, publication_id: p.id, contenu: "Depuis Notion :\n" + p._note });
+  const idNote = uuidDe("note:" + p.id);
+  if (p._note && !NOTES_IGNOREES.has(idNote)) plan.notes.push({ id: idNote, espace_id: p.espace_id, publication_id: p.id, contenu: "Depuis Notion :\n" + p._note });
 }
 
 // ---------- Résumé ----------
