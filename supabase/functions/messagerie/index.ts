@@ -30,10 +30,13 @@ async function composer(g: any, c: CompteMail, nomExp: string, b: any, envoyer: 
   if (pieces.reduce((s, p) => s + p.octets.length, 0) > 20_000_000) throw new Error("pièces jointes trop lourdes (20 Mo au plus)");
   const brut = b.html ? nettoyerHtml(b.html) : "";
   const texte = (b.texte ? String(b.texte) : htmlEnTexte(brut)).replace(/\s+$/, "").slice(0, 100000);
-  const html = `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5">${brut || echapper(texte).replace(/\n/g, "<br>")}</div>`;
+  let html = `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5">${brut || echapper(texte).replace(/\n/g, "<br>")}</div>`;
+  // Signature manuscrite : noire en mode clair, blanche en mode sombre chez les messageries qui le permettent
+  // (Mail d'Apple, Outlook pour Mac) ; ailleurs (Gmail) la version noire bordée de blanc reste affichée.
+  if (/class="sig-sombre"/.test(brut)) html = `<!doctype html><html><head><style>@media (prefers-color-scheme: dark) { .sig-clair { display: none !important; } .sig-sombre { display: block !important; max-height: none !important; overflow: visible !important; } }</style></head><body>${html}`;
   const o = b.origine && mode !== "nouveau" ? await g.origine(String(b.origine)) : null, ci = o ? citer(o, mode) : null;
   const raw = mime({ nom: nomExp, de: c.email, a: aa, cc, cci, objet: String(b.objet ?? "").trim().slice(0, 300),
-    texte: texte + (ci?.t ?? ""), html: html + (ci?.h ?? ""), pieces: [...pieces, ...(mode === "transferer" && o ? o.pieces : [])],
+    texte: texte + (ci?.t ?? ""), html: html + (ci?.h ?? "") + (html.startsWith("<!doctype") ? "</body></html>" : ""), pieces: [...pieces, ...(mode === "transferer" && o ? o.pieces : [])],
     enReponse: o && mode !== "transferer" ? { messageId: o.messageId, references: o.references } : null });
   return g.ecrire(raw, o && mode !== "transferer" ? o.fil : null, envoyer, b.brouillon_id ? String(b.brouillon_id) : null);
 }
