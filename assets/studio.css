@@ -48,7 +48,8 @@ select:focus, textarea:focus, input[type="date"]:focus, input[type="time"]:focus
 .cote-lien:hover { background: var(--survol); color: var(--encre); }
 .cote-clients > .cote-lien { touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .cote-clients.en-glisse { cursor: grabbing; } .cote-clients.en-glisse .cote-lien:hover { background: none; }
-.cote-clients > .cote-lien.glisse { background: var(--blanc) !important; box-shadow: 0 8px 22px -10px rgb(0 0 0 / .35), 0 0 0 1px var(--filet); position: relative; z-index: 2; cursor: grabbing; }
+.cote-clients > .cote-lien { position: relative; }
+.cote-clients > .cote-lien.glisse { background: var(--blanc) !important; box-shadow: 0 12px 28px -12px rgb(0 0 0 / .45), 0 0 0 1px var(--filet); z-index: 3; cursor: grabbing; will-change: transform; }
 .cote-lien[aria-current="page"] { background: color-mix(in srgb, var(--encre) 7%, transparent); color: var(--encre); font-weight: 600; view-transition-name: lien-actif; }
 .cote-texte { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cote-compte { font: 500 11.5px var(--mono); color: var(--papier); background: var(--terre); border-radius: 999px; padding: 1px 7px; }

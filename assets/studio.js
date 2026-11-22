@@ -422,25 +422,57 @@ window.Studio = (function () {
   // Glisser un client dans la barre latérale pour changer l'ordre (souris : dès qu'on bouge de 6 px ; doigt : appui
   // de 0,35 s). L'ordre est renuméroté pour tous les clients non archivés, comme les flèches de la page Clients.
   function glisserClients(nav) {
+    // L'étiquette prise suit le pointeur ; les autres s'écartent en douceur pour lui faire place. Le vrai
+    // déplacement dans la liste ne se fait qu'au lâcher (puis l'ordre est enregistré).
     var etat = null;
     var liens = function () { return Array.prototype.slice.call(nav.children); };
-    var finir = function (ev) {
+    var nettoyer = function (items) { items.forEach(function (a) { a.style.transition = ""; a.style.transform = ""; }); };
+    var decalages = function (e) {
+      // Place visée : nombre d'autres étiquettes dont le milieu est au-dessus du milieu de l'étiquette prise
+      var milieu = e.rects[e.idx].top + e.rects[e.idx].height / 2 + e.dy, cible = 0;
+      e.items.forEach(function (a, i) { if (i !== e.idx && milieu > e.rects[i].top + e.rects[i].height / 2) cible++; });
+      e.cible = cible;
+      var H = e.rects[e.idx].height + e.ecart;
+      e.items.forEach(function (a, i) {
+        if (i === e.idx) return;
+        var y = (e.idx < cible && i > e.idx && i <= cible) ? -H : (cible < e.idx && i >= cible && i < e.idx) ? H : 0;
+        a.style.transform = y ? "translateY(" + y + "px)" : "";
+      });
+    };
+    var finir = function () {
       if (!etat) return;
       var e = etat; etat = null; clearTimeout(e.minuteur);
       document.removeEventListener("pointermove", bouger, true); document.removeEventListener("pointerup", finir, true); document.removeEventListener("pointercancel", finir, true);
       if (!e.actif) return;
-      e.lien.classList.remove("glisse"); nav.classList.remove("en-glisse"); e.lien.style.transform = "";
-      // Le clic qui suit le lâcher ne doit pas ouvrir le client
       var bloque = function (c) { c.preventDefault(); c.stopPropagation(); nav.removeEventListener("click", bloque, true); };
       nav.addEventListener("click", bloque, true);
       setTimeout(function () { nav.removeEventListener("click", bloque, true); }, 400);
-      var ordre = liens().map(function (a) { return a.dataset.espace; });
-      var depart = espacesActifs().map(function (x) { return x.id; });
-      if (ordre.join() === depart.join()) return;
-      Promise.all(ordre.map(function (id, n) { var x = espace(id); return !x || x.ordre === n + 1 ? null : maj("espaces", id, { ordre: n + 1 }); }))
-        .then(function () { dessinerCoquille(); signaler("Ordre des clients enregistré"); }, function () { dessinerCoquille(); });
+      // L'étiquette se pose à sa nouvelle place, puis la liste est remise dans le bon ordre sans saut
+      var fin = 0, H = e.ecart;
+      if (e.cible > e.idx) for (var i = e.idx + 1; i <= e.cible; i++) fin += e.rects[i].height + H;
+      if (e.cible < e.idx) for (var j = e.cible; j < e.idx; j++) fin -= e.rects[j].height + H;
+      e.lien.style.transition = "transform .16s ease, box-shadow .16s ease"; e.lien.style.transform = "translateY(" + fin + "px)";
+      e.lien.classList.remove("glisse");
+      setTimeout(function () {
+        nav.classList.remove("en-glisse");
+        var reste = e.items.filter(function (a) { return a !== e.lien; });
+        nav.insertBefore(e.lien, reste[e.cible] || null);
+        nettoyer(e.items);
+        var ordre = liens().map(function (a) { return a.dataset.espace; });
+        if (ordre.join() === espacesActifs().map(function (x) { return x.id; }).join()) return;
+        Promise.all(ordre.map(function (id, n) { var x = espace(id); return !x || x.ordre === n + 1 ? null : maj("espaces", id, { ordre: n + 1 }); }))
+          .then(function () { dessinerCoquille(); signaler("Ordre des clients enregistré"); }, function () { dessinerCoquille(); });
+      }, 170);
     };
-    var demarrer = function () { etat.actif = true; etat.lien.classList.add("glisse"); nav.classList.add("en-glisse"); if (navigator.vibrate) try { navigator.vibrate(10); } catch (x) {} };
+    var demarrer = function () {
+      var e = etat; e.actif = true;
+      e.items = liens(); e.idx = e.items.indexOf(e.lien); e.rects = e.items.map(function (a) { return a.getBoundingClientRect(); });
+      e.ecart = e.items.length > 1 ? Math.max(0, e.rects[1].top - e.rects[0].bottom) : 0;
+      e.min = e.rects[0].top - e.rects[e.idx].top - 6; e.max = e.rects[e.rects.length - 1].bottom - e.rects[e.idx].bottom + 6;
+      e.items.forEach(function (a) { if (a !== e.lien) a.style.transition = "transform .18s ease"; });
+      e.lien.classList.add("glisse"); nav.classList.add("en-glisse");
+      if (navigator.vibrate) try { navigator.vibrate(10); } catch (x) {}
+    };
     var bouger = function (ev) {
       if (!etat) return;
       var dy = ev.clientY - etat.y;
@@ -450,19 +482,17 @@ window.Studio = (function () {
         demarrer();
       }
       ev.preventDefault();
-      var l = etat.lien, autres = liens().filter(function (a) { return a !== l; });
-      var cible = autres.filter(function (a) { var r = a.getBoundingClientRect(); return ev.clientY > r.top + r.height / 2; }).length;
-      var avant = autres[cible] || null;
-      if (l.nextElementSibling !== avant || (avant === null && nav.lastElementChild !== l)) { nav.insertBefore(l, avant); }
+      etat.dy = Math.max(etat.min, Math.min(etat.max, dy));
+      etat.lien.style.transform = "translateY(" + etat.dy + "px) scale(1.02)";
+      decalages(etat);
     };
     nav.addEventListener("pointerdown", function (ev) {
       var a = ev.target.closest(".cote-clients > a.cote-lien");
       if (!a || ev.button > 0 || ev.target.closest(".cote-sous")) return;
-      etat = { lien: a, y: ev.clientY, x: ev.clientX, actif: false, tactile: ev.pointerType !== "mouse" };
-      if (etat.tactile) etat.minuteur = setTimeout(function () { if (etat) demarrer(); }, 350);
+      etat = { lien: a, y: ev.clientY, x: ev.clientX, dy: 0, actif: false, tactile: ev.pointerType !== "mouse" };
+      if (etat.tactile) etat.minuteur = setTimeout(function () { if (etat) { demarrer(); etat.lien.style.transform = "scale(1.02)"; } }, 350);
       document.addEventListener("pointermove", bouger, true); document.addEventListener("pointerup", finir, true); document.addEventListener("pointercancel", finir, true);
     });
-    // Pas de glisser natif du lien (image fantôme du navigateur)
     nav.addEventListener("dragstart", function (ev) { ev.preventDefault(); });
     nav.addEventListener("touchmove", function (ev) { if (etat && etat.actif) ev.preventDefault(); }, { passive: false });
   }
