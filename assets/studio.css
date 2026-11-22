@@ -287,9 +287,17 @@ button.som-une { font: inherit; text-align: left; cursor: pointer; width: 100%; 
 .carte-pub.compacte .carte-pub-visuel { aspect-ratio: 1; } .carte-pub.compacte b { font-size: 15.5px; }
 
 /* ---------- Calendrier ---------- */
-.cal-outils { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
-.cal-nav { display: flex; align-items: center; gap: 4px; } .cal-titre { margin-left: 10px; font-size: 26px; } .cal-titre::first-letter { text-transform: uppercase; }
-.cal-choix { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* Le sélecteur Mois / Semaine / Jour / Liste ne bouge jamais : sur grand écran tout tient sur une ligne (le titre
+   se raccourcit s'il le faut) ; en dessous, toujours deux lignes, quelle que soit la longueur du titre. */
+.cal-outils { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: nowrap; margin-bottom: 10px; min-height: 44px; }
+.cal-nav { display: flex; align-items: center; gap: 4px; flex: 1 1 0; min-width: 0; } .cal-nav > a { flex: none; }
+.cal-titre { margin: 0 0 0 10px; font-size: 26px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .cal-titre::first-letter { text-transform: uppercase; }
+.cal-choix { display: flex; align-items: center; gap: 8px; flex: none; flex-wrap: nowrap; }
+@media (max-width: 1320px) {
+  .cal-outils { flex-direction: column; align-items: stretch; gap: 8px; }
+  .cal-nav { flex: none; } .cal-choix { flex-wrap: wrap; }
+}
+@media (max-width: 640px) { .cal-titre { font-size: 19px; margin-left: 4px; } .cal-nav { gap: 0; } .cal-nav > .btn-texte { padding-left: 8px; padding-right: 8px; } }
 .vues { display: inline-flex; padding: 3px; border-radius: 11px; background: var(--creme); border: 1px solid var(--filet); }
 .vues a { padding: 6px 13px; border-radius: 8px; text-decoration: none; color: var(--encre-2); font-size: 13.5px; font-weight: 500; }
 .vues a[aria-current] { background: var(--blanc); color: var(--encre); box-shadow: 0 1px 3px rgb(0 0 0 / .08); }
@@ -362,6 +370,7 @@ a.cal-num { text-decoration: none; } a.cal-num:hover { background: var(--survol)
 @media (max-width: 640px) { .cj-pub { grid-template-columns: 52px minmax(0, 1fr); gap: 10px; } .cj-pub-img { width: 52px; height: 52px; } .cj-pub > .pl-statut { grid-column: 2; justify-self: start; } .cj-pub-texte > b { font-size: 17px; white-space: normal; } }
 .cj-heure { transition: background .12s; } .cj-heure.survol { background: color-mix(in srgb, var(--terre) 10%, transparent); box-shadow: inset 3px 0 0 var(--terre); }
 .cj-heure.survol .cj-h { color: var(--terre); font-weight: 600; }
+.cj-rdv, .cal-rdv { touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; } .cj-rdv.glissee, .cal-rdv.glissee { opacity: .35; }
 .cj-pub { touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; } .cj-pub.glissee { opacity: .35; }
 .cj-rdvs { display: grid; gap: 6px; }
 .cj-rdv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; align-items: baseline; text-align: left; padding: 10px 14px; border: 1px solid var(--filet); border-left: 3px solid var(--c, var(--encre)); border-radius: 10px; background: var(--blanc); color: inherit; font: inherit; cursor: pointer; transition: border-color .15s, transform .15s; }

@@ -49,7 +49,7 @@
   }
 
   // ---------- Glisser une publication d'un jour à l'autre ----------
-  function activerGlisser(carte, p) {
+  function activerGlisser(carte, p, deposer) {
     if (!St.estLili()) return;
     carte.addEventListener("pointerdown", function (ev) {
       if (ev.pointerType === "mouse" && ev.button !== 0) return;
@@ -78,6 +78,7 @@
         if (!avait) return;
         St.X.finGlisse = Date.now();
         if (!cible) return;
+        if (deposer) { deposer(cible); return; }
         var nouveau = new Date(cible.dataset.jour + "T12:00:00"), ancien = p.date_prevue ? new Date(p.date_prevue) : null;
         if (ancien) nouveau.setHours(ancien.getHours(), ancien.getMinutes(), 0, 0);
         else { var h = St.HEURES[(p.reseaux || [])[0]] || "12:30"; nouveau.setHours(+h.slice(0, 2), +h.slice(3), 0, 0); }
@@ -98,7 +99,7 @@
       document.addEventListener("pointermove", bouger, { passive: false });
       document.addEventListener("pointerup", lacher); document.addEventListener("pointercancel", fin);
     });
-    carte.addEventListener("click", function (ev) { if (St.X.finGlisse && Date.now() - St.X.finGlisse < 300) ev.preventDefault(); });
+    carte.addEventListener("click", function (ev) { if (St.X.finGlisse && Date.now() - St.X.finGlisse < 300) { ev.preventDefault(); ev.stopImmediatePropagation(); } }, true);
   }
   document.addEventListener("touchmove", function (e) { if (St.X.glisse) e.preventDefault(); }, { passive: false });
   document.addEventListener("contextmenu", function (e) { if (St.X.glisse) e.preventDefault(); });
@@ -141,13 +142,13 @@
       }
       corps = el("div", { class: "cal-mois" }, [el("div", { class: "cal-entete" }, ["lun.", "mar.", "mer.", "jeu.", "ven.", "sam.", "dim."].map(function (x) { return el("span", { text: x }); }))].concat([el("div", { class: "cal-grille" }, cases)]));
     } else if (vue === "semaine") {
-      var l = St.lundi(ref); titre = "Semaine du " + St.fmt(l, { day: "numeric", month: "long" });
+      var l = St.lundi(ref); titre = (etroit ? "Sem. du " : "Semaine du ") + St.fmt(l, { day: "numeric", month: etroit ? "short" : "long" });
       precedent = St.ajouterJours(ref, -7); suivant = St.ajouterJours(ref, 7);
       corps = el("div", { class: "cal-semaine" }, Array.from({ length: 7 }, function (_, k) { var j = St.ajouterJours(l, k); return caseJour(j, parJour[St.iso(j)] || [], false, eId, 99, true); }));
     } else if (vue === "jour") {
       // Une journée, heure par heure : rendez-vous et publications à leur heure, ligne de l'heure qu'il est
       var jr = St.debutJour(ref), kj = St.iso(jr), repJ = reperesJour(jr, eId), estAuj = St.memeJour(jr, new Date());
-      titre = St.fmt(jr, { weekday: "long", day: "numeric", month: "long" }); titre = titre.charAt(0).toUpperCase() + titre.slice(1);
+      titre = St.fmt(jr, etroit ? { weekday: "short", day: "numeric", month: "short" } : { weekday: "long", day: "numeric", month: "long" }); titre = titre.charAt(0).toUpperCase() + titre.slice(1);
       precedent = St.ajouterJours(jr, -1); suivant = St.ajouterJours(jr, 1);
       var psJ = parJour[kj] || [], rdvs = St.estLili() ? St.rdvDu(jr).filter(function (x) { return !eId || x.espace_id === eId; }) : [];
       var heures = psJ.map(function (p) { return new Date(p.date_prevue).getHours(); }).concat(rdvs.map(function (x) { return new Date(x.debut).getHours(); }));
@@ -162,8 +163,8 @@
             ici ? el("i", { class: "cj-ligne", style: { top: Math.round(mnt.getMinutes() / 60 * 100) + "%" }, "aria-label": "Maintenant, " + St.hm(mnt) }) : null,
             rdvH.length ? el("div", { class: "cj-rdvs" }, rdvH.map(function (x) {
               var ex = St.espace(x.espace_id);
-              return el("button", { type: "button", class: "cj-rdv", style: ex ? { "--c": ex.couleur } : null, onclick: function () { St.editerRdv(x); } }, [
-                el("b", { text: St.libelleRdv(x) }), el("span", { text: x.titre }), el("small", { text: [ex && ex.nom, x.lieu].filter(Boolean).join(" · ") })]);
+              return glisserRdv(el("button", { type: "button", class: "cj-rdv", style: ex ? { "--c": ex.couleur } : null, onclick: function () { St.editerRdv(x); } }, [
+                el("b", { text: St.libelleRdv(x) }), el("span", { text: x.titre }), el("small", { text: [ex && ex.nom, x.lieu].filter(Boolean).join(" · ") })]), x);
             })) : null,
             pubsH.length ? el("div", { class: "cj-pubs" }, pubsH.map(function (p) {
               var ep = St.espace(p.espace_id) || {}, m = St.mediasDe(p.id)[0];
@@ -195,7 +196,7 @@
         el("div", { class: "cj-heures" }, rangees)
       ]);
     } else {
-      var d0 = St.debutJour(ref); titre = "À partir du " + St.fmt(d0, { day: "numeric", month: "long" });
+      var d0 = St.debutJour(ref); titre = (etroit ? "Dès le " : "À partir du ") + St.fmt(d0, { day: "numeric", month: etroit ? "short" : "long" });
       precedent = St.ajouterJours(ref, -14); suivant = St.ajouterJours(ref, 14);
       var jours = [];
       for (var n = 0; n < 45; n++) { var jj = St.ajouterJours(d0, n), ps = parJour[St.iso(jj)] || [], rep = reperesJour(jj, eId); var rv = rdvJour(jj, eId); if (ps.length || rv.length || rep.ferie || rep.forts.length || n === 0) jours.push([jj, ps, rep, rv]); }
@@ -236,13 +237,31 @@
         el("div", { class: "sans-date-liste" }, sansDate.map(function (p) { return puceCal(p, !eId); }))]) : null
     ]);
   };
+  // Glisser un rendez-vous : sur un autre jour (mois, semaine, liste) il garde son heure ; sur une heure (vue Jour)
+  // il prend cette heure et garde ses minutes. Sa durée ne change pas.
+  function glisserRdv(bouton, r) {
+    bouton.setAttribute("draggable", "false");
+    activerGlisser(bouton, r, function (cible) {
+      var ancien = new Date(r.debut), nouveau = new Date(cible.dataset.jour + "T12:00:00");
+      nouveau.setHours(ancien.getHours(), ancien.getMinutes(), 0, 0);
+      var surHeure = cible.dataset.heure != null && cible.dataset.heure !== "";
+      if (surHeure) nouveau.setHours(+cible.dataset.heure);
+      if (nouveau.getTime() === ancien.getTime()) return;
+      var champs = { debut: nouveau.toISOString() };
+      if (r.fin) champs.fin = new Date(nouveau.getTime() + (new Date(r.fin).getTime() - ancien.getTime())).toISOString();
+      St.maj("rendez_vous", r.id, champs).then(function () {
+        St.signaler("« " + r.titre + " » déplacé " + (surHeure ? "à " + St.hm(nouveau) : "au " + St.fmt(nouveau, { weekday: "long", day: "numeric", month: "long" }))); St.dessiner(false); });
+      St.dessiner(false);
+    });
+    return bouton;
+  }
   // Rendez-vous de Lili dans une case du calendrier (filtrés par client si un client est choisi)
   function rdvJour(j, eId) {
     if (!St.estLili()) return [];
     return St.rdvDu(j).filter(function (r) { return !eId || r.espace_id === eId; }).map(function (r) {
       var e = St.espace(r.espace_id);
-      return el("button", { type: "button", class: "cal-rdv", style: e ? { "--c": e.couleur } : null, title: [r.titre, St.libelleRdv(r), r.lieu, e && e.nom].filter(Boolean).join(" · "),
-        onclick: function () { St.editerRdv(r); } }, [el("b", { text: St.libelleRdv(r).split("–")[0] }), " " + r.titre]);
+      return glisserRdv(el("button", { type: "button", class: "cal-rdv", style: e ? { "--c": e.couleur } : null, title: [r.titre, St.libelleRdv(r), r.lieu, e && e.nom].filter(Boolean).join(" · "),
+        onclick: function () { St.editerRdv(r); } }, [el("b", { text: St.libelleRdv(r).split("–")[0] }), " " + r.titre]), r);
     });
   }
   function caseJour(j, ps, horsMois, eId, max, grand) {
