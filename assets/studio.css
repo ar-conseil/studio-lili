@@ -804,6 +804,10 @@ input[type="file"] { font-size: 13px; max-width: 100%; }
 .mx-titre { display: flex; align-items: center; justify-content: space-between; margin: 14px 10px 4px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--encre-3); font-weight: 600; }
 .mx-colonne { display: flex; flex-direction: column; min-width: 0; min-height: 0; border-right: 1px solid var(--filet); }
 .mx-recherche { display: flex; align-items: center; gap: 8px; margin: 10px 10px 6px; padding: 0 12px; border-radius: 12px; background: var(--creme); color: var(--encre-3); }
+.mx-recherche .mx-actualiser { flex: none; margin-right: -6px; color: var(--encre-2); }
+.mx-actualiser.tourne svg { animation: mx-tourne .8s linear infinite; }
+@keyframes mx-tourne { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .mx-actualiser.tourne svg { animation-duration: 2.4s; } }
 .mx-recherche input { border: 0; background: none; min-height: 40px; padding: 0; font-size: 14px; box-shadow: none !important; }
 .mx-filtres { display: flex; gap: 6px; padding: 0 10px 8px; overflow-x: auto; scrollbar-width: none; } .mx-filtres .puce { min-height: 30px; padding: 4px 11px; font-size: 12.5px; cursor: pointer; }
 .mx-outils { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-bottom: 1px solid var(--filet); min-height: 42px; }

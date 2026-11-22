@@ -165,6 +165,12 @@
   }
 
   // ---------- La page : Ma photo, Mes informations, Aperçu ----------
+  // La carte enregistrée, en HTML pour les messageries (réponse automatique de vacances) ; null si elle n'est pas prête
+  St.signatureCarteHtml = function () {
+    var r = reglage("signature_carte")[moi()];
+    if (!r || !r.avatar_url || (!St.X.demo && /^data:/.test(r.avatar_url))) return null;
+    return html(Object.assign(defauts(), r), { avatar: r.avatar_url, logo: LOGO });
+  };
   St.carteSignature = function (carte) {
     var tout = reglage("signature_carte"), r = Object.assign(defauts(), tout[moi()] || {});
     var local = { photo: null, avatar: null, logo: null, change: false };   // ce qui n'est pas encore enregistré

@@ -338,6 +338,7 @@
   function appelMessagerie(corps) { return St.appel("messagerie", corps); }
   St.vacances = function () {
     var v = reglage("vacances"), actif = St.vacancesActives(), auj = St.iso(new Date());
+    var sigHtml = St.signatureCarteHtml ? St.signatureCarteHtml() : null;
     var e = reglage("entreprise"), prenom = (e.nom || MARQUE.proprietaire || "Lili").split(" ")[0];
     var debut = el("input", { type: "date", value: actif ? v.debut : auj, "aria-label": "Du" }), fin = el("input", { type: "date", value: actif ? v.fin : St.iso(St.ajouterJours(new Date(), 7)), "aria-label": "Au" });
     var objet = A.texte(actif ? v.objet : "", { aide: "Absente jusqu'au …" });
@@ -347,16 +348,17 @@
       if (actif && (objet.value || message.value)) return;
       objet.value = "Absente jusqu'au " + (fin.value ? St.fmt(fin.value + "T12:00:00", { day: "numeric", month: "long" }) : "…");
       message.value = "Bonjour,\n\nJe suis en congés jusqu'au " + (fin.value ? St.fmt(fin.value + "T12:00:00", { weekday: "long", day: "numeric", month: "long" }) : "…") +
-        " et je lirai votre message à mon retour, le " + retourLe() + ".\n\nVos publications programmées continuent de paraître normalement.\n\nBelle journée,\n" + (e.nom || MARQUE.proprietaire || prenom);
+        " et je lirai votre message à mon retour, le " + retourLe() + ".\n\nVos publications programmées continuent de paraître normalement.\n\nBelle journée," + (sigHtml ? "" : "\n" + (e.nom || MARQUE.proprietaire || prenom));
     };
     fin.addEventListener("change", function () { if (!actif) { objet.value = ""; message.value = ""; proposer(); } });
     proposer();
     var cGmail = el("input", { type: "checkbox", checked: actif ? v.gmail !== false : true }), cBandeau = el("input", { type: "checkbox", checked: actif ? v.bandeau !== false : true }), cPause = el("input", { type: "checkbox", checked: actif ? v.pause !== false : true });
+    var cSig = el("input", { type: "checkbox", checked: !!sigHtml && (actif ? v.signature !== false : true), disabled: !sigHtml });
     var avert = el("p", { class: "aide" });
     if (!St.X.demo) appelMessagerie({ action: "etat" }).then(function (r) { var b = (r.boites || [])[0]; if (b && !b.vacances_possible) avert.textContent = "Pour la réponse automatique, Google doit d'abord donner son accord : Réglages > Mails et vacances > « Relier à nouveau »."; if (!b) avert.textContent = "Aucune boîte Gmail reliée : pas de réponse automatique."; }).catch(function () {});
     var envoyer = function (actifV, fermer) {
       if (actifV && (!debut.value || !fin.value || fin.value < debut.value)) return St.signaler("Vérifiez les dates", true);
-      var corps = { action: "vacances", actif: actifV, debut: debut.value, fin: fin.value, objet: objet.value.trim(), message: A.echapper(message.value.trim()), gmail: cGmail.checked, bandeau: cBandeau.checked, pause: cPause.checked };
+      var corps = { action: "vacances", actif: actifV, debut: debut.value, fin: fin.value, objet: objet.value.trim(), message: A.echapper(message.value.trim()), signature: cSig.checked && sigHtml ? sigHtml : "", gmail: cGmail.checked, bandeau: cBandeau.checked, pause: cPause.checked };
       var fini = function (r) {
         fermer();
         St.signaler(actifV ? (r && r.gmail === false ? "Vacances activées (bandeau et pause) ; réponse automatique non activée : " + (r.gmail_erreur === "droit" ? "reliez à nouveau Gmail pour l'autoriser" : r.gmail_erreur) : "Bonnes vacances ! Tout est en place jusqu'au " + St.fmt(fin.value + "T12:00:00", { day: "numeric", month: "long" }) + ".")
@@ -364,7 +366,7 @@
         St.charger().then(function () { St.dessiner(false); });
       };
       if (St.X.demo) {
-        var valeur = actifV ? { actif: true, debut: corps.debut, fin: corps.fin, objet: corps.objet, message: corps.message, bandeau: corps.bandeau, pause: corps.pause, gmail: cGmail.checked } : Object.assign({}, v, { actif: false });
+        var valeur = actifV ? { actif: true, debut: corps.debut, fin: corps.fin, objet: corps.objet, message: corps.message, signature: !!corps.signature, bandeau: corps.bandeau, pause: corps.pause, gmail: cGmail.checked } : Object.assign({}, v, { actif: false });
         St.enregistrer("reglages", { cle: "vacances", valeur: valeur });
         S.tempsForts = S.tempsForts.filter(function (t) { return !(t.type === "absence" && !t.espace_id && t.libelle === "Lili en congés"); });
         if (actifV && corps.bandeau) S.tempsForts.push({ id: "vac", espace_id: null, libelle: "Lili en congés", debut: corps.debut, fin: corps.fin, type: "absence", visibilite: "partage" });
@@ -376,6 +378,7 @@
       el("div", { class: "deux-colonnes" }, [A.champ("Du", debut), A.champ("Au (dernier jour d'absence)", fin)]),
       el("label", { class: "case-option" }, [cGmail, el("span", {}, [el("b", { text: "Réponse automatique Gmail" }), el("small", { text: "Toute personne qui vous écrit la reçoit, une fois par expéditeur, pendant ces dates." })])]),
       A.champ("Objet de la réponse", objet), A.champ("Message", message),
+      el("label", { class: "case-option" }, [cSig, el("span", {}, [el("b", { text: "Ajouter ma signature" }), el("small", { text: sigHtml ? "Votre carte (photo, coordonnées, logo) sous le message, comme dans vos mails." : "Préparez d'abord votre signature : Réglages › Signatures de mail › Ma signature, puis « Enregistrer »." })])]),
       el("label", { class: "case-option" }, [cBandeau, el("span", {}, [el("b", { text: "Bandeau dans l'espace des clients" }), el("small", { text: "« " + prenom + " est en congés jusqu'au … » en haut de leur espace, et l'absence dans le calendrier." })])]),
       el("label", { class: "case-option" }, [cPause, el("span", {}, [el("b", { text: "Pause de mes notifications" }), el("small", { text: "Ni push ni e-mail pour vous pendant ces dates ; tout vous attend dans la cloche au retour." })])]),
       avert],

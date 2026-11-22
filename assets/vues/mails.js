@@ -212,7 +212,8 @@
   function colonneListe() {
     var ids = Object.keys(M.sel).filter(function (k) { return M.sel[k]; });
     var recherche = el("form", { class: "mx-recherche", role: "search", onsubmit: function (ev) { ev.preventDefault(); M.q = champ.value.trim(); M.ouvert = null; M.fil = null; M.sel = {}; M.curseur = -1; charger().then(redessiner); } },
-      [St.icone("oeil"), el("input", { type: "search", id: "mx-cherche", placeholder: "Rechercher (touche /) : mots, de:inès, has:attachment, after:2026/11/01…", value: M.q, "aria-label": "Rechercher dans les mails" })]);
+      [St.icone("oeil"), el("input", { type: "search", id: "mx-cherche", placeholder: "Rechercher (touche /) : mots, de:inès, has:attachment, after:2026/11/01…", value: M.q, "aria-label": "Rechercher dans les mails" }),
+       el("button", { type: "button", class: "btn-icone petit mx-actualiser" + (M.charge ? " tourne" : ""), title: "Actualiser la boîte", "aria-label": "Actualiser la boîte", onclick: actualiser }, [St.icone("rafraichir")])]);
     var champ = recherche.querySelector("input");
     var filtres = el("div", { class: "mx-filtres" }, [["", "Tout"], ["non_lus", "Non lus"], ["pieces", "Pièces jointes"], ["clients", "Clients"]].map(function (f) {
       return el("button", { type: "button", class: "puce" + (M.filtre === f[0] ? " active" : ""), onclick: function () { M.filtre = f[0]; M.sel = {}; charger().then(redessiner); } }, [f[1]]);
@@ -226,8 +227,7 @@
         outil("lu", "Marquer comme lu (Maj+I)", function () { ranger(ids, "lu"); }), outil("mail", "Marquer comme non lu (Maj+U)", function () { ranger(ids, "non_lu"); }),
         outil("etoile", "Suivre (S)", function () { ranger(ids, "suivi"); }), outil("etiquette", "Libellé", function () { libeller(ids); }),
         outil("fermer", "Indésirable", function () { ranger(ids, "indesirable"); })
-      ]) : el("span", { class: "mx-groupe" }, [outil("rafraichir", "Actualiser", function () { charger().then(redessiner); }),
-        el("small", { text: M.charge ? "Chargement…" : M.fils.length ? M.fils.length + (M.suite ? "+" : "") + " conversation" + (M.fils.length > 1 ? "s" : "") : "" })]),
+      ]) : el("span", { class: "mx-groupe" }, [el("small", { text: M.charge ? "Chargement…" : M.fils.length ? M.fils.length + (M.suite ? "+" : "") + " conversation" + (M.fils.length > 1 ? "s" : "") : "" })]),
       el("button", { type: "button", class: "btn-icone petit", title: "Raccourcis clavier (?)", "aria-label": "Raccourcis clavier", onclick: aideClavier }, ["?"])
     ]);
     var corps;
@@ -237,6 +237,13 @@
     else corps = el("ul", { class: "mx-liste", role: "listbox", "aria-label": "Conversations" }, M.fils.map(function (f, i) { return ligneFil(f, i); }));
     return el("div", { class: "mx-colonne" }, [recherche, filtres, outils, corps,
       M.suite && M.dossier !== "PROGRAMMES" ? el("button", { type: "button", class: "btn-texte mx-plus", text: "Plus de conversations", onclick: function () { charger(true).then(redessiner); } }) : null]);
+  }
+  // Bouton « Actualiser » (comme Evoalys) : relit Gmail tout de suite ; la flèche tourne le temps de la lecture
+  function actualiser(ev) {
+    var b = ev && ev.currentTarget; if (b) { b.classList.add("tourne"); b.disabled = true; }
+    Promise.all([charger(), new Promise(function (r) { setTimeout(r, 500); })]).then(function () {
+      redessiner(); St.signaler("Boîte à jour");
+    }, function () { redessiner(); });
   }
   function outil(ic, titre, f) { return el("button", { type: "button", class: "btn-icone petit", title: titre, "aria-label": titre, onclick: f }, [St.icone(ic)]); }
   function ligneFil(f, i) {

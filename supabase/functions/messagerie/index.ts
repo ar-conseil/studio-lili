@@ -118,11 +118,13 @@ Deno.serve(async (req) => {
         if (actif && (!/^\d{4}-\d{2}-\d{2}$/.test(debut) || !/^\d{4}-\d{2}-\d{2}$/.test(fin) || fin < debut)) return json({ erreur: "dates de vacances invalides" }, 400);
         const { data: avant } = await db.from("reglages").select("valeur").eq("cle", "vacances").maybeSingle();
         const ancien = avant?.valeur ?? {};
+        // Signature (carte HTML de « Ma signature ») ajoutée sous le message, nettoyée comme tout HTML envoyé
+        const sig = typeof b.signature === "string" && b.signature.length < 30000 ? nettoyerHtml(b.signature) : "";
         // 1. Réponse automatique Gmail (du début au lendemain de la fin, heure de Paris)
         let gmailOk = true, gmailErreur = "";
         try {
           await g.ecrireVacances(avecGmail ? {
-            enableAutoReply: true, responseSubject: String(b.objet ?? "Absence").slice(0, 200), responseBodyHtml: nettoyerHtml(String(b.message ?? "")).replace(/\n/g, "<br>"),
+            enableAutoReply: true, responseSubject: String(b.objet ?? "Absence").slice(0, 200), responseBodyHtml: nettoyerHtml(String(b.message ?? "")).replace(/\n/g, "<br>") + (sig ? "<br><br>" + sig : ""),
             restrictToContacts: false, restrictToDomain: false,
             startTime: String(Date.parse(debut + "T00:00:00+01:00")), endTime: String(Date.parse(fin + "T23:59:59+01:00")),
           } : { enableAutoReply: false });
@@ -134,7 +136,7 @@ Deno.serve(async (req) => {
           const { data } = await db.from("temps_forts").insert({ espace_id: null, libelle: "Lili en congés", debut, fin, type: "absence", visibilite: "partage" }).select("id").single();
           tf = data?.id ?? null;
         }
-        const valeur = actif ? { actif: true, debut, fin, objet: b.objet ?? "", message: b.message ?? "", bandeau: b.bandeau !== false, pause: b.pause !== false, gmail: avecGmail && gmailOk, temps_fort_id: tf }
+        const valeur = actif ? { actif: true, debut, fin, objet: b.objet ?? "", message: b.message ?? "", signature: !!sig, bandeau: b.bandeau !== false, pause: b.pause !== false, gmail: avecGmail && gmailOk, temps_fort_id: tf }
           : { ...ancien, actif: false, temps_fort_id: null, gmail: false };
         await db.from("reglages").upsert({ cle: "vacances", valeur, modifie_le: new Date().toISOString() }, { onConflict: "cle" });
         return json({ ok: true, gmail: avecGmail ? gmailOk : null, gmail_erreur: gmailErreur ? (/insufficient|scope|403/i.test(gmailErreur) ? "droit" : gmailErreur) : null, valeur });
