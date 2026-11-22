@@ -461,7 +461,7 @@ window.Studio = (function () {
         var ordre = liens().map(function (a) { return a.dataset.espace; });
         if (ordre.join() === espacesActifs().map(function (x) { return x.id; }).join()) return;
         Promise.all(ordre.map(function (id, n) { var x = espace(id); return !x || x.ordre === n + 1 ? null : maj("espaces", id, { ordre: n + 1 }); }))
-          .then(function () { dessinerCoquille(); signaler("Ordre des clients enregistré"); }, function () { dessinerCoquille(); });
+          .then(function () { dessiner(false); signaler("Ordre des clients enregistré"); }, function () { dessiner(false); });
       }, 170);
     };
     var demarrer = function () {
@@ -544,9 +544,9 @@ window.Studio = (function () {
       })));
       a.addEventListener("click", function (ev) {
         if (!actif || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.target.closest(".cote-sous")) return;
-        if (ouvert) { ev.preventDefault(); sousFermes[e.slug] = true; dessinerCoquille(); return; }
+        if (ouvert) { ev.preventDefault(); sousFermes[e.slug] = true; dessiner(false); return; }
         delete sousFermes[e.slug];
-        if (location.hash === "#" + e.slug) { ev.preventDefault(); dessinerCoquille(); }
+        if (location.hash === "#" + e.slug) { ev.preventDefault(); dessiner(false); }
       });
       return a;
     }))] : [];
