@@ -50,6 +50,11 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   deux gestes, médiathèque). Styles : `assets/studio.css` (piste Papier, téléphone compris).
 - Adresses : `#`, `#calendrier?vue=mois|semaine|liste&jour=…&client=…`, `#publications?statut=…`, `#mediatheque`,
   `#p/<id>`, `#valider` (client), `#<slug-client>` et `#<slug>/calendrier|publications|mediatheque`.
+  Recherche globale (`assets/vues/recherche.js`, `St.rechercher(q)`) : champ « Rechercher » dans la barre du haut,
+  ⌘K / Ctrl+K partout, F hors saisie ; index construit à l'ouverture sur `Studio.S` (donc limité par les règles de la
+  base : un client ne cherche que dans son espace), sans accents, tous les mots requis, titres devant ; ouvre
+  `#p/<id>`, la fiche d'un média (`St.ouvrirMedia`), `#<slug>/mediatheque?dossier=…`, une tâche ou un prospect
+  (`St.editerTache`, `St.editerProspect`), `#mails?q=…` (recherche Gmail).
   Clavier : / assistant, N nouvelle publication, 0 accueil, C calendrier, P publications, M médiathèque, 1-9 clients, Échap retour,
   ← → rubriques ou période du calendrier, T aujourd'hui.
 - Étape 5, en direct et notifications : `assets/vues/direct.js` (présence Realtime sur `#p/<id>` : avatars de qui

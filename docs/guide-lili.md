@@ -22,6 +22,17 @@ Ce guide suit une semaine de travail. Les touches du clavier sont rappelées en 
 gauche la met dans ton Dock ou ta barre des tâches. Sur iPhone : dans Safari, Partager › Sur l'écran d'accueil.
 Sur un Mac avec Safari : Fichier › Ajouter au Dock.
 
+## Tout retrouver en deux secondes
+
+Le champ **Rechercher**, en haut de chaque page (ou **⌘K** sur Mac, **Ctrl K** sur PC, ou la touche **F**), cherche
+dans tout le studio en même temps : clients, publications (titre et légende), images et vidéos (nom, dossier,
+étiquettes, avec leur vignette), dossiers de chaque client, commentaires, messages, notes, tâches, prospects,
+factures et devis, opérations et temps forts, veille, partenaires, comptes des réseaux, personnes invitées, et les
+pages du studio. Pas besoin d'accents ni de majuscules (« noel » trouve « Noël ») ; plusieurs mots affinent
+(« palomano reel »). Flèches pour choisir, Entrée pour ouvrir : une image s'ouvre dans sa fiche, un dossier dans la
+médiathèque du client. En dernière ligne, « Chercher dans les mails » lance la même recherche dans Gmail.
+Tes clients ont la même barre, limitée à leur espace et à ce que tu partages.
+
 ## 2. Ta journée : la page Aujourd'hui
 
 C'est la page d'ouverture (touche **0**). De haut en bas :

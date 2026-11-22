@@ -761,6 +761,7 @@
       }, function (id, statut) { St.maj("taches", id, { statut: statut, fait_le: statut === "fait" ? maintenant() : null }).then(function () { St.dessiner(false); }); })
     ]);
   };
+  St.editerTache = function (x) { return editerTache(x); };
   function editerTache(t) {
     t = t || {};
     var titre = texte(t.titre, { aide: "Ce qu'il faut faire" }), notes = texte(t.notes, { lignes: 3 }), ech = el("input", { type: "date", value: t.echeance || "", "aria-label": "Échéance" });
@@ -796,6 +797,7 @@
       }, function (id, etape) { St.maj("prospects", id, { etape: etape }).then(function () { St.dessiner(false); }); })
     ]);
   };
+  St.editerProspect = function (x) { return editerProspect(x); };
   function editerProspect(p) {
     p = p || {};
     var nom = texte(p.nom, { aide: "Nom de la marque" }), contact = texte(p.contact, { aide: "Prénom Nom" }), email = texte(p.email, { type: "email" }), tel = texte(p.telephone, { attrs: { inputmode: "tel" } });

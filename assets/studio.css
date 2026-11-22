@@ -888,3 +888,47 @@ a.cote-titre:hover, a.cote-titre[aria-current="page"] { color: var(--encre); }
 .fiche-comptes { display: grid; gap: 8px; margin-bottom: 6px; }
 .fiche-compte { display: grid; grid-template-columns: 150px minmax(0, 1fr) minmax(0, 1fr) auto; gap: 8px; align-items: center; }
 @media (max-width: 640px) { .fiche-compte { grid-template-columns: 1fr 1fr auto; } .fiche-compte > :first-child { grid-column: 1 / -1; } }
+
+/* Recherche : champ en haut de chaque page (⌘K), fenêtre de résultats façon Spotlight */
+.barre-recherche { margin-left: auto; display: flex; align-items: center; gap: 8px; width: min(360px, 34vw); height: 34px; padding: 0 8px 0 11px;
+  border: 1px solid var(--filet); border-radius: 10px; background: var(--blanc); color: var(--encre-3); font: 14px var(--texte, inherit); cursor: text; }
+.barre-recherche:hover { border-color: var(--encre-3); color: var(--encre-2); }
+.barre-recherche svg { width: 15px; height: 15px; flex: none; }
+.barre-recherche-texte { flex: 1; text-align: left; }
+.barre-recherche kbd, .rech-pied kbd { font: 11px var(--mono); padding: 1px 6px; border-radius: 6px; border: 1px solid var(--filet); background: var(--creme); color: var(--encre-2); }
+.barre-recherche + .barre-heure { margin-left: 4px; }
+@media (max-width: 1100px) { .barre-heure { display: none; } }
+@media (max-width: 760px) {
+  .barre-recherche { width: 38px; height: 38px; padding: 0; justify-content: center; border-color: transparent; background: none; color: var(--encre-2); }
+  .barre-recherche-texte, .barre-recherche kbd { display: none; }
+  .barre-recherche svg { width: 19px; height: 19px; }
+}
+.rech-fenetre { width: min(720px, calc(100vw - 32px)); max-height: min(78dvh, 720px); margin: 9vh auto auto; padding: 0; border: 1px solid var(--filet); border-radius: 18px;
+  background: var(--papier); color: var(--encre); box-shadow: 0 30px 80px -30px rgb(0 0 0 / .45); overflow: hidden; }
+.rech-fenetre[open] { display: flex; flex-direction: column; }
+.rech-fenetre::backdrop { background: rgb(30 26 23 / .32); }
+.rech-tete { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--filet); }
+.rech-tete > svg { width: 20px; height: 20px; color: var(--encre-3); flex: none; }
+.rech-champ { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: var(--encre); font: 18px/1.3 inherit; font-size: 18px; }
+.rech-champ::-webkit-search-cancel-button { display: none; }
+.rech-resultats { overflow-y: auto; padding: 6px 8px 10px; overscroll-behavior: contain; }
+.rech-famille { margin: 12px 10px 4px; font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--encre-3); }
+.rech-groupe { display: grid; gap: 2px; }
+.rech-ligne { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 10px; border: 0; border-radius: 10px; background: none; color: inherit; text-align: left; font: inherit; cursor: pointer; }
+.rech-ligne[aria-selected="true"] { background: var(--survol, rgb(30 26 23 / .06)); }
+.rech-texte { display: grid; gap: 1px; min-width: 0; }
+.rech-texte b { font-weight: 500; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rech-texte small { color: var(--encre-3); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rech-extrait { white-space: normal !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.rech-texte mark { background: color-mix(in srgb, var(--terre) 22%, transparent); color: inherit; border-radius: 3px; padding: 0 1px; }
+.rech-icone { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 9px; background: var(--creme); color: var(--encre-2); }
+.rech-icone.teinte { background: color-mix(in srgb, var(--c) 16%, var(--creme)); color: color-mix(in srgb, var(--c) 70%, var(--encre)); }
+.rech-icone svg { width: 16px; height: 16px; }
+.rech-vignette { width: 44px; height: 44px; flex: none; object-fit: cover; border-radius: 8px; background: var(--creme); }
+.rech-images .rech-ligne { padding: 6px 10px; }
+.rech-vide { padding: 22px 12px; color: var(--encre-3); text-align: center; }
+.rech-pied { display: flex; gap: 16px; padding: 9px 16px; border-top: 1px solid var(--filet); font-size: 12px; color: var(--encre-3); }
+@media (max-width: 760px) {
+  .rech-fenetre { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; border: 0; }
+  .rech-pied { display: none; }
+}

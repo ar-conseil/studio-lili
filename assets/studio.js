@@ -78,7 +78,7 @@ window.Studio = (function () {
     publications: '<rect x="2.5" y="2.5" width="11" height="11" rx="2"/><path d="M5 10.5l2-2.5 1.7 2 1.8-2 1.5 2.5"/>',
     mediatheque: '<path d="M2 4.5h4l1.2 1.5H14v6.5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>',
     valider: '<path d="m3.5 8.5 3 3 6-7"/>',
-    plus: '<path d="M8 3v10M3 8h10"/>', haut: '<path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/>', bas: '<path d="M8 3v10M3.5 8.5 8 13l4.5-4.5"/>', fleche: '<path d="M6 3.5 10.5 8 6 12.5"/>', retour: '<path d="M10 3.5 5.5 8 10 12.5"/>',
+    plus: '<path d="M8 3v10M3 8h10"/>', recherche: '<circle cx="7" cy="7" r="4.5"/><path d="m10.4 10.4 3.6 3.6"/>', haut: '<path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/>', bas: '<path d="M8 3v10M3.5 8.5 8 13l4.5-4.5"/>', fleche: '<path d="M6 3.5 10.5 8 6 12.5"/>', retour: '<path d="M10 3.5 5.5 8 10 12.5"/>',
     fermer: '<path d="M4 4l8 8M12 4l-8 8"/>', menu: '<path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/>',
     taches: '<rect x="2.5" y="2.5" width="11" height="11" rx="3"/><path d="m5.5 8 1.8 1.8L10.8 6"/>',
     commentaire: '<path d="M13.5 7.5a5.5 5.5 0 0 1-8 4.9L2.5 13.5l1-2.9a5.5 5.5 0 1 1 10-3.1z"/>',
@@ -480,7 +480,10 @@ window.Studio = (function () {
     var fil = el("nav", { class: "fil", "aria-label": "Fil d'Ariane" }, filAriane());
     var barre = el("header", { class: "barre" }, [
       el("button", { type: "button", class: "btn-icone ouvrir-menu", "aria-label": "Ouvrir le menu", onclick: function () { menu(true); } }, [icone("menu")]),
-      fil, el("span", { class: "barre-heure", id: "barre-heure", text: fmt(new Date(), { weekday: "long", day: "numeric", month: "long" }) + " · " + hm(new Date()) })
+      fil,
+      el("button", { type: "button", class: "barre-recherche", "aria-label": "Rechercher dans le studio (⌘K)", onclick: function () { if (window.Studio.rechercher) window.Studio.rechercher(); } },
+        [icone("recherche"), el("span", { class: "barre-recherche-texte", text: "Rechercher" }), el("kbd", { text: /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl K" })]),
+      el("span", { class: "barre-heure", id: "barre-heure", text: fmt(new Date(), { weekday: "long", day: "numeric", month: "long" }) + " · " + hm(new Date()) })
     ]);
     var basTel = el("nav", { class: "nav-bas", "aria-label": "Navigation principale" }, (lili ? [
       ["#", "aujourdhui", "Aujourd'hui", r.nom === ""], ["#calendrier", "calendrier", "Calendrier", r.nom === "calendrier"],

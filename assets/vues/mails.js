@@ -145,6 +145,8 @@
   V.mails = function (r, sansCharger) {
     var q = (r && r.query) || {};
     if (q.message) { St.signaler(q.message, /impossible|refusée|expiré/i.test(q.message)); history.replaceState(null, "", "#mails"); M.boites = null; M.dossiers = []; }
+    // Recherche lancée depuis la barre du haut : #mails?q=… cherche dans toute la boîte Gmail
+    if (q.q) { M.q = q.q; M.dossier = "TOUS"; M.client = ""; M.filtre = ""; M.ouvert = null; M.fil = null; M.sel = {}; M.curseur = -1; M.chargeLe = 0; M.hashCharge = null; history.replaceState(null, "", "#mails"); }
     var page = el("div", { class: "vue-mails", id: "vue-mails" });
     // Gmail n'est interrogé qu'en arrivant sur la page (ou après une minute), pas à chaque rafraîchissement du studio
     if (!sansCharger && !M.charge && (M.hashCharge !== location.hash || Date.now() - (M.chargeLe || 0) > 60000)) { charger().then(redessiner); }

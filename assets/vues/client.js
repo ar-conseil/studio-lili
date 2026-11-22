@@ -154,6 +154,7 @@
     })) : el("div", { class: "depot-vide", onclick: function () { fichier.click(); } }, [St.icone("deposer"), el("p", { text: "Aucun fichier ici pour l'instant." }), el("small", { text: "Glissez vos photos et vidéos, ou touchez pour les choisir." })]));
     return page;
   };
+  St.ouvrirMedia = function (m) { return ouvrirMedia(m); };
   function ouvrirMedia(m) {
     var lili = St.estLili(), e = St.espace(m.espace_id) || {}, auteur = St.personne(m.depose_par) || {};
     var dossier = el("input", { type: "text", value: m.dossier || "", placeholder: "Dossier", "aria-label": "Dossier", list: "liste-dossiers" });
