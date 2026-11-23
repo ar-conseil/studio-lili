@@ -138,10 +138,10 @@
     var ent = A.entreprise ? A.entreprise() : {};
     return el("div", { class: "pile rubrique-etroite" }, [
       St.entete(null, "Factures", du ? "À régler : " + A.euros(du) + "." : "Tout est réglé, merci !"),
-      fs.length ? el("section", { class: "bloc" }, [el("ul", { class: "liste-compta" }, fs.map(function (f) {
+      fs.length ? el("section", { class: "bloc" }, [el("ul", { class: "liste-factures-client" }, fs.map(function (f) {
         var retard = f.statut === "emise" && f.echeance && f.echeance < St.iso(new Date());
         return el("li", {}, [el("span", { class: "mono", text: "N° " + (f.numero || "") }),
-          el("span", { class: "banque-libelle" }, [el("b", { text: (f.objet || "Facture") + (f.periode ? " · " + f.periode : "") }), el("small", { text: f.date_facture ? "du " + St.fmt(f.date_facture + "T12:00:00", { day: "numeric", month: "long", year: "numeric" }) : "" })]),
+          el("span", { class: "fc-libelle" }, [el("b", { text: (f.objet || "Facture") + (f.periode ? " · " + f.periode : "") }), el("small", { text: f.date_facture ? "Facture du " + St.fmt(f.date_facture + "T12:00:00", { day: "numeric", month: "long", year: "numeric" }) : "" })]),
           el("b", { class: "mono", text: A.euros(f.total_ttc) }),
           el("span", { class: "etat-piece " + (f.statut === "payee" ? "e-payee" : retard ? "e-retard" : "e-emise"), text: f.statut === "payee" ? "Réglée" : retard ? "Échue" : "À régler" + (f.echeance ? " avant le " + St.fmt(f.echeance + "T12:00:00", { day: "numeric", month: "short" }) : "") }),
           el("button", { type: "button", class: "btn-texte", onclick: function () { St.ouvrirPdfPiece("factures", f); } }, [St.icone("imprimer"), "PDF"])]);

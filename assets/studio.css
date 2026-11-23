@@ -1371,3 +1371,13 @@ button.etat-modifiable small { font-weight: 500; opacity: .8; }
 .meta-nom { flex: 1; display: grid; min-width: 0; } .meta-nom small { color: var(--encre-3); font-size: 12.5px; }
 .liste-comptes-meta select { width: auto; max-width: 48%; }
 .etapes-liaison code { font-size: 12px; word-break: break-all; background: var(--creme); padding: 1px 6px; border-radius: 6px; }
+/* Factures côté client */
+.liste-factures-client { list-style: none; margin: 0; padding: 0; }
+.liste-factures-client li { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto auto auto; align-items: center; gap: 14px; padding: 12px 0; border-top: 1px solid var(--filet); }
+.liste-factures-client li:first-child { border-top: 0; }
+.fc-libelle { display: grid; min-width: 0; } .fc-libelle b { font-weight: 600; } .fc-libelle small { color: var(--encre-3); font-size: 12.5px; }
+@media (max-width: 700px) {
+  .liste-factures-client li { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "n m" "l l" "e p"; row-gap: 6px; }
+  .liste-factures-client li > :nth-child(1) { grid-area: n; } .liste-factures-client li > :nth-child(2) { grid-area: l; } .liste-factures-client li > :nth-child(3) { grid-area: m; }
+  .liste-factures-client li > :nth-child(4) { grid-area: e; justify-self: start; } .liste-factures-client li > :nth-child(5) { grid-area: p; }
+}
