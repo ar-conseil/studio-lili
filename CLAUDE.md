@@ -145,6 +145,9 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   dans Réglages › Réseaux sociaux : table `meta_application` (clé secrète jamais lisible du navigateur, migration
   `20261122250000_meta_application.sql`, testée) ; à défaut, secrets META_*. **À faire (23/11/2026)** : créer
   l'appli Meta depuis le Chrome de Lili, connecté à SON Facebook (étapes affichées dans l'onglet), puis la relier.
+- **Pleine largeur** (23/11/2026, à la demande d'Antonin) : plus de largeur maximale sur `.page` ni `.rubrique-etroite`
+  (seuls les éléments eux-mêmes gardent une taille : aperçus, bulles…). Messages (`V.rub_messages`) : conversation
+  sur toute la hauteur (`.conv-*`), jours séparés, bulles groupées, photos jointes (médiathèque, dossier « Messages »).
 - Espace « Lili Rouzier » (`#lili-rouzier`, 22/11/2026) : sa propre marque ; ses portraits (dossier Portraits, internes). HTML des mails dans un iframe isolé,
   images distantes bloquées jusqu'au clic ; le HTML envoyé est nettoyé côté serveur (`nettoyerHtml`).
 - **Ma signature** (22/11/2026, comme Evoalys) : `assets/vues/signature.js`, en tête de Réglages › Signatures de mail.

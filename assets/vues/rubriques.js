@@ -153,26 +153,62 @@
   // ======================================================================
   // Messages : la conversation de l'espace (Lili et les clients)
   // ======================================================================
+  // Messages : une vraie conversation sur toute la largeur. Jours séparés, bulles groupées par auteur, heure dans la
+  // bulle, photos jointes (déposées dans la médiathèque du client, dossier « Messages »), Entrée pour envoyer.
   V.rub_messages = function (r, e) {
+    var lili = St.estLili(), MARQUE = window.MARQUE || {}, prenomLili = (MARQUE.proprietaire || "Lili").split(" ")[0];
     var ms = S.messages.filter(function (m) { return m.espace_id === e.id; }).sort(function (a, b) { return String(a.cree_le).localeCompare(String(b.cree_le)); });
-    var fil = el("div", { class: "fil-messages", role: "log", "aria-label": "Messages" }, ms.length ? ms.map(function (m) {
+    var jourDe = function (d) { var j = St.joursEntre ? St.joursEntre(new Date(d), new Date()) : 0, x = new Date(d);
+      if (St.memeJour(x, new Date())) return "Aujourd'hui"; var h = new Date(); h.setDate(h.getDate() - 1); if (St.memeJour(x, h)) return "Hier";
+      return St.fmt(x, { weekday: "long", day: "numeric", month: "long" }) + (x.getFullYear() !== new Date().getFullYear() ? " " + x.getFullYear() : ""); };
+    var lignes = [], dernierJour = "";
+    ms.forEach(function (m, i) {
+      var j = jourDe(m.cree_le); if (j !== dernierJour) { lignes.push(el("div", { class: "conv-jour" }, [el("span", { text: j.charAt(0).toUpperCase() + j.slice(1) })])); dernierJour = j; }
       var a = St.personne(m.auteur_id) || {}, moi = S.moi && m.auteur_id === S.moi.id;
-      return el("div", { class: "message" + (moi ? " moi" : "") }, [
-        el("span", { class: "avatar", style: { "--c": a.role === "proprietaire" ? "var(--terre)" : e.couleur }, text: St.initiales(a.nom) }),
-        el("div", {}, [el("small", { text: (moi ? "Vous" : a.nom || "") + " · " + St.ilya(m.cree_le) }), el("p", { text: m.contenu })])
-      ]);
-    }) : [St.vide(St.estLili() ? "Aucun message avec " + e.nom + " pour l'instant." : "Écrivez ici à Lili : une question, une idée, une info pour la semaine.")]);
-    var saisie = el("textarea", { rows: 2, placeholder: St.estLili() ? "Écrire à " + e.nom + "…" : "Écrire à Lili…", "aria-label": "Message" });
-    var envoyer = function () {
-      var t = saisie.value.trim(); if (!t) return;
-      saisie.value = "";
-      St.creer("messages", { espace_id: e.id, auteur_id: S.moi.id, contenu: t, pieces: [] }).then(function () { St.dessiner(false); var f = document.querySelector(".fil-messages"); if (f) f.scrollTop = f.scrollHeight; });
+      var prec = ms[i - 1], suiv = ms[i + 1];
+      var memeAvant = prec && prec.auteur_id === m.auteur_id && jourDe(prec.cree_le) === j && new Date(m.cree_le) - new Date(prec.cree_le) < 10 * 60000;
+      var memeApres = suiv && suiv.auteur_id === m.auteur_id && jourDe(suiv.cree_le) === j && new Date(suiv.cree_le) - new Date(m.cree_le) < 10 * 60000;
+      var photos = (m.pieces || []).map(function (p) { return p.media_id && St.media ? St.media(p.media_id) : null; }).filter(Boolean);
+      var bulle = el("div", { class: "conv-bulle" }, [
+        !moi && !memeAvant ? el("b", { class: "conv-auteur", text: a.nom || (a.role === "proprietaire" ? prenomLili : "") }) : null,
+        photos.length ? el("div", { class: "conv-photos n" + Math.min(photos.length, 3) }, photos.map(function (ph) { return el("button", { type: "button", class: "conv-photo", onclick: function () { St.ouvrirMedia(ph); } }, [St.image(ph)]); })) : null,
+        m.contenu ? el("p", { text: m.contenu }) : null,
+        el("time", { datetime: m.cree_le, title: St.fmt(m.cree_le, { weekday: "long", day: "numeric", month: "long" }) + " à " + St.hm(m.cree_le), text: St.hm(m.cree_le) })]);
+      lignes.push(el("div", { class: "conv-ligne" + (moi ? " moi" : "") + (memeAvant ? " suite" : "") + (memeApres ? " avant-suite" : "") }, [
+        !moi ? (memeApres ? el("span", { class: "conv-avatar vide" }) : el("span", { class: "avatar conv-avatar", style: { "--c": a.role === "proprietaire" ? "var(--terre)" : e.couleur }, text: St.initiales(a.nom) })) : null, bulle]));
+    });
+    var fil = el("div", { class: "conv-fil", role: "log", "aria-live": "polite", "aria-label": "Messages" }, lignes.length ? lignes : [el("div", { class: "conv-vide" }, [St.icone("commentaire"),
+      el("p", { text: lili ? "Aucun message avec " + e.nom + " pour l'instant." : "Écrivez ici à " + prenomLili + " : une question, une idée, une info pour la semaine." })])]);
+    var saisie = el("textarea", { rows: 1, placeholder: lili ? "Écrire à " + e.nom + "…" : "Écrire à " + prenomLili + "…", "aria-label": "Message" });
+    var ajuster = function () { saisie.style.height = "auto"; saisie.style.height = Math.min(saisie.scrollHeight, 180) + "px"; };
+    saisie.addEventListener("input", ajuster);
+    var enCours = false;
+    var envoyer = function (pieces) {
+      var t = saisie.value.trim(); if ((!t && !pieces) || enCours) return;
+      enCours = true; saisie.value = ""; ajuster();
+      St.creer("messages", { espace_id: e.id, auteur_id: S.moi.id, contenu: t, pieces: pieces || [] }).then(function () {
+        enCours = false; St.dessiner(false); var f = document.querySelector(".conv-fil"); if (f) f.scrollTop = f.scrollHeight;
+        var z = document.querySelector(".conv-saisie textarea"); if (z) z.focus();
+      }, function () { enCours = false; saisie.value = t; });
     };
-    saisie.addEventListener("keydown", function (ev) { if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); envoyer(); } });
+    saisie.addEventListener("keydown", function (ev) { if (ev.key === "Enter" && !ev.shiftKey && !ev.isComposing) { ev.preventDefault(); envoyer(); } });
+    var fichier = el("input", { type: "file", accept: "image/*,video/*", multiple: true, hidden: true, onchange: function () {
+      var l = Array.prototype.slice.call(fichier.files || []); fichier.value = ""; if (!l.length) return;
+      St.signaler("Envoi de " + (l.length > 1 ? l.length + " photos" : "la photo") + "…");
+      Promise.all(l.slice(0, 10).map(function (f) { return St.televerser(f, e.id, "Messages"); }))
+        .then(function (medias) { envoyer(medias.filter(Boolean).map(function (m) { return { media_id: m.id }; })); }, function (x) { St.signaler("Envoi impossible : " + x.message, true); });
+    } });
+    // En-tête : à qui l'on écrit
+    var membres = S.membres.filter(function (m) { return m.espace_id === e.id && m.role === "client"; }).map(function (m) { return St.personne(m.personne_id); }).filter(Boolean);
+    var tete = el("header", { class: "conv-tete" }, lili
+      ? [St.logoEspace(e, "petit"), el("div", {}, [el("b", { text: e.nom }), el("small", { text: membres.length ? membres.map(function (p) { return (p.nom || p.email || "").split(" ")[0]; }).join(", ") + " · prévenu" + (membres.length > 1 ? "s" : "") + " par e-mail" : "Aucun client invité (rubrique Équipe)" })])]
+      : [el("span", { class: "avatar", style: { "--c": "var(--terre)" }, text: St.initiales(MARQUE.proprietaire || "Lili") }), el("div", {}, [el("b", { text: MARQUE.proprietaire || "Lili" }), el("small", { text: (function (m) { return m.charAt(0).toUpperCase() + m.slice(1); })(MARQUE.metier || "community manager") + " · vous répond en général dans la journée" })])]);
     setTimeout(function () { fil.scrollTop = fil.scrollHeight; }, 0);
-    return el("div", { class: "rubrique-etroite" }, [enteteClient("Messages", "La conversation avec Lili."), el("div", { class: "bloc messagerie" }, [fil,
-      el("div", { class: "saisie-message" }, [saisie, el("button", { type: "button", class: "btn-plein", onclick: envoyer, text: "Envoyer" })]),
-      St.estLili() ? el("small", { class: "aide", text: "Le client est prévenu par un e-mail groupé, envoyé depuis votre boîte Gmail une fois reliée." }) : null])]);
+    return el("div", { class: "vue-conversation" + (lili ? " lili" : "") }, [enteteClient("Messages", null), el("section", { class: "conv" }, [tete, fil,
+      el("div", { class: "conv-saisie" }, [
+        el("button", { type: "button", class: "btn-icone", title: "Joindre une photo", "aria-label": "Joindre une photo", onclick: function () { fichier.click(); } }, [St.icone("trombone")]), fichier,
+        saisie, el("button", { type: "button", class: "btn-plein conv-envoyer", "aria-label": "Envoyer", onclick: function () { envoyer(); } }, [St.icone("envoyer"), el("span", { text: "Envoyer" })])]),
+      el("small", { class: "conv-aide", text: "Entrée pour envoyer · Maj + Entrée pour aller à la ligne" + (lili ? " · le client est prévenu par un e-mail groupé" : "") })])]);
   };
 
   // ======================================================================
