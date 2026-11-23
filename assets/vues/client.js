@@ -58,16 +58,8 @@
       facturesClient(e).length ? ["#factures", "Factures", (function () { var n = facturesClient(e).filter(function (f) { return f.statut === "emise"; }).length; return n ? n + " à régler" : "Toutes réglées"; })()] : null,
       ["guide.html", "Comment ça marche", "Le guide en 2 minutes"]
     ].filter(Boolean);
-    return el("nav", { class: "sommaire", "aria-label": "Votre espace" }, [
-      el("div", { class: "som-unes trois" }, [calendrier, photos, idee]),
-      el("div", { class: "som-dossier" }, [
-        el("h2", {}, [el("span", { text: "Votre espace" }), el("small", { text: e.nom || "" })]),
-        el("ol", {}, lignes.map(function (x, i) {
-          return el("li", {}, [el("a", { href: x[0] }, [el("i", { class: "som-no", text: "0" + (i + 1) }), el("b", { text: x[1] }), el("span", { class: "som-points", "aria-hidden": "true" }),
-            el("small", { class: x[3] ? "a-faire" : "", text: x[2] }), St.icone("fleche", "som-fleche")])]);
-        }))
-      ])
-    ]);
+    // Le menu de gauche mène déjà à chaque rubrique : l'accueil garde seulement les trois « unes »
+    return el("nav", { class: "sommaire", "aria-label": "Votre espace" }, [el("div", { class: "som-unes trois" }, [calendrier, photos, idee])    ]);
   }
 
   // ---------- Ce mois-ci : le travail de Lili, les derniers chiffres, le prochain rendez-vous ----------

@@ -145,6 +145,13 @@ et sa qualité ; **on ne touche jamais à ce dépôt ni à sa base Supabase**.
   dans Réglages › Réseaux sociaux : table `meta_application` (clé secrète jamais lisible du navigateur, migration
   `20261122250000_meta_application.sql`, testée) ; à défaut, secrets META_*. **À faire (23/11/2026)** : créer
   l'appli Meta depuis le Chrome de Lili, connecté à SON Facebook (étapes affichées dans l'onglet), puis la relier.
+- **Notifications de Lili par e-mail** (23/11/2026, demande d'Antonin) : `notifier` écrit à Lili (propriétaire la plus
+  ancienne) un e-mail groupé sur 3 minutes, par client, avec un lien par nouveauté (idée, message, validation,
+  commentaire, dépôt…), depuis sa boîte vers sa boîte ; en plus du Web Push. Pause en vacances ; coupure possible
+  par `reglages.notifications.mail = false`. Pièces jointes : idée du client (`proposerIdee`, fichiers dans la
+  médiathèque, dossier « Idées », rattachés à l'idée : politique `client_joint_idee`, migration
+  `20261123100000_idees_pieces.sql`, testée) et messages (photos, PDF, documents). Accueil client sans le sommaire
+  « Votre espace » (le menu de gauche suffit).
 - **Pleine largeur** (23/11/2026, à la demande d'Antonin) : plus de largeur maximale sur `.page` ni `.rubrique-etroite`
   (seuls les éléments eux-mêmes gardent une taille : aperçus, bulles…). Messages (`V.rub_messages`) : conversation
   sur toute la hauteur (`.conv-*`), jours séparés, bulles groupées, photos jointes (médiathèque, dossier « Messages »).
@@ -338,8 +345,8 @@ Après chaque étape : commit clair, mise à jour de ce fichier, note à Antonin
 ## Décisions
 - 22/11/2026 : **Antonin a un compte propriétaire** (arouzier@gmail.com, entrée avec Google, code à 6 chiffres à la
   première connexion), à sa demande, accès complet comme Lili. Les fonctions qui désignent « Lili » prennent le
-  propriétaire le plus ancien (Lili) : envois depuis sa boîte, vigie, notifier. Un propriétaire ne reçoit jamais
-  d'e-mail de notification (cloche et notifications de l'appareil seulement) ; la page Mails montre la boîte reliée
+  propriétaire le plus ancien (Lili) : envois depuis sa boîte, vigie, notifier. Antonin (propriétaire
+  secondaire) ne reçoit jamais d'e-mail de notification (cloche et appareil seulement) ; **Lili, oui depuis le 23/11/2026** ; la page Mails montre la boîte reliée
   par la personne connectée. Même jour : adresse de connexion de Lili alignée sur son compte Google
   (lili.vergote@gmail.com, au lieu de lilivergote@gmail.com : Gmail ignore le point, Supabase non).
 - 21/11/2026 : **ce qui reste hors du compte de Lili, validé par Antonin** : la base Supabase (organisation « Lili Rouzier »

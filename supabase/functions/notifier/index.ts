@@ -13,7 +13,7 @@ import { appelant, base, cors, estLili, json, parCron, SITE } from "../_partage/
 import { jetonAcces } from "../_partage/google.ts";
 import { echapper, gmail, mime } from "../_partage/gmail.ts";
 
-const ATTENTE_MAIL = 10 * 60000, FENETRE = 7 * 86400000;
+const ATTENTE_MAIL = 10 * 60000, ATTENTE_LILI = 3 * 60000, FENETRE = 7 * 86400000;
 const pub = () => Deno.env.get("VAPID_PUBLIQUE") ?? "", priv = () => Deno.env.get("VAPID_PRIVEE") ?? "";
 
 async function pousser(db: any, personneId: string, titre: string, corps: string, url: string) {
@@ -45,7 +45,7 @@ function phrase(j: any, acteur: string, titre: string, pourClient: boolean) {
       return `${t} : ${v}`;
     }
     case "commentaire.ajoute": return `${acteur} a commenté ${t}${j.details?.extrait ? " : " + j.details.extrait : ""}`;
-    case "message.envoye": return `${pourClient ? acteur : acteur} vous a écrit${j.details?.extrait ? " : " + j.details.extrait : ""}`;
+    case "message.envoye": return j.details?.extrait ? `${acteur} vous a écrit : ${j.details.extrait}` : `${acteur} vous a envoyé un fichier`;
     case "media.depose": return `${acteur} a déposé ${j.details?.nom ? "« " + j.details.nom + " »" : "un fichier"}`;
     case "publication.idee": return `${acteur} propose une idée : ${titre || ""}`;
     case "devis.envoye": return `Un devis vous attend${j.details?.objet ? " : " + j.details.objet : ""}, à signer en ligne`;
@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
   const pubIds = [...new Set((journal ?? []).filter((j: any) => j.objet_type === "publication").map((j: any) => j.objet_id))];
   const { data: pubs } = pubIds.length ? await db.from("publications").select("id, titre").in("id", pubIds) : { data: [] };
   const T = new Map((pubs ?? []).map((p: any) => [p.id, p.titre]));
-  const { data: espaces } = await db.from("espaces").select("id, nom, couleur");
+  const { data: espaces } = await db.from("espaces").select("id, nom, couleur, slug");
   const E = new Map((espaces ?? []).map((e: any) => [e.id, e]));
   const { data: membres } = await db.from("membres").select("espace_id, personne_id, notifier_mail");
   const { data: lili } = await db.from("personnes").select("id, nom").eq("role", "proprietaire").order("cree_le").limit(1).maybeSingle();
@@ -126,7 +126,9 @@ Deno.serve(async (req) => {
       const j: any = J.get(n.journal_id); if (!j) return null;
       const acteur = ((P.get(j.acteur_id) as any)?.nom || "Quelqu'un").split(" ")[0];
       const titre = (T.get(j.objet_id) as string) || j.details?.titre || "";
-      const lien = j.objet_type === "publication" ? `${SITE}#p/${j.objet_id}` : j.objet_type === "devis" ? `${SITE}#devis` : SITE;
+      const esp: any = E.get(j.espace_id);
+      const lien = j.objet_type === "publication" ? `${SITE}#p/${j.objet_id}` : j.objet_type === "devis" ? (pourClient ? `${SITE}#devis` : `${SITE}#${esp?.slug ?? ""}/documents`)
+        : j.objet_type === "message" ? (pourClient ? `${SITE}#messages` : `${SITE}#${esp?.slug ?? ""}/messages`) : esp && !pourClient ? `${SITE}#${esp.slug}` : SITE;
       return { n, j, texte: phrase(j, pourClient ? (acteur === "Lili" ? "Lili" : acteur) : acteur, titre, pourClient), lien };
     }).filter(Boolean) as any[];
 
@@ -143,7 +145,40 @@ Deno.serve(async (req) => {
     // E-mail : clients seulement, regroupé, si la plus ancienne nouveauté a 10 minutes et que le client l'accepte
     const aEcrire = lignes.filter((l) => !l.n.mail_le);
     if (!aEcrire.length) continue;
-    if (!pourClient) { await db.from("notifications").update({ mail_le: maintenant }).in("id", aEcrire.map((l) => l.n.id)); continue; }
+    if (!pourClient) {
+      // Lili (la propriétaire principale) reçoit aussi un e-mail, groupé sur 3 minutes, depuis et vers sa boîte ;
+      // les autres propriétaires (Antonin) : cloche et appareil seulement. Réglage : reglages.notifications.mail = false
+      const { data: rn } = await db.from("reglages").select("valeur").eq("cle", "notifications").maybeSingle();
+      const veutMail = rn?.valeur?.mail !== false;
+      if (!lili || pid !== lili.id || !veutMail || !envoyeur || !dest.email) { await db.from("notifications").update({ mail_le: maintenant }).in("id", aEcrire.map((l) => l.n.id)); continue; }
+      if (Date.now() - Date.parse(aEcrire[0].n.cree_le) < ATTENTE_LILI) continue;
+      const parEspace = new Map<string, any[]>();
+      for (const l of aEcrire) { const k = l.j.espace_id ?? ""; const t = parEspace.get(k) ?? []; t.push(l); parEspace.set(k, t); }
+      const premier: any = E.get(aEcrire[0].j.espace_id);
+      const objet = aEcrire.length === 1 ? `${premier?.nom ? premier.nom + " : " : ""}${aEcrire[0].texte}`.slice(0, 140) : `${aEcrire.length} nouveautés de vos clients`;
+      const blocs = [...parEspace.entries()].map(([k, ls]) => {
+        const e: any = E.get(k); const c = e?.couleur || "#A9553A";
+        return `<tr><td style="padding:16px 0 4px;font:600 12px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:${c}">${echapper(e?.nom || "Studio")}</td></tr>` +
+          ls.map((l) => `<tr><td style="padding:10px 0;border-top:1px solid #E7E0D5;font:15px/1.45 Arial,sans-serif;color:#1E1A17"><a href="${l.lien}" style="color:#1E1A17;text-decoration:none">${echapper(l.texte)}</a> <a href="${l.lien}" style="color:#A9553A;font-size:13px;text-decoration:none">Ouvrir</a></td></tr>`).join("");
+      }).join("");
+      const html = `<!doctype html><html lang="fr"><body style="margin:0;background:#F4EFE7;padding:28px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#FFFFFF;border-radius:18px;border:1px solid #E7E0D5"><tr><td style="padding:26px 28px">
+        <div style="font:500 22px Georgia,serif;color:#1E1A17;margin-bottom:4px">${echapper(objet)}</div><div style="height:3px;width:34px;background:#A9553A;margin:10px 0 6px"></div>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${blocs}</table>
+        <p style="margin:22px 0 0"><a href="${SITE}" style="display:inline-block;background:#1E1A17;color:#FBF8F3;text-decoration:none;font:600 14px Arial,sans-serif;padding:11px 18px;border-radius:999px">Ouvrir le studio</a></p>
+        </td></tr></table><p style="font:12px Arial,sans-serif;color:#8B8178">Studio · notification automatique</p></td></tr></table></body></html>`;
+      try {
+        const raw = mime({ nom: "Studio Lili", de: boite.email, a: [dest.email], cc: [], objet,
+          texte: `${aEcrire.map((l) => "- " + l.texte + " : " + l.lien).join("\n")}\n\nOuvrir le studio : ${SITE}\n`, html, pieces: [] });
+        await envoyeur.ecrire(raw, null, true, null);
+        bilan.mails++;
+        await db.from("notifications").update({ mail_le: maintenant }).in("id", aEcrire.map((l) => l.n.id));
+      } catch (e) {
+        console.error("notifier : e-mail à Lili", (e as Error).message);
+        for (const l of aEcrire) await db.from("notifications").update({ essais: (l.n.essais || 0) + 1, ...(l.n.essais >= 4 ? { mail_le: maintenant } : {}) }).eq("id", l.n.id);
+      }
+      continue;
+    }
     if (Date.now() - Date.parse(aEcrire[0].n.cree_le) < ATTENTE_MAIL || !envoyeur || !dest.email) continue;
     const acceptes = aEcrire.filter((l) => (membres ?? []).some((m: any) => m.personne_id === pid && m.espace_id === l.j.espace_id && m.notifier_mail));
     const refuses = aEcrire.filter((l) => !acceptes.includes(l));

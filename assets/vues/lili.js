@@ -223,10 +223,29 @@
   function proposerIdee() {
     var e = St.espacesClient()[0]; if (!e) return;
     var titre = el("input", { type: "text", placeholder: "Votre idée en une phrase", maxlength: 140 }), detail = el("textarea", { rows: 4, placeholder: "Quelques mots de plus (facultatif)" });
-    St.fenetre({ titre: "Proposer une idée", sous: "Lili la reçoit et vous dira comment la mettre en forme.", corps: [titre, detail], actions: [{ texte: "Annuler" }, { texte: "Envoyer l'idée", principal: true, action: function (fermer) {
+    // Pièces jointes : photos, vidéos, PDF, documents (10 au plus) ; elles vont dans la médiathèque, dossier « Idées »
+    var pieces = [], liste = el("div", { class: "pieces-idee" });
+    var fichier = el("input", { type: "file", multiple: true, hidden: true, accept: "image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip", onchange: function () {
+      Array.prototype.slice.call(fichier.files || []).forEach(function (f) { if (pieces.length < 10) pieces.push(f); }); fichier.value = ""; peindre();
+    } });
+    function peindre() {
+      liste.textContent = "";
+      pieces.forEach(function (f, i) { liste.appendChild(el("span", { class: "puce" }, [St.icone(/^image\//.test(f.type) ? "publications" : "trombone"), f.name + " · " + Math.max(1, Math.round(f.size / 1024)) + " Ko",
+        el("button", { type: "button", class: "btn-icone petit", "aria-label": "Retirer " + f.name, onclick: function () { pieces.splice(i, 1); peindre(); } }, [St.icone("fermer")])])); });
+      liste.appendChild(el("button", { type: "button", class: "btn-texte", onclick: function () { fichier.click(); } }, [St.icone("trombone"), pieces.length ? "Ajouter un fichier" : "Joindre des photos ou des fichiers"]));
+    }
+    peindre();
+    St.fenetre({ titre: "Proposer une idée", sous: "Lili la reçoit tout de suite et vous dira comment la mettre en forme.", corps: [titre, detail, liste, fichier], actions: [{ texte: "Annuler" }, { texte: "Envoyer l'idée", principal: true, action: function (fermer) {
       if (!titre.value.trim()) { titre.focus(); return; }
+      St.signaler(pieces.length ? "Envoi de l'idée et de " + pieces.length + " fichier" + (pieces.length > 1 ? "s" : "") + "…" : "Envoi de l'idée…");
       St.creer("publications", { espace_id: e.id, titre: titre.value.trim(), legende: detail.value.trim(), statut: "idee", visibilite: "partage", auteur_id: S.moi.id, reseaux: (e.reseaux || []).slice(0, 1), format: "post", hashtags: [], mentions: [], etapes: [], etiquettes: [] })
-        .then(function () { fermer(); St.signaler("Idée envoyée à Lili"); St.dessiner(false); });
+        .then(function (p) {
+          if (!pieces.length || !p) return;
+          return pieces.reduce(function (suite, f, i) {
+            return suite.then(function () { return St.televerser(f, e.id, "Idées"); }).then(function (m) { if (m) return St.creer("publication_medias", { publication_id: p.id, media_id: m.id, rang: i }); });
+          }, Promise.resolve());
+        })
+        .then(function () { fermer(); St.signaler("Idée envoyée à Lili"); St.dessiner(false); }, function (x) { St.signaler("Envoi impossible : " + x.message, true); });
     } }] });
   }
   St.proposerIdee = proposerIdee;

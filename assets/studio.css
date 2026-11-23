@@ -1418,3 +1418,8 @@ button.etat-modifiable small { font-weight: 500; opacity: .8; }
 }
 .conv-envoyer .ic { display: inline-block !important; width: 18px; height: 18px; flex: none; }
 @media (max-width: 700px) { .conv-envoyer { width: 46px; justify-content: center; } }
+.pieces-idee { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; } .pieces-idee .puce { font-size: 12.5px; gap: 6px; padding: 2px 4px 2px 10px; min-height: 30px; }
+.conv-docs { display: grid; gap: 4px; }
+.conv-doc { display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 6px; border: 0; border-radius: 12px; background: rgb(0 0 0 / .06); font: inherit; color: inherit; text-align: left; cursor: pointer; max-width: 320px; }
+.conv-ligne.moi .conv-doc { background: rgb(255 255 255 / .16); }
+.conv-doc .doc-ext { width: 34px; height: 40px; font-size: 9.5px; } .conv-doc > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }

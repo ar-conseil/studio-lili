@@ -168,10 +168,13 @@
       var prec = ms[i - 1], suiv = ms[i + 1];
       var memeAvant = prec && prec.auteur_id === m.auteur_id && jourDe(prec.cree_le) === j && new Date(m.cree_le) - new Date(prec.cree_le) < 10 * 60000;
       var memeApres = suiv && suiv.auteur_id === m.auteur_id && jourDe(suiv.cree_le) === j && new Date(suiv.cree_le) - new Date(m.cree_le) < 10 * 60000;
-      var photos = (m.pieces || []).map(function (p) { return p.media_id && St.media ? St.media(p.media_id) : null; }).filter(Boolean);
+      var jointes = (m.pieces || []).map(function (p) { return p.media_id && St.media ? St.media(p.media_id) : null; }).filter(Boolean);
+      var photos = jointes.filter(function (x) { return x.type !== "document"; }), docs = jointes.filter(function (x) { return x.type === "document"; });
       var bulle = el("div", { class: "conv-bulle" }, [
         !moi && !memeAvant ? el("b", { class: "conv-auteur", text: a.nom || (a.role === "proprietaire" ? prenomLili : "") }) : null,
         photos.length ? el("div", { class: "conv-photos n" + Math.min(photos.length, 3) }, photos.map(function (ph) { return el("button", { type: "button", class: "conv-photo", onclick: function () { St.ouvrirMedia(ph); } }, [St.image(ph)]); })) : null,
+        docs.length ? el("div", { class: "conv-docs" }, docs.map(function (d) { return el("button", { type: "button", class: "conv-doc", onclick: function () { St.ouvrirFichier(d); } },
+          [el("span", { class: "doc-ext", text: String((d.nom_fichier || d.chemin).split(".").pop()).toUpperCase().slice(0, 4) }), el("span", { text: St.nomMedia ? St.nomMedia(d) : d.nom_fichier || "Fichier" })]); })) : null,
         m.contenu ? el("p", { text: m.contenu }) : null,
         el("time", { datetime: m.cree_le, title: St.fmt(m.cree_le, { weekday: "long", day: "numeric", month: "long" }) + " à " + St.hm(m.cree_le), text: St.hm(m.cree_le) })]);
       lignes.push(el("div", { class: "conv-ligne" + (moi ? " moi" : "") + (memeAvant ? " suite" : "") + (memeApres ? " avant-suite" : "") }, [
@@ -192,9 +195,9 @@
       }, function () { enCours = false; saisie.value = t; });
     };
     saisie.addEventListener("keydown", function (ev) { if (ev.key === "Enter" && !ev.shiftKey && !ev.isComposing) { ev.preventDefault(); envoyer(); } });
-    var fichier = el("input", { type: "file", accept: "image/*,video/*", multiple: true, hidden: true, onchange: function () {
+    var fichier = el("input", { type: "file", accept: "image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip", multiple: true, hidden: true, onchange: function () {
       var l = Array.prototype.slice.call(fichier.files || []); fichier.value = ""; if (!l.length) return;
-      St.signaler("Envoi de " + (l.length > 1 ? l.length + " photos" : "la photo") + "…");
+      St.signaler("Envoi de " + (l.length > 1 ? l.length + " fichiers" : "« " + l[0].name + " »") + "…");
       Promise.all(l.slice(0, 10).map(function (f) { return St.televerser(f, e.id, "Messages"); }))
         .then(function (medias) { envoyer(medias.filter(Boolean).map(function (m) { return { media_id: m.id }; })); }, function (x) { St.signaler("Envoi impossible : " + x.message, true); });
     } });
@@ -206,7 +209,7 @@
     setTimeout(function () { fil.scrollTop = fil.scrollHeight; }, 0);
     return el("div", { class: "vue-conversation" + (lili ? " lili" : "") }, [enteteClient("Messages", null), el("section", { class: "conv" }, [tete, fil,
       el("div", { class: "conv-saisie" }, [
-        el("button", { type: "button", class: "btn-icone", title: "Joindre une photo", "aria-label": "Joindre une photo", onclick: function () { fichier.click(); } }, [St.icone("trombone")]), fichier,
+        el("button", { type: "button", class: "btn-icone", title: "Joindre des photos ou des fichiers (PDF, documents…)", "aria-label": "Joindre des fichiers", onclick: function () { fichier.click(); } }, [St.icone("trombone")]), fichier,
         saisie, el("button", { type: "button", class: "btn-plein conv-envoyer", "aria-label": "Envoyer", onclick: function () { envoyer(); } }, [St.icone("envoyer"), el("span", { text: "Envoyer" })])]),
       el("small", { class: "conv-aide", text: "Entrée pour envoyer · Maj + Entrée pour aller à la ligne" + (lili ? " · le client est prévenu par un e-mail groupé" : "") })])]);
   };

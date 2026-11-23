@@ -245,6 +245,12 @@ select essais.doit_echouer($$select public.piece_pour_pdf('factures', '40000000-
 select essais.doit_echouer($$select public.piece_pour_pdf('factures', '40000000-0000-4000-a000-0000000000aa')$$, 'A obtient l''en-tête d''un brouillon');
 update public.factures set statut = 'payee' where objet = 'Facture A';   -- sans effet : lecture seule
 select essais.verifier((select statut from public.factures where objet = 'Facture A') = 'emise', 'A ne modifie pas sa facture');
+-- Idée avec pièces jointes : A rattache son fichier à son idée, jamais à une autre publication ni le fichier d'un autre
+insert into public.publications (id, espace_id, titre, statut, visibilite, auteur_id) values ('60000000-0000-4000-a000-00000000000a', '10000000-0000-4000-a000-00000000000a', 'Idée de A', 'idee', 'partage', '00000000-0000-4000-a000-0000000000a1');
+insert into public.medias (id, espace_id, chemin, type, depose_par, visibilite) values ('60000000-0000-4000-a000-0000000000a2', '10000000-0000-4000-a000-00000000000a', '10000000-0000-4000-a000-00000000000a/60000000-0000-4000-a000-0000000000a2.pdf', 'document', '00000000-0000-4000-a000-0000000000a1', 'partage');
+insert into public.publication_medias (publication_id, media_id) values ('60000000-0000-4000-a000-00000000000a', '60000000-0000-4000-a000-0000000000a2');
+select essais.verifier(exists (select 1 from public.publication_medias where publication_id = '60000000-0000-4000-a000-00000000000a'), 'A joint son fichier à son idée');
+select essais.doit_echouer($$insert into public.publication_medias (publication_id, media_id) values ('20000000-0000-4000-a000-000000000001', '60000000-0000-4000-a000-0000000000a2')$$, 'A joint un fichier à une publication de Lili');
 select essais.doit_echouer($q$insert into public.signature_images (type, contenu) values ('image/png', 'iVBORw0KGgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')$q$, 'A dépose une image de signature');
 select essais.verifier((select count(*) from public.briefs_jour) = 0, 'A ne voit pas le brief du jour de Lili');
 select essais.verifier((select count(*) from public.assistant_journal) = 0, 'A ne voit pas ce que Lili demande à son assistant');
